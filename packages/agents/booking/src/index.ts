@@ -65,3 +65,17 @@ export type {
   PnrFareData,
   SegmentStatus,
 } from './pnr-validation/index.js';
+
+export { QueueManagement } from './queue-management/index.js';
+export type {
+  QueueManagementInput,
+  QueueManagementOutput,
+  QueueEntry,
+  QueueProcessingResult,
+  QueueCommand,
+  QueueEntryType,
+  QueuePriority,
+  QueueItemStatus,
+  QueueGdsSystem,
+  QueueAction,
+} from './queue-management/index.js';

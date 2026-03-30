@@ -1,0 +1,97 @@
+{
+  "queue_definitions": {
+    "AMADEUS": {
+      "ticketing": { "queue": 7, "category": 0, "description": "Ticketing time limit queue" },
+      "schedule_change": { "queue": 10, "category": 0, "description": "Schedule change notifications" },
+      "waitlist": { "queue": 50, "category": 0, "description": "Waitlist clearance" },
+      "general": { "queue": 0, "category": 0, "description": "General queue" },
+      "reissue": { "queue": 20, "category": 0, "description": "Reissue / involuntary rebook" }
+    },
+    "SABRE": {
+      "ticketing": { "queue": 100, "category": 0, "description": "Ticketing deadline" },
+      "schedule_change": { "queue": 200, "category": 0, "description": "Schedule changes" },
+      "waitlist": { "queue": 300, "category": 0, "description": "Waitlist clears" },
+      "general": { "queue": 50, "category": 0, "description": "General queue" },
+      "reissue": { "queue": 400, "category": 0, "description": "Involuntary changes" }
+    },
+    "TRAVELPORT": {
+      "ticketing": { "queue": 7, "category": 0, "description": "Ticketing queue" },
+      "schedule_change": { "queue": 41, "category": 0, "description": "Schedule changes" },
+      "waitlist": { "queue": 50, "category": 0, "description": "Waitlist queue" },
+      "general": { "queue": 1, "category": 0, "description": "General queue" },
+      "reissue": { "queue": 60, "category": 0, "description": "Reissue queue" }
+    }
+  },
+  "sample_entries": [
+    {
+      "item_id": "Q001",
+      "record_locator": "ABC123",
+      "gds": "AMADEUS",
+      "queue_number": 7,
+      "entry_type": "TTL_DEADLINE",
+      "placed_at": "2026-03-29T10:00:00Z",
+      "deadline": "2026-03-30T23:59:00Z",
+      "remark": "TTL/30MAR — MUST TICKET TODAY",
+      "passenger_count": 2,
+      "segment_count": 4
+    },
+    {
+      "item_id": "Q002",
+      "record_locator": "DEF456",
+      "gds": "AMADEUS",
+      "queue_number": 10,
+      "entry_type": "SCHEDULE_CHANGE",
+      "placed_at": "2026-03-28T14:30:00Z",
+      "deadline": "2026-04-01T23:59:00Z",
+      "remark": "BA115 15JUN LHRJFK TIME CHANGE 0900 TO 1030",
+      "passenger_count": 1,
+      "segment_count": 2
+    },
+    {
+      "item_id": "Q003",
+      "record_locator": "GHI789",
+      "gds": "SABRE",
+      "queue_number": 300,
+      "entry_type": "WAITLIST_CLEAR",
+      "placed_at": "2026-03-29T16:00:00Z",
+      "remark": "SEG 1 HK CONFIRMED FROM HL",
+      "passenger_count": 3,
+      "segment_count": 1
+    },
+    {
+      "item_id": "Q004",
+      "record_locator": "JKL012",
+      "gds": "AMADEUS",
+      "queue_number": 20,
+      "entry_type": "INVOLUNTARY_REBOOK",
+      "placed_at": "2026-03-29T08:00:00Z",
+      "deadline": "2026-03-31T12:00:00Z",
+      "remark": "FLIGHT CANCELLED — UN SEG REQUIRES REBOOKING",
+      "passenger_count": 1,
+      "segment_count": 3
+    },
+    {
+      "item_id": "Q005",
+      "record_locator": "MNO345",
+      "gds": "AMADEUS",
+      "queue_number": 7,
+      "entry_type": "TTL_DEADLINE",
+      "placed_at": "2026-03-25T10:00:00Z",
+      "deadline": "2026-04-05T23:59:00Z",
+      "remark": "TTL/05APR",
+      "passenger_count": 1,
+      "segment_count": 2
+    },
+    {
+      "item_id": "Q006",
+      "record_locator": "PQR678",
+      "gds": "SABRE",
+      "queue_number": 50,
+      "entry_type": "GENERAL",
+      "placed_at": "2026-03-29T12:00:00Z",
+      "remark": "FREQUENT FLYER UPGRADE AVAILABLE",
+      "passenger_count": 1,
+      "segment_count": 2
+    }
+  ]
+}
