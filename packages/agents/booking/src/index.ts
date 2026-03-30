@@ -51,3 +51,17 @@ export type {
   PnrGdsSystem,
   SsrCode,
 } from './pnr-builder/index.js';
+
+export { PnrValidation } from './pnr-validation/index.js';
+export type {
+  PnrValidationInput,
+  PnrValidationOutput,
+  ValidationCheck,
+  ValidationSeverity,
+  PnrPassengerData,
+  PnrSegmentData,
+  PnrContactData,
+  PnrTicketingData,
+  PnrFareData,
+  SegmentStatus,
+} from './pnr-validation/index.js';
