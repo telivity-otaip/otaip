@@ -19,10 +19,6 @@ export interface AirportDataset {
 
 const DATA_DIR = join(process.cwd(), 'data', 'reference');
 
-function getDataPath(filename: string): string {
-  return join(DATA_DIR, filename);
-}
-
 async function loadJsonFile<T>(filepath: string): Promise<T> {
   const raw = await readFile(filepath, 'utf-8');
   return JSON.parse(raw) as T;

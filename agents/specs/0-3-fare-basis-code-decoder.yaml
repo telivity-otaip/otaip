@@ -1,0 +1,127 @@
+agent:
+  id: "0.3"
+  name: Fare Basis Code Decoder
+  version: 0.1.0
+  stage: 0
+  package: packages/agents/reference/src/fare-basis-decoder/
+
+description: >
+  Decodes ATPCO-standard fare basis codes into human-readable components.
+  Fare basis codes encode cabin class, fare restrictions, advance purchase,
+  min/max stay, seasonality, and fare type into compact alphanumeric strings.
+  This agent parses the structure without requiring live pricing — pure
+  reference decoding of the ATPCO encoding standard.
+
+input:
+  type: FareBasisDecoderInput
+  fields:
+    - name: fare_basis
+      type: string
+      required: true
+      description: >
+        ATPCO fare basis code (e.g., "YOW3M1", "TLXP14NR", "B1AKUS").
+        Max 15 characters per ATPCO standard.
+    - name: carrier
+      type: string
+      required: false
+      description: >
+        IATA airline code for carrier-specific decoding.
+        Some fare basis patterns are carrier-specific.
+        [NEEDS DOMAIN INPUT] Carrier-specific pattern maps.
+
+output:
+  type: FareBasisDecoderOutput
+  fields:
+    - name: decoded
+      type: DecodedFareBasis | null
+      description: Decoded components, null if code cannot be parsed.
+    - name: match_confidence
+      type: number
+      description: "1.0 = fully decoded, 0.5-0.9 = partial, 0 = unknown format"
+    - name: unparsed_segments
+      type: string[]
+      description: Parts of the code that could not be decoded.
+
+types:
+  DecodedFareBasis:
+    fare_basis: string              # Original code
+    primary_code: string            # First letter — booking class
+    cabin_class: "'first' | 'business' | 'premium_economy' | 'economy' | 'unknown'"
+    fare_type: "'normal' | 'special' | 'excursion' | 'promotional' | 'corporate' | 'unknown'"
+    season: "'high' | 'low' | 'shoulder' | null"
+    day_of_week: "'weekday' | 'weekend' | null"
+    advance_purchase: AdvancePurchase | null
+    min_stay: StayRequirement | null
+    max_stay: StayRequirement | null
+    penalties: FarePenalties
+    ticket_designator: string | null
+
+  AdvancePurchase:
+    days: number | null
+    description: string             # e.g., "7-day advance purchase"
+
+  StayRequirement:
+    value: number | null
+    unit: "'days' | 'months' | null"
+    description: string             # e.g., "Saturday night stay required"
+
+  FarePenalties:
+    refundable: boolean
+    changeable: boolean
+    change_fee_applies: boolean
+    description: string | null
+
+reference_data:
+  primary_code_map:
+    description: Maps first letter to booking/cabin class
+    note: >
+      Standard ATPCO primary codes:
+      F/P/A = First Class
+      J/C/D/I/Z = Business Class
+      W/R = Premium Economy
+      Y/B/M/H/Q/V/K/L/S/N/T = Economy
+      [NEEDS DOMAIN INPUT] Airline-specific variations exist.
+
+  fare_type_patterns:
+    description: Regex patterns for fare type indicators in positions 2+
+    note: >
+      Common ATPCO patterns:
+      OW = one-way, RT = round-trip, X = excursion
+      NR = non-refundable, AP = advance purchase
+      Numbers often encode advance purchase days or max stay months.
+      [NEEDS DOMAIN INPUT] Complete ATPCO Category 25/35 decoding tables.
+
+confidence_scoring:
+  fully_decoded: 1.0
+  primary_code_only: 0.7
+  partial_decode: 0.5-0.9
+  unknown_format: 0
+
+test_cases:
+  - description: Full economy fare Y → economy, normal
+    input: { fare_basis: "Y" }
+    expected: { decoded.primary_code: "Y", decoded.cabin_class: "economy", decoded.fare_type: "normal", match_confidence: 1.0 }
+
+  - description: Business class code J → business
+    input: { fare_basis: "J" }
+    expected: { decoded.cabin_class: "business", match_confidence: 1.0 }
+
+  - description: First class code F → first
+    input: { fare_basis: "F" }
+    expected: { decoded.cabin_class: "first", match_confidence: 1.0 }
+
+  - description: Economy special HLXP14NR → economy, 14-day AP, non-refundable
+    input: { fare_basis: "HLXP14NR" }
+    expected: { decoded.cabin_class: "economy", decoded.advance_purchase.days: 14, decoded.penalties.refundable: false }
+
+  - description: One-way indicator YOW → economy, one-way
+    input: { fare_basis: "YOW" }
+    expected: { decoded.cabin_class: "economy" }
+
+  - description: Premium economy W code
+    input: { fare_basis: "W" }
+    expected: { decoded.cabin_class: "premium_economy" }
+
+  - description: Unknown garbage returns null
+    input: { fare_basis: "ZZZZZZZZ" }
+    expected: { decoded: "partial or null", match_confidence: "<= 0.7" }

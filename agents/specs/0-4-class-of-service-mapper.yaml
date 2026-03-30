@@ -1,0 +1,110 @@
+agent:
+  id: "0.4"
+  name: Class of Service Mapper
+  version: 0.1.0
+  stage: 0
+  package: packages/agents/reference/src/class-of-service-mapper/
+
+description: >
+  Maps single-letter booking class codes to cabin class, fare family,
+  upgrade eligibility, and loyalty program earning rates. Booking classes
+  are airline-specific — the same letter can mean different things on
+  different carriers. This agent provides carrier-aware mapping using
+  static reference data.
+
+input:
+  type: ClassOfServiceMapperInput
+  fields:
+    - name: booking_class
+      type: string
+      required: true
+      description: Single-letter booking class code (A-Z)
+    - name: carrier
+      type: string
+      required: true
+      description: >
+        IATA 2-letter airline code. Required because booking class
+        meanings are carrier-specific.
+    - name: include_loyalty
+      type: boolean
+      required: false
+      default: false
+      description: Include loyalty earning rates (RDM, PQP, etc.)
+
+output:
+  type: ClassOfServiceMapperOutput
+  fields:
+    - name: mapping
+      type: ClassMapping | null
+      description: Resolved class mapping, null if unknown carrier/class combination.
+    - name: match_confidence
+      type: number
+      description: "1.0 = carrier-specific mapping, 0.7 = IATA default, 0 = unknown"
+
+types:
+  ClassMapping:
+    booking_class: string           # The input letter
+    carrier: string                 # IATA carrier code
+    cabin_class: "'first' | 'business' | 'premium_economy' | 'economy'"
+    cabin_brand_name: string | null # Carrier's marketing name (e.g., "Polaris" for UA J)
+    fare_family: string | null      # e.g., "Basic Economy", "Main Cabin", "Business Saver"
+    upgrade_eligible: boolean
+    upgrade_type: "'instrument' | 'mileage' | 'complimentary' | 'gpu' | 'not_eligible' | null"
+    same_day_change: boolean        # Eligible for same-day confirmed/standby
+    seat_selection: "'included' | 'paid' | 'none' | 'at_check_in'"
+    changes_allowed: boolean
+    refundable: boolean
+    priority: "'standard' | 'preferred' | 'premium'"
+    loyalty_earning: LoyaltyEarning | null
+
+  LoyaltyEarning:
+    program_name: string            # e.g., "MileagePlus", "AAdvantage"
+    rdm_percent: number             # Redeemable miles earning rate (percentage of distance)
+    pqm_percent: number | null      # Premier qualifying miles (if applicable)
+    pqp_earning: "'fare_based' | 'distance_based' | null"
+    status_earning: boolean         # Whether this class earns toward elite status
+
+reference_data:
+  carrier_class_maps:
+    description: Per-airline booking class → cabin/fare family mappings
+    note: >
+      Initial dataset covers major carriers: UA, AA, DL, BA, LH, AF, EK, SQ, QF, NH.
+      [NEEDS DOMAIN INPUT] Complete carrier mappings require GDS fare filing data
+      or airline distribution agreements. Community contributions welcome.
+
+  iata_default_classes:
+    description: IATA standard booking class defaults (fallback)
+    note: >
+      F/P/A → First, J/C/D/I/Z → Business, W/R → Premium Economy,
+      Y/B/M/H/Q/V/K/L/S/N/T/G/E/U/X/O → Economy.
+      Used when no carrier-specific mapping exists.
+
+confidence_scoring:
+  carrier_specific: 1.0
+  iata_default_fallback: 0.7
+  unknown: 0
+
+test_cases:
+  - description: UA J class → Business (Polaris)
+    input: { booking_class: "J", carrier: "UA" }
+    expected: { mapping.cabin_class: "business", mapping.cabin_brand_name: "Polaris", match_confidence: 1.0 }
+
+  - description: AA Y class → Economy (Main Cabin)
+    input: { booking_class: "Y", carrier: "AA" }
+    expected: { mapping.cabin_class: "economy", mapping.fare_family: "Main Cabin Flexible", match_confidence: 1.0 }
+
+  - description: BA F class → First
+    input: { booking_class: "F", carrier: "BA" }
+    expected: { mapping.cabin_class: "first", match_confidence: 1.0 }
+
+  - description: Unknown carrier falls back to IATA default
+    input: { booking_class: "Y", carrier: "ZZ" }
+    expected: { mapping.cabin_class: "economy", match_confidence: 0.7 }
+
+  - description: Loyalty earning for UA J with include_loyalty
+    input: { booking_class: "J", carrier: "UA", include_loyalty: true }
+    expected: { mapping.loyalty_earning: "non-null" }
+
+  - description: Invalid booking class
+    input: { booking_class: "9", carrier: "UA" }
+    expected: { mapping: null, match_confidence: 0 }

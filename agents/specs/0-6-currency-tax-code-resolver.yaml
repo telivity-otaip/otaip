@@ -1,0 +1,128 @@
+agent:
+  id: "0.6"
+  name: Currency & Tax Code Resolver
+  version: 0.1.0
+  stage: 0
+  package: packages/agents/reference/src/currency-tax-resolver/
+
+description: >
+  Resolves ISO 4217 currency codes and IATA tax/surcharge codes used in
+  airline pricing and ticketing. Maps tax codes (e.g., YQ, YR, GB, US) to
+  their descriptions, categories, and applicability. Provides BSP
+  settlement rate (BSR) direction — not live rates, but the reference
+  structure for which currencies settle through which BSP.
+
+input:
+  type: CurrencyTaxResolverInput
+  fields:
+    - name: code
+      type: string
+      required: true
+      description: >
+        ISO 4217 currency code (e.g., "USD", "EUR"), IATA tax code
+        (e.g., "YQ", "GB", "US2"), or tax code with amount (e.g., "YQ500").
+    - name: code_type
+      type: "'currency' | 'tax' | 'auto'"
+      required: false
+      default: auto
+      description: Hint for resolution type. Auto-detected if omitted.
+    - name: country
+      type: string
+      required: false
+      description: >
+        ISO 2-letter country code to filter tax applicability
+        (e.g., "GB" to see only UK-applicable taxes).
+
+output:
+  type: CurrencyTaxResolverOutput
+  fields:
+    - name: currency
+      type: ResolvedCurrency | null
+      description: Currency details, null if input is a tax code.
+    - name: tax
+      type: ResolvedTax | null
+      description: Tax/surcharge details, null if input is a currency code.
+    - name: match_confidence
+      type: number
+      description: "1.0 = exact match, 0 = not found"
+
+types:
+  ResolvedCurrency:
+    code: string                    # ISO 4217 code (e.g., "USD")
+    numeric_code: string            # ISO numeric (e.g., "840")
+    name: string                    # "US Dollar"
+    symbol: string | null           # "$", "€", "£"
+    minor_units: number             # Decimal places (2 for USD, 0 for JPY)
+    countries: string[]             # ISO country codes where this is official currency
+    is_active: boolean              # false for historical currencies (e.g., DEM)
+
+  ResolvedTax:
+    code: string                    # IATA tax code (e.g., "YQ")
+    name: string                    # Human-readable name
+    description: string             # What this tax covers
+    category: "'carrier_surcharge' | 'government_tax' | 'airport_fee' | 'security_fee' | 'immigration' | 'customs' | 'other'"
+    country_code: string | null     # ISO country code (null for carrier surcharges)
+    country_name: string | null
+    applies_to: "'departure' | 'arrival' | 'transit' | 'ticketing' | 'both' | null"
+    is_percentage: boolean          # true if tax is percentage-based
+    note: string | null             # Additional context
+    # [NEEDS DOMAIN INPUT] Actual tax amounts require live ATPCO/SITA data feeds
+
+reference_data:
+  currencies:
+    source: Static JSON (currencies.json)
+    note: >
+      ISO 4217 currency list, ~180 active currencies.
+      Includes historical currencies for PNR/ticket archaeology.
+
+  tax_codes:
+    source: Static JSON (tax-codes.json)
+    note: >
+      IATA-registered tax codes. ~300 codes covering government taxes,
+      airport fees, carrier surcharges, and security charges.
+      [NEEDS DOMAIN INPUT] Complete IATA tax code database requires
+      IATA TTBS (Tax/Travel/Billing Solutions) subscription.
+      Initial dataset covers ~80 most common codes.
+
+confidence_scoring:
+  exact_currency: 1.0
+  exact_tax: 1.0
+  partial_tax: 0.8
+  not_found: 0
+
+test_cases:
+  - description: Resolve USD → US Dollar
+    input: { code: "USD", code_type: "currency" }
+    expected: { currency.code: "USD", currency.name: "US Dollar", currency.symbol: "$", match_confidence: 1.0 }
+
+  - description: Resolve EUR → Euro
+    input: { code: "EUR" }
+    expected: { currency.code: "EUR", currency.minor_units: 2 }
+
+  - description: JPY has 0 minor units
+    input: { code: "JPY" }
+    expected: { currency.minor_units: 0 }
+
+  - description: YQ → Carrier Surcharge
+    input: { code: "YQ", code_type: "tax" }
+    expected: { tax.code: "YQ", tax.category: "carrier_surcharge", match_confidence: 1.0 }
+
+  - description: GB → UK Air Passenger Duty
+    input: { code: "GB", code_type: "tax" }
+    expected: { tax.code: "GB", tax.category: "government_tax", tax.country_code: "GB" }
+
+  - description: US → US Transportation Tax
+    input: { code: "US", code_type: "tax" }
+    expected: { tax.code: "US", tax.category: "government_tax", tax.country_code: "US" }
+
+  - description: Auto-detect tax vs currency (YQ is tax, not currency)
+    input: { code: "YQ" }
+    expected: { tax: "non-null", currency: null }
+
+  - description: Historical currency DEM
+    input: { code: "DEM" }
+    expected: { currency.name: "Deutsche Mark", currency.is_active: false }
+
+  - description: Unknown code returns null
+    input: { code: "ZZZ" }
+    expected: { currency: null, tax: null, match_confidence: 0 }

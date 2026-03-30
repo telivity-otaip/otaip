@@ -1,0 +1,118 @@
+agent:
+  id: "0.2"
+  name: Airline Code & Alliance Mapper
+  version: 0.1.0
+  stage: 0
+  package: packages/agents/reference/src/airline-code-mapper/
+
+description: >
+  Resolves IATA (2-letter) and ICAO (3-letter) airline designator codes to
+  canonical airline records. Maps alliance memberships (Star Alliance, oneworld,
+  SkyTeam), codeshare partner networks, and distinguishes operating vs marketing
+  carriers. Uses static reference data — no live API calls.
+
+input:
+  type: AirlineCodeMapperInput
+  fields:
+    - name: code
+      type: string
+      required: true
+      description: IATA 2-letter (e.g., "UA"), ICAO 3-letter (e.g., "UAL"), or airline name
+    - name: code_type
+      type: "'iata' | 'icao' | 'name' | 'auto'"
+      required: false
+      default: auto
+      description: Hint for resolution. Auto-detected if omitted.
+    - name: include_codeshares
+      type: boolean
+      required: false
+      default: false
+      description: If true, include known codeshare partners in output.
+    - name: include_defunct
+      type: boolean
+      required: false
+      default: false
+      description: If true, include airlines that have ceased operations.
+
+output:
+  type: AirlineCodeMapperOutput
+  fields:
+    - name: airline
+      type: ResolvedAirline | null
+      description: Canonical airline record, null if not found
+    - name: codeshare_partners
+      type: "CodesharePartner[] | null"
+      description: Known codeshare partners (when include_codeshares=true)
+    - name: match_confidence
+      type: number
+      description: "1.0 = exact code match, 0.5-0.9 = fuzzy name, 0 = not found"
+
+types:
+  ResolvedAirline:
+    iata_code: string | null
+    icao_code: string | null
+    name: string
+    callsign: string | null
+    country_code: string
+    country_name: string
+    alliance: "'star_alliance' | 'oneworld' | 'skyteam' | null"
+    alliance_status: "'full_member' | 'affiliate' | 'connect_partner' | null"
+    is_operating: boolean          # false = marketing carrier only / virtual airline
+    hub_airports: string[]         # IATA codes of primary hubs
+    website: string | null
+    founded_year: number | null
+    status: "'active' | 'defunct' | 'suspended' | 'merged'"
+    merged_into: string | null     # IATA code of successor airline if merged
+    defunct_date: string | null    # ISO date
+
+  CodesharePartner:
+    iata_code: string
+    name: string
+    alliance: string | null
+    relationship: "'codeshare' | 'joint_venture' | 'franchise' | 'wet_lease'"
+
+reference_data:
+  airlines:
+    source: Static JSON dataset (airlines.json)
+    fields: All ResolvedAirline fields
+    note: >
+      Curated dataset of ~200 major airlines. Community-maintained.
+      [NEEDS DOMAIN INPUT] Full airline database with codeshare mappings
+      requires industry sources (OAG, Cirium, or IATA AIDM).
+
+  alliance_members:
+    source: Static JSON (alliance-members.json)
+    note: >
+      Star Alliance (26 members), oneworld (14), SkyTeam (19).
+      Updated manually when membership changes.
+
+confidence_scoring:
+  exact_iata: 1.0
+  exact_icao: 1.0
+  fuzzy_name: 0.5-0.9
+  not_found: 0
+
+test_cases:
+  - description: Resolve IATA code UA → United Airlines
+    input: { code: "UA", code_type: "iata" }
+    expected: { airline.iata_code: "UA", airline.name: "United Airlines", airline.alliance: "star_alliance", match_confidence: 1.0 }
+
+  - description: Resolve ICAO code BAW → British Airways
+    input: { code: "BAW", code_type: "icao" }
+    expected: { airline.iata_code: "BA", airline.icao_code: "BAW", airline.alliance: "oneworld", match_confidence: 1.0 }
+
+  - description: Fuzzy name match "delta" → Delta Air Lines
+    input: { code: "delta", code_type: "name" }
+    expected: { airline.iata_code: "DL", airline.alliance: "skyteam", match_confidence: ">= 0.5" }
+
+  - description: Codeshare partners for UA
+    input: { code: "UA", include_codeshares: true }
+    expected: { codeshare_partners: "non-null array" }
+
+  - description: Defunct airline with include_defunct=true
+    input: { code: "PA", include_defunct: true }
+    expected: { airline.name: "Pan American World Airways", airline.status: "defunct" }
+
+  - description: Defunct airline without flag returns null
+    input: { code: "PA", include_defunct: false }
+    expected: { airline: null, match_confidence: 0 }

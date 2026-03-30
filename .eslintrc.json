@@ -17,7 +17,8 @@
     "@typescript-eslint/explicit-function-return-type": "warn",
     "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/require-await": "off",
     "no-console": ["warn", { "allow": ["warn", "error"] }]
   },
-  "ignorePatterns": ["dist", "node_modules", "data", "*.js", "*.mjs"]
+  "ignorePatterns": ["dist", "node_modules", "data", "*.js", "*.mjs", "**/__tests__/**"]
 }

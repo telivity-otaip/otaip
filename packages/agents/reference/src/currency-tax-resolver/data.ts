@@ -1,0 +1,150 @@
+/**
+ * Static reference data for Currency & Tax Code Resolver.
+ *
+ * Inline datasets for ISO 4217 currencies and IATA tax codes.
+ * Agent 0.6 — all data from the spec (agents/specs/0-6-currency-tax-code-resolver.yaml).
+ */
+
+import type { CurrencyRecord, TaxCodeRecord } from './types.js';
+
+// ---------------------------------------------------------------------------
+// ISO 4217 Currencies
+// ---------------------------------------------------------------------------
+
+export const CURRENCIES: CurrencyRecord[] = [
+  { code: 'USD', numeric_code: '840', name: 'US Dollar', symbol: '$', minor_units: 2, countries: ['US', 'AS', 'GU', 'MH', 'FM', 'MP', 'PW', 'PR', 'VI', 'EC', 'SV', 'PA', 'TL'], is_active: true },
+  { code: 'EUR', numeric_code: '978', name: 'Euro', symbol: '€', minor_units: 2, countries: ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'FI', 'PT', 'IE', 'GR', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'MT', 'CY', 'HR'], is_active: true },
+  { code: 'GBP', numeric_code: '826', name: 'Pound Sterling', symbol: '£', minor_units: 2, countries: ['GB', 'GG', 'IM', 'JE'], is_active: true },
+  { code: 'JPY', numeric_code: '392', name: 'Japanese Yen', symbol: '¥', minor_units: 0, countries: ['JP'], is_active: true },
+  { code: 'CHF', numeric_code: '756', name: 'Swiss Franc', symbol: 'CHF', minor_units: 2, countries: ['CH', 'LI'], is_active: true },
+  { code: 'CAD', numeric_code: '124', name: 'Canadian Dollar', symbol: 'C$', minor_units: 2, countries: ['CA'], is_active: true },
+  { code: 'AUD', numeric_code: '036', name: 'Australian Dollar', symbol: 'A$', minor_units: 2, countries: ['AU', 'CX', 'CC', 'NR', 'TV'], is_active: true },
+  { code: 'NZD', numeric_code: '554', name: 'New Zealand Dollar', symbol: 'NZ$', minor_units: 2, countries: ['NZ', 'CK', 'NU', 'PN', 'TK'], is_active: true },
+  { code: 'CNY', numeric_code: '156', name: 'Chinese Yuan', symbol: '¥', minor_units: 2, countries: ['CN'], is_active: true },
+  { code: 'KRW', numeric_code: '410', name: 'South Korean Won', symbol: '₩', minor_units: 0, countries: ['KR'], is_active: true },
+  { code: 'SGD', numeric_code: '702', name: 'Singapore Dollar', symbol: 'S$', minor_units: 2, countries: ['SG'], is_active: true },
+  { code: 'HKD', numeric_code: '344', name: 'Hong Kong Dollar', symbol: 'HK$', minor_units: 2, countries: ['HK'], is_active: true },
+  { code: 'THB', numeric_code: '764', name: 'Thai Baht', symbol: '฿', minor_units: 2, countries: ['TH'], is_active: true },
+  { code: 'INR', numeric_code: '356', name: 'Indian Rupee', symbol: '₹', minor_units: 2, countries: ['IN'], is_active: true },
+  { code: 'BRL', numeric_code: '986', name: 'Brazilian Real', symbol: 'R$', minor_units: 2, countries: ['BR'], is_active: true },
+  { code: 'MXN', numeric_code: '484', name: 'Mexican Peso', symbol: 'MX$', minor_units: 2, countries: ['MX'], is_active: true },
+  { code: 'ZAR', numeric_code: '710', name: 'South African Rand', symbol: 'R', minor_units: 2, countries: ['ZA'], is_active: true },
+  { code: 'AED', numeric_code: '784', name: 'UAE Dirham', symbol: 'د.إ', minor_units: 2, countries: ['AE'], is_active: true },
+  { code: 'SAR', numeric_code: '682', name: 'Saudi Riyal', symbol: '﷼', minor_units: 2, countries: ['SA'], is_active: true },
+  { code: 'TRY', numeric_code: '949', name: 'Turkish Lira', symbol: '₺', minor_units: 2, countries: ['TR'], is_active: true },
+  { code: 'SEK', numeric_code: '752', name: 'Swedish Krona', symbol: 'kr', minor_units: 2, countries: ['SE'], is_active: true },
+  { code: 'NOK', numeric_code: '578', name: 'Norwegian Krone', symbol: 'kr', minor_units: 2, countries: ['NO'], is_active: true },
+  { code: 'DKK', numeric_code: '208', name: 'Danish Krone', symbol: 'kr', minor_units: 2, countries: ['DK', 'FO', 'GL'], is_active: true },
+  { code: 'PLN', numeric_code: '985', name: 'Polish Zloty', symbol: 'zł', minor_units: 2, countries: ['PL'], is_active: true },
+  { code: 'CZK', numeric_code: '203', name: 'Czech Koruna', symbol: 'Kč', minor_units: 2, countries: ['CZ'], is_active: true },
+  { code: 'HUF', numeric_code: '348', name: 'Hungarian Forint', symbol: 'Ft', minor_units: 2, countries: ['HU'], is_active: true },
+  { code: 'ILS', numeric_code: '376', name: 'Israeli New Shekel', symbol: '₪', minor_units: 2, countries: ['IL'], is_active: true },
+  { code: 'RUB', numeric_code: '643', name: 'Russian Ruble', symbol: '₽', minor_units: 2, countries: ['RU'], is_active: true },
+  { code: 'PHP', numeric_code: '608', name: 'Philippine Peso', symbol: '₱', minor_units: 2, countries: ['PH'], is_active: true },
+  { code: 'MYR', numeric_code: '458', name: 'Malaysian Ringgit', symbol: 'RM', minor_units: 2, countries: ['MY'], is_active: true },
+  { code: 'IDR', numeric_code: '360', name: 'Indonesian Rupiah', symbol: 'Rp', minor_units: 2, countries: ['ID'], is_active: true },
+  { code: 'VND', numeric_code: '704', name: 'Vietnamese Dong', symbol: '₫', minor_units: 0, countries: ['VN'], is_active: true },
+  { code: 'EGP', numeric_code: '818', name: 'Egyptian Pound', symbol: 'E£', minor_units: 2, countries: ['EG'], is_active: true },
+  { code: 'QAR', numeric_code: '634', name: 'Qatari Riyal', symbol: 'QR', minor_units: 2, countries: ['QA'], is_active: true },
+  { code: 'KWD', numeric_code: '414', name: 'Kuwaiti Dinar', symbol: 'د.ك', minor_units: 3, countries: ['KW'], is_active: true },
+  { code: 'BHD', numeric_code: '048', name: 'Bahraini Dinar', symbol: 'BD', minor_units: 3, countries: ['BH'], is_active: true },
+  { code: 'OMR', numeric_code: '512', name: 'Omani Rial', symbol: 'OMR', minor_units: 3, countries: ['OM'], is_active: true },
+  { code: 'JOD', numeric_code: '400', name: 'Jordanian Dinar', symbol: 'JD', minor_units: 3, countries: ['JO'], is_active: true },
+  { code: 'ARS', numeric_code: '032', name: 'Argentine Peso', symbol: '$', minor_units: 2, countries: ['AR'], is_active: true },
+  { code: 'CLP', numeric_code: '152', name: 'Chilean Peso', symbol: '$', minor_units: 0, countries: ['CL'], is_active: true },
+  // Historical currencies
+  { code: 'DEM', numeric_code: '276', name: 'Deutsche Mark', symbol: 'DM', minor_units: 2, countries: ['DE'], is_active: false },
+  { code: 'FRF', numeric_code: '250', name: 'French Franc', symbol: 'F', minor_units: 2, countries: ['FR'], is_active: false },
+  { code: 'ITL', numeric_code: '380', name: 'Italian Lira', symbol: '₤', minor_units: 0, countries: ['IT'], is_active: false },
+  { code: 'ESP', numeric_code: '724', name: 'Spanish Peseta', symbol: '₧', minor_units: 0, countries: ['ES'], is_active: false },
+  { code: 'NLG', numeric_code: '528', name: 'Dutch Guilder', symbol: 'ƒ', minor_units: 2, countries: ['NL'], is_active: false },
+  { code: 'ATS', numeric_code: '040', name: 'Austrian Schilling', symbol: 'öS', minor_units: 2, countries: ['AT'], is_active: false },
+];
+
+// ---------------------------------------------------------------------------
+// IATA Tax Codes
+// TODO: [NEEDS DOMAIN INPUT] Complete IATA tax code database requires
+// IATA TTBS subscription. Initial dataset covers ~80 most common codes.
+// ---------------------------------------------------------------------------
+
+export const TAX_CODES: TaxCodeRecord[] = [
+  // Carrier surcharges
+  { code: 'YQ', name: 'Carrier Surcharge', description: 'Fuel/insurance surcharge imposed by the operating carrier', category: 'carrier_surcharge', country_code: null, country_name: null, applies_to: null, is_percentage: false, note: 'Most common surcharge. Amount varies by carrier and route.' },
+  { code: 'YR', name: 'Carrier Service Charge', description: 'Service fee imposed by the carrier for ticketing/distribution', category: 'carrier_surcharge', country_code: null, country_name: null, applies_to: null, is_percentage: false, note: 'Often applied for GDS bookings or specific fare types.' },
+
+  // United States
+  { code: 'US', name: 'US Transportation Tax', description: 'Federal excise tax on domestic air transportation', category: 'government_tax', country_code: 'US', country_name: 'United States', applies_to: 'departure', is_percentage: true, note: '7.5% of base fare for domestic flights.' },
+  { code: 'US1', name: 'US Flight Segment Tax', description: 'Per-segment tax on domestic flights', category: 'government_tax', country_code: 'US', country_name: 'United States', applies_to: 'departure', is_percentage: false, note: 'Fixed amount per segment, adjusted annually.' },
+  { code: 'US2', name: 'US September 11th Security Fee', description: 'Security fee enacted after September 11, 2001', category: 'security_fee', country_code: 'US', country_name: 'United States', applies_to: 'departure', is_percentage: false, note: '$5.60 per one-way trip (as of 2024).' },
+  { code: 'AY', name: 'US APHIS Passenger Fee', description: 'Animal and Plant Health Inspection Service user fee', category: 'government_tax', country_code: 'US', country_name: 'United States', applies_to: 'arrival', is_percentage: false, note: 'Applies to international arrivals into the US.' },
+  { code: 'XF', name: 'US Passenger Facility Charge', description: 'Airport-level fee for facility improvements', category: 'airport_fee', country_code: 'US', country_name: 'United States', applies_to: 'departure', is_percentage: false, note: 'Up to $4.50 per enplanement, max $18.00 per round trip.' },
+  { code: 'XA', name: 'US APHIS User Fee', description: 'Customs and agriculture inspection fee', category: 'government_tax', country_code: 'US', country_name: 'United States', applies_to: 'arrival', is_percentage: false, note: null },
+  { code: 'XY', name: 'US Immigration User Fee', description: 'Immigration and Naturalization fee', category: 'immigration', country_code: 'US', country_name: 'United States', applies_to: 'arrival', is_percentage: false, note: null },
+  { code: 'YC', name: 'US Customs User Fee', description: 'Customs processing fee for international arrivals', category: 'customs', country_code: 'US', country_name: 'United States', applies_to: 'arrival', is_percentage: false, note: null },
+  { code: 'ZP', name: 'US Domestic Segment Fee', description: 'Federal segment fee on domestic flights', category: 'government_tax', country_code: 'US', country_name: 'United States', applies_to: 'departure', is_percentage: false, note: 'Per-segment fee, adjusted annually for inflation.' },
+
+  // United Kingdom
+  { code: 'GB', name: 'UK Air Passenger Duty', description: 'Departure tax on flights from UK airports', category: 'government_tax', country_code: 'GB', country_name: 'United Kingdom', applies_to: 'departure', is_percentage: false, note: 'Rates vary by distance band and class of travel.' },
+  { code: 'UB', name: 'UK Passenger Service Charge', description: 'Airport passenger service charge', category: 'airport_fee', country_code: 'GB', country_name: 'United Kingdom', applies_to: 'departure', is_percentage: false, note: null },
+
+  // Germany
+  { code: 'DE', name: 'Germany Aviation Tax', description: 'German air transport tax (Luftverkehrsteuer)', category: 'government_tax', country_code: 'DE', country_name: 'Germany', applies_to: 'departure', is_percentage: false, note: 'Three distance bands based on destination country.' },
+  { code: 'RA', name: 'Germany Security Charge', description: 'Aviation security charge at German airports', category: 'security_fee', country_code: 'DE', country_name: 'Germany', applies_to: 'departure', is_percentage: false, note: null },
+
+  // France
+  { code: 'FR', name: 'France Civil Aviation Tax', description: 'French civil aviation tax (taxe de l\'aviation civile)', category: 'government_tax', country_code: 'FR', country_name: 'France', applies_to: 'departure', is_percentage: false, note: 'Includes solidarity tax component for international development.' },
+  { code: 'IZ', name: 'France Solidarity Tax', description: 'French solidarity tax on airline tickets', category: 'government_tax', country_code: 'FR', country_name: 'France', applies_to: 'departure', is_percentage: false, note: null },
+  { code: 'QX', name: 'France Airport Tax', description: 'French airport passenger service charge', category: 'airport_fee', country_code: 'FR', country_name: 'France', applies_to: 'departure', is_percentage: false, note: null },
+
+  // Italy
+  { code: 'IT', name: 'Italy Passenger Service Charge', description: 'Italian airport municipal tax and service charge', category: 'government_tax', country_code: 'IT', country_name: 'Italy', applies_to: 'departure', is_percentage: false, note: null },
+  { code: 'HB', name: 'Italy Municipal Tax', description: 'Italian municipal airport surcharge', category: 'airport_fee', country_code: 'IT', country_name: 'Italy', applies_to: 'departure', is_percentage: false, note: null },
+
+  // Ireland
+  { code: 'OY', name: 'Ireland Travel Tax', description: 'Irish air travel tax', category: 'government_tax', country_code: 'IE', country_name: 'Ireland', applies_to: 'departure', is_percentage: false, note: 'Rate varies based on distance from Dublin.' },
+
+  // Australia
+  { code: 'AU', name: 'Australia Passenger Movement Charge', description: 'Departure tax for passengers leaving Australia', category: 'government_tax', country_code: 'AU', country_name: 'Australia', applies_to: 'departure', is_percentage: false, note: null },
+  { code: 'WY', name: 'Australia Noise Levy', description: 'Sydney Airport noise amelioration levy', category: 'airport_fee', country_code: 'AU', country_name: 'Australia', applies_to: 'departure', is_percentage: false, note: 'Applies only at Sydney (SYD).' },
+
+  // Canada
+  { code: 'SQ', name: 'Canada Air Travellers Security Charge', description: 'Security charge on flights departing Canadian airports', category: 'security_fee', country_code: 'CA', country_name: 'Canada', applies_to: 'departure', is_percentage: false, note: null },
+  { code: 'CA', name: 'Canada Airport Improvement Fee', description: 'Airport improvement fee at Canadian airports', category: 'airport_fee', country_code: 'CA', country_name: 'Canada', applies_to: 'departure', is_percentage: false, note: 'Varies by airport.' },
+
+  // Japan
+  { code: 'SW', name: 'Japan Passenger Service Facility Charge', description: 'Japanese airport passenger service facility charge', category: 'airport_fee', country_code: 'JP', country_name: 'Japan', applies_to: 'departure', is_percentage: false, note: null },
+  { code: 'OI', name: 'Japan International Tourist Tax', description: 'Japanese international tourist tax (sayonara tax)', category: 'government_tax', country_code: 'JP', country_name: 'Japan', applies_to: 'departure', is_percentage: false, note: '¥1,000 per departure.' },
+
+  // South Korea
+  { code: 'BP', name: 'South Korea Passenger Service Charge', description: 'Korean airport passenger service charge', category: 'airport_fee', country_code: 'KR', country_name: 'South Korea', applies_to: 'departure', is_percentage: false, note: null },
+
+  // Singapore
+  { code: 'OP', name: 'Singapore Passenger Service Charge', description: 'Changi Airport passenger service and security fee', category: 'airport_fee', country_code: 'SG', country_name: 'Singapore', applies_to: 'departure', is_percentage: false, note: null },
+
+  // UAE
+  { code: 'ZR', name: 'UAE Airport Service Charge', description: 'Airport service charge at UAE airports', category: 'airport_fee', country_code: 'AE', country_name: 'United Arab Emirates', applies_to: 'departure', is_percentage: false, note: null },
+  { code: 'F6', name: 'UAE Tourism Fee', description: 'Tourism dirham fee', category: 'government_tax', country_code: 'AE', country_name: 'United Arab Emirates', applies_to: 'departure', is_percentage: false, note: null },
+
+  // India
+  { code: 'IN', name: 'India Passenger Service Fee', description: 'Indian airport passenger service fee', category: 'airport_fee', country_code: 'IN', country_name: 'India', applies_to: 'departure', is_percentage: false, note: null },
+  { code: 'WO', name: 'India User Development Fee', description: 'Indian airport user development fee', category: 'airport_fee', country_code: 'IN', country_name: 'India', applies_to: 'departure', is_percentage: false, note: null },
+
+  // Mexico
+  { code: 'MX', name: 'Mexico Tourism Tax', description: 'Mexican tourism tax (DNR)', category: 'government_tax', country_code: 'MX', country_name: 'Mexico', applies_to: 'departure', is_percentage: false, note: null },
+  { code: 'UK', name: 'Mexico Airport Tax', description: 'Mexican airport use tax (TUA)', category: 'airport_fee', country_code: 'MX', country_name: 'Mexico', applies_to: 'departure', is_percentage: false, note: null },
+
+  // Brazil
+  { code: 'BR', name: 'Brazil Airport Boarding Fee', description: 'Brazilian airport boarding tax', category: 'airport_fee', country_code: 'BR', country_name: 'Brazil', applies_to: 'departure', is_percentage: false, note: null },
+
+  // South Africa
+  { code: 'WC', name: 'South Africa Passenger Safety Charge', description: 'Passenger safety charge at South African airports', category: 'security_fee', country_code: 'ZA', country_name: 'South Africa', applies_to: 'departure', is_percentage: false, note: null },
+
+  // Turkey
+  { code: 'TR', name: 'Turkey Passenger Service Charge', description: 'Turkish airport passenger service charge', category: 'airport_fee', country_code: 'TR', country_name: 'Turkey', applies_to: 'departure', is_percentage: false, note: null },
+
+  // Netherlands
+  { code: 'RN', name: 'Netherlands Air Passenger Tax', description: 'Dutch aviation tax (vliegbelasting)', category: 'government_tax', country_code: 'NL', country_name: 'Netherlands', applies_to: 'departure', is_percentage: false, note: 'Per departing passenger, introduced 2021.' },
+
+  // General / multi-country
+  { code: 'XT', name: 'Taxes (Combined)', description: 'Multiple taxes combined into a single line item', category: 'other', country_code: null, country_name: null, applies_to: null, is_percentage: false, note: 'Used when individual tax codes are collapsed into one total. Breakdown available in fare calculation.' },
+];

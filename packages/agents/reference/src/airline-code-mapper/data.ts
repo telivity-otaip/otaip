@@ -1,0 +1,466 @@
+/**
+ * Static reference data for Airline Code & Alliance Mapper.
+ *
+ * All data is inline — no external JSON files to load.
+ * Includes ~40 major airlines, alliance memberships, and codeshare relationships.
+ *
+ * [NEEDS DOMAIN INPUT] Full airline database with codeshare mappings
+ * requires industry sources (OAG, Cirium, or IATA AIDM).
+ */
+
+import Fuse from 'fuse.js';
+import type {
+  AirlineRecord,
+  CodeshareMapping,
+} from './types.js';
+
+/**
+ * Static airline dataset (~40 major airlines).
+ * Community-maintained. For production use, integrate with OAG/Cirium.
+ */
+export const AIRLINES: readonly AirlineRecord[] = [
+  // --- Star Alliance ---
+  {
+    iata_code: 'UA', icao_code: 'UAL', name: 'United Airlines', callsign: 'UNITED',
+    country_code: 'US', country_name: 'United States',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['ORD', 'EWR', 'IAH', 'DEN', 'SFO', 'LAX'],
+    website: 'https://www.united.com', founded_year: 1926,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'LH', icao_code: 'DLH', name: 'Lufthansa', callsign: 'LUFTHANSA',
+    country_code: 'DE', country_name: 'Germany',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['FRA', 'MUC'],
+    website: 'https://www.lufthansa.com', founded_year: 1953,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'AC', icao_code: 'ACA', name: 'Air Canada', callsign: 'AIR CANADA',
+    country_code: 'CA', country_name: 'Canada',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['YYZ', 'YUL', 'YVR'],
+    website: 'https://www.aircanada.com', founded_year: 1937,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'NH', icao_code: 'ANA', name: 'All Nippon Airways', callsign: 'ALL NIPPON',
+    country_code: 'JP', country_name: 'Japan',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['NRT', 'HND'],
+    website: 'https://www.ana.co.jp', founded_year: 1952,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'TK', icao_code: 'THY', name: 'Turkish Airlines', callsign: 'TURKISH',
+    country_code: 'TR', country_name: 'Turkey',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['IST'],
+    website: 'https://www.turkishairlines.com', founded_year: 1933,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'SQ', icao_code: 'SIA', name: 'Singapore Airlines', callsign: 'SINGAPORE',
+    country_code: 'SG', country_name: 'Singapore',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['SIN'],
+    website: 'https://www.singaporeair.com', founded_year: 1947,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'NZ', icao_code: 'ANZ', name: 'Air New Zealand', callsign: 'NEW ZEALAND',
+    country_code: 'NZ', country_name: 'New Zealand',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['AKL'],
+    website: 'https://www.airnewzealand.co.nz', founded_year: 1940,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'ET', icao_code: 'ETH', name: 'Ethiopian Airlines', callsign: 'ETHIOPIAN',
+    country_code: 'ET', country_name: 'Ethiopia',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['ADD'],
+    website: 'https://www.ethiopianairlines.com', founded_year: 1945,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'AV', icao_code: 'AVA', name: 'Avianca', callsign: 'AVIANCA',
+    country_code: 'CO', country_name: 'Colombia',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['BOG'],
+    website: 'https://www.avianca.com', founded_year: 1919,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'LO', icao_code: 'LOT', name: 'LOT Polish Airlines', callsign: 'LOT',
+    country_code: 'PL', country_name: 'Poland',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['WAW'],
+    website: 'https://www.lot.com', founded_year: 1929,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'SK', icao_code: 'SAS', name: 'Scandinavian Airlines', callsign: 'SCANDINAVIAN',
+    country_code: 'SE', country_name: 'Sweden',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['CPH', 'ARN', 'OSL'],
+    website: 'https://www.flysas.com', founded_year: 1946,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'TP', icao_code: 'TAP', name: 'TAP Air Portugal', callsign: 'AIR PORTUGAL',
+    country_code: 'PT', country_name: 'Portugal',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['LIS'],
+    website: 'https://www.flytap.com', founded_year: 1945,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'SN', icao_code: 'BEL', name: 'Brussels Airlines', callsign: 'BEE-LINE',
+    country_code: 'BE', country_name: 'Belgium',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['BRU'],
+    website: 'https://www.brusselsairlines.com', founded_year: 2006,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'MS', icao_code: 'MSR', name: 'EgyptAir', callsign: 'EGYPTAIR',
+    country_code: 'EG', country_name: 'Egypt',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['CAI'],
+    website: 'https://www.egyptair.com', founded_year: 1932,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'SA', icao_code: 'SAA', name: 'South African Airways', callsign: 'SPRINGBOK',
+    country_code: 'ZA', country_name: 'South Africa',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['JNB'],
+    website: 'https://www.flysaa.com', founded_year: 1934,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'OS', icao_code: 'AUA', name: 'Austrian Airlines', callsign: 'AUSTRIAN',
+    country_code: 'AT', country_name: 'Austria',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['VIE'],
+    website: 'https://www.austrian.com', founded_year: 1957,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'LX', icao_code: 'SWR', name: 'Swiss International Air Lines', callsign: 'SWISS',
+    country_code: 'CH', country_name: 'Switzerland',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['ZRH'],
+    website: 'https://www.swiss.com', founded_year: 2002,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'CM', icao_code: 'CMP', name: 'Copa Airlines', callsign: 'COPA',
+    country_code: 'PA', country_name: 'Panama',
+    alliance: 'star_alliance', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['PTY'],
+    website: 'https://www.copaair.com', founded_year: 1947,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  // --- oneworld ---
+  {
+    iata_code: 'AA', icao_code: 'AAL', name: 'American Airlines', callsign: 'AMERICAN',
+    country_code: 'US', country_name: 'United States',
+    alliance: 'oneworld', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['DFW', 'CLT', 'MIA', 'ORD', 'PHL', 'PHX'],
+    website: 'https://www.aa.com', founded_year: 1930,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'BA', icao_code: 'BAW', name: 'British Airways', callsign: 'SPEEDBIRD',
+    country_code: 'GB', country_name: 'United Kingdom',
+    alliance: 'oneworld', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['LHR', 'LGW'],
+    website: 'https://www.britishairways.com', founded_year: 1974,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'QF', icao_code: 'QFA', name: 'Qantas', callsign: 'QANTAS',
+    country_code: 'AU', country_name: 'Australia',
+    alliance: 'oneworld', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['SYD', 'MEL'],
+    website: 'https://www.qantas.com', founded_year: 1920,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'CX', icao_code: 'CPA', name: 'Cathay Pacific', callsign: 'CATHAY',
+    country_code: 'HK', country_name: 'Hong Kong',
+    alliance: 'oneworld', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['HKG'],
+    website: 'https://www.cathaypacific.com', founded_year: 1946,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'JL', icao_code: 'JAL', name: 'Japan Airlines', callsign: 'JAPAN AIR',
+    country_code: 'JP', country_name: 'Japan',
+    alliance: 'oneworld', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['NRT', 'HND'],
+    website: 'https://www.jal.co.jp', founded_year: 1951,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'IB', icao_code: 'IBE', name: 'Iberia', callsign: 'IBERIA',
+    country_code: 'ES', country_name: 'Spain',
+    alliance: 'oneworld', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['MAD'],
+    website: 'https://www.iberia.com', founded_year: 1927,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'AY', icao_code: 'FIN', name: 'Finnair', callsign: 'FINNAIR',
+    country_code: 'FI', country_name: 'Finland',
+    alliance: 'oneworld', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['HEL'],
+    website: 'https://www.finnair.com', founded_year: 1923,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'FI', icao_code: 'ICE', name: 'Icelandair', callsign: 'ICEAIR',
+    country_code: 'IS', country_name: 'Iceland',
+    alliance: 'oneworld', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['KEF'],
+    website: 'https://www.icelandair.com', founded_year: 1937,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'QR', icao_code: 'QTR', name: 'Qatar Airways', callsign: 'QATARI',
+    country_code: 'QA', country_name: 'Qatar',
+    alliance: 'oneworld', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['DOH'],
+    website: 'https://www.qatarairways.com', founded_year: 1993,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'AS', icao_code: 'ASA', name: 'Alaska Airlines', callsign: 'ALASKA',
+    country_code: 'US', country_name: 'United States',
+    alliance: 'oneworld', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['SEA'],
+    website: 'https://www.alaskaair.com', founded_year: 1932,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  // --- SkyTeam ---
+  {
+    iata_code: 'DL', icao_code: 'DAL', name: 'Delta Air Lines', callsign: 'DELTA',
+    country_code: 'US', country_name: 'United States',
+    alliance: 'skyteam', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['ATL', 'MSP', 'DTW', 'SLC', 'JFK', 'LAX', 'BOS'],
+    website: 'https://www.delta.com', founded_year: 1929,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'AF', icao_code: 'AFR', name: 'Air France', callsign: 'AIRFRANS',
+    country_code: 'FR', country_name: 'France',
+    alliance: 'skyteam', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['CDG'],
+    website: 'https://www.airfrance.com', founded_year: 1933,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'KE', icao_code: 'KAL', name: 'Korean Air', callsign: 'KOREAN AIR',
+    country_code: 'KR', country_name: 'South Korea',
+    alliance: 'skyteam', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['ICN'],
+    website: 'https://www.koreanair.com', founded_year: 1969,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'AZ', icao_code: 'ITY', name: 'ITA Airways', callsign: 'ITA',
+    country_code: 'IT', country_name: 'Italy',
+    alliance: 'skyteam', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['FCO'],
+    website: 'https://www.ita-airways.com', founded_year: 2021,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'SU', icao_code: 'AFL', name: 'Aeroflot', callsign: 'AEROFLOT',
+    country_code: 'RU', country_name: 'Russia',
+    alliance: 'skyteam', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['SVO'],
+    website: 'https://www.aeroflot.ru', founded_year: 1923,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'GA', icao_code: 'GIA', name: 'Garuda Indonesia', callsign: 'INDONESIA',
+    country_code: 'ID', country_name: 'Indonesia',
+    alliance: 'skyteam', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['CGK'],
+    website: 'https://www.garuda-indonesia.com', founded_year: 1949,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'KL', icao_code: 'KLM', name: 'KLM Royal Dutch Airlines', callsign: 'KLM',
+    country_code: 'NL', country_name: 'Netherlands',
+    alliance: 'skyteam', alliance_status: 'full_member',
+    is_operating: true, hub_airports: ['AMS'],
+    website: 'https://www.klm.com', founded_year: 1919,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  // --- Non-alliance carriers ---
+  {
+    iata_code: 'EK', icao_code: 'UAE', name: 'Emirates', callsign: 'EMIRATES',
+    country_code: 'AE', country_name: 'United Arab Emirates',
+    alliance: null, alliance_status: null,
+    is_operating: true, hub_airports: ['DXB'],
+    website: 'https://www.emirates.com', founded_year: 1985,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'WN', icao_code: 'SWA', name: 'Southwest Airlines', callsign: 'SOUTHWEST',
+    country_code: 'US', country_name: 'United States',
+    alliance: null, alliance_status: null,
+    is_operating: true, hub_airports: ['DAL', 'MDW', 'BWI', 'DEN', 'LAS'],
+    website: 'https://www.southwest.com', founded_year: 1967,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'B6', icao_code: 'JBU', name: 'JetBlue Airways', callsign: 'JETBLUE',
+    country_code: 'US', country_name: 'United States',
+    alliance: null, alliance_status: null,
+    is_operating: true, hub_airports: ['JFK', 'BOS', 'FLL'],
+    website: 'https://www.jetblue.com', founded_year: 1998,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'NK', icao_code: 'NKS', name: 'Spirit Airlines', callsign: 'SPIRIT WINGS',
+    country_code: 'US', country_name: 'United States',
+    alliance: null, alliance_status: null,
+    is_operating: true, hub_airports: ['FLL', 'DTW'],
+    website: 'https://www.spirit.com', founded_year: 1992,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  {
+    iata_code: 'F9', icao_code: 'FFT', name: 'Frontier Airlines', callsign: 'FRONTIER FLIGHT',
+    country_code: 'US', country_name: 'United States',
+    alliance: null, alliance_status: null,
+    is_operating: true, hub_airports: ['DEN'],
+    website: 'https://www.flyfrontier.com', founded_year: 1994,
+    status: 'active', merged_into: null, defunct_date: null,
+  },
+  // --- Defunct airlines ---
+  {
+    iata_code: 'PA', icao_code: 'PAA', name: 'Pan American World Airways', callsign: 'CLIPPER',
+    country_code: 'US', country_name: 'United States',
+    alliance: null, alliance_status: null,
+    is_operating: false, hub_airports: ['JFK', 'MIA'],
+    website: null, founded_year: 1927,
+    status: 'defunct', merged_into: 'DL', defunct_date: '1991-12-04',
+  },
+  {
+    iata_code: 'TW', icao_code: 'TWA', name: 'Trans World Airlines', callsign: 'TWA',
+    country_code: 'US', country_name: 'United States',
+    alliance: null, alliance_status: null,
+    is_operating: false, hub_airports: ['STL', 'JFK'],
+    website: null, founded_year: 1930,
+    status: 'merged', merged_into: 'AA', defunct_date: '2001-12-01',
+  },
+] as const satisfies readonly AirlineRecord[];
+
+/**
+ * Codeshare relationship mappings.
+ * Representative set — not exhaustive.
+ *
+ * [NEEDS DOMAIN INPUT] Complete codeshare/interline data requires
+ * OAG Schedules, Cirium, or IATA AIDM feeds.
+ */
+export const CODESHARE_MAPPINGS: readonly CodeshareMapping[] = [
+  {
+    airline_iata: 'UA',
+    partners: [
+      { iata_code: 'LH', relationship: 'joint_venture' },
+      { iata_code: 'AC', relationship: 'joint_venture' },
+      { iata_code: 'NH', relationship: 'joint_venture' },
+      { iata_code: 'SQ', relationship: 'codeshare' },
+      { iata_code: 'LX', relationship: 'codeshare' },
+      { iata_code: 'OS', relationship: 'codeshare' },
+    ],
+  },
+  {
+    airline_iata: 'AA',
+    partners: [
+      { iata_code: 'BA', relationship: 'joint_venture' },
+      { iata_code: 'IB', relationship: 'joint_venture' },
+      { iata_code: 'QF', relationship: 'joint_venture' },
+      { iata_code: 'JL', relationship: 'joint_venture' },
+      { iata_code: 'AY', relationship: 'codeshare' },
+      { iata_code: 'CX', relationship: 'codeshare' },
+    ],
+  },
+  {
+    airline_iata: 'DL',
+    partners: [
+      { iata_code: 'AF', relationship: 'joint_venture' },
+      { iata_code: 'KL', relationship: 'joint_venture' },
+      { iata_code: 'KE', relationship: 'joint_venture' },
+      { iata_code: 'AZ', relationship: 'codeshare' },
+    ],
+  },
+  {
+    airline_iata: 'BA',
+    partners: [
+      { iata_code: 'AA', relationship: 'joint_venture' },
+      { iata_code: 'IB', relationship: 'joint_venture' },
+      { iata_code: 'AY', relationship: 'codeshare' },
+      { iata_code: 'QR', relationship: 'codeshare' },
+    ],
+  },
+] as const satisfies readonly CodeshareMapping[];
+
+/**
+ * Fuse.js fuzzy search instance for airline name matching.
+ */
+let fuseInstance: Fuse<AirlineRecord> | null = null;
+
+export interface FuzzyAirlineResult {
+  airline: AirlineRecord;
+  confidence: number;
+}
+
+/**
+ * Initialize the fuzzy search index. Call once during agent initialization.
+ */
+export function initAirlineFuseIndex(airlines: readonly AirlineRecord[]): void {
+  fuseInstance = new Fuse([...airlines], {
+    keys: [
+      { name: 'name', weight: 0.6 },
+      { name: 'callsign', weight: 0.2 },
+      { name: 'iata_code', weight: 0.1 },
+      { name: 'icao_code', weight: 0.1 },
+    ],
+    threshold: 0.4,
+    distance: 100,
+    includeScore: true,
+    minMatchCharLength: 2,
+  });
+}
+
+/**
+ * Search airlines by name with fuzzy matching.
+ * Returns matches sorted by confidence (highest first).
+ */
+export function fuzzyAirlineSearch(query: string, limit: number = 5): FuzzyAirlineResult[] {
+  if (!fuseInstance) {
+    throw new Error('Fuzzy index not initialized. Call initAirlineFuseIndex() first.');
+  }
+
+  const results = fuseInstance.search(query, { limit });
+
+  return results.map((result) => ({
+    airline: result.item,
+    // Fuse.js score is 0 (perfect) to 1 (no match). Invert to our 0-1 confidence scale.
+    confidence: result.score !== undefined ? Math.round((1 - result.score) * 100) / 100 : 0,
+  }));
+}
+
+/**
+ * Reset the fuzzy index (used in testing).
+ */
+export function resetAirlineFuseIndex(): void {
+  fuseInstance = null;
+}
