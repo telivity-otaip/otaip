@@ -1,0 +1,548 @@
+{
+  "_comment": "Curated ATPCO fare rule snapshot. NOT real tariff data — representative examples for testing.",
+  "_version": "0.1.0",
+  "rules": [
+    {
+      "rule_id": "UA-ECON-STD-001",
+      "carrier": "UA",
+      "fare_basis": "V14NR",
+      "market": { "origin": "JFK", "destination": "LHR" },
+      "tariff": "YPUB",
+      "rule_number": "0001",
+      "effective_date": "2025-01-15",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions. Available to all passengers."
+        },
+        "2": {
+          "name": "Day/Time Application",
+          "text": "Valid for travel on all days of the week."
+        },
+        "3": {
+          "name": "Seasonality",
+          "text": "Valid for travel year-round. No seasonal restrictions."
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "Tickets must be purchased at least 14 days prior to departure.",
+          "structured": { "min_days": 14 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "Minimum stay of 7 days or a Saturday night at destination required.",
+          "structured": { "min_days": 7, "saturday_night_required": true }
+        },
+        "7": {
+          "name": "Maximum Stay",
+          "text": "Maximum stay of 12 months from date of departure.",
+          "structured": { "max_months": 12 }
+        },
+        "10": {
+          "name": "Combinability",
+          "text": "May be combined with other published fares on UA and Star Alliance carriers."
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Non-refundable. Changes permitted for a fee of USD 200.00 per coupon plus any fare difference. No-show fee USD 200.00.",
+          "structured": {
+            "refundable": false,
+            "changeable": true,
+            "change_fee": { "amount": "200.00", "currency": "USD" },
+            "no_show_fee": { "amount": "200.00", "currency": "USD" }
+          }
+        },
+        "18": {
+          "name": "Ticket Endorsements",
+          "text": "NON-REF/CHG FEE APPLIES"
+        }
+      }
+    },
+    {
+      "rule_id": "UA-ECON-FLEX-001",
+      "carrier": "UA",
+      "fare_basis": "Y",
+      "market": { "origin": "JFK", "destination": "LHR" },
+      "tariff": "YPUB",
+      "rule_number": "0002",
+      "effective_date": "2025-01-15",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions. Available to all passengers."
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "No advance purchase requirement.",
+          "structured": { "min_days": 0 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "No minimum stay requirement.",
+          "structured": { "min_days": 0, "saturday_night_required": false }
+        },
+        "7": {
+          "name": "Maximum Stay",
+          "text": "Maximum stay of 12 months from date of departure.",
+          "structured": { "max_months": 12 }
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Fully refundable. Changes permitted at no charge. No change fee applies.",
+          "structured": {
+            "refundable": true,
+            "changeable": true,
+            "change_fee": null,
+            "no_show_fee": null
+          }
+        },
+        "18": {
+          "name": "Ticket Endorsements",
+          "text": "FULLY FLEX"
+        }
+      }
+    },
+    {
+      "rule_id": "BA-BIZ-001",
+      "carrier": "BA",
+      "fare_basis": "J",
+      "market": { "origin": "JFK", "destination": "LHR" },
+      "tariff": "YPUB",
+      "rule_number": "0010",
+      "effective_date": "2025-01-01",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions. Available to all passengers."
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "No advance purchase requirement.",
+          "structured": { "min_days": 0 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "No minimum stay requirement.",
+          "structured": { "min_days": 0, "saturday_night_required": false }
+        },
+        "7": {
+          "name": "Maximum Stay",
+          "text": "Maximum stay of 12 months.",
+          "structured": { "max_months": 12 }
+        },
+        "9": {
+          "name": "Transfers/Routing",
+          "text": "Direct flights and connections via LHR permitted. No interline transfers."
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Fully refundable. Changes permitted without fee. Upgrade to First Class subject to availability.",
+          "structured": {
+            "refundable": true,
+            "changeable": true,
+            "change_fee": null,
+            "no_show_fee": null
+          }
+        },
+        "18": {
+          "name": "Ticket Endorsements",
+          "text": "FULLY FLEX/BIZ"
+        }
+      }
+    },
+    {
+      "rule_id": "AA-ECON-STD-001",
+      "carrier": "AA",
+      "fare_basis": "H7NR",
+      "market": { "origin": "ORD", "destination": "MIA" },
+      "tariff": "YPUB",
+      "rule_number": "0020",
+      "effective_date": "2025-03-01",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions."
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "Tickets must be purchased at least 7 days prior to departure.",
+          "structured": { "min_days": 7 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "No minimum stay requirement.",
+          "structured": { "min_days": 0, "saturday_night_required": false }
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Non-refundable. Changes permitted for USD 75.00 per coupon plus fare difference.",
+          "structured": {
+            "refundable": false,
+            "changeable": true,
+            "change_fee": { "amount": "75.00", "currency": "USD" },
+            "no_show_fee": { "amount": "75.00", "currency": "USD" }
+          }
+        }
+      }
+    },
+    {
+      "rule_id": "DL-ECON-PEAK-001",
+      "carrier": "DL",
+      "fare_basis": "M21NR",
+      "market": { "origin": "JFK", "destination": "LHR" },
+      "tariff": "YPUB",
+      "rule_number": "0030",
+      "effective_date": "2025-06-01",
+      "discontinue_date": "2025-09-15",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions."
+        },
+        "3": {
+          "name": "Seasonality",
+          "text": "Valid only for travel between 01JUN and 15SEP (peak summer season). Blackout dates: 01JUL-07JUL, 23DEC-02JAN.",
+          "structured": {
+            "season": "peak",
+            "valid_from": "2025-06-01",
+            "valid_to": "2025-09-15",
+            "blackout_dates": [
+              { "from": "2025-07-01", "to": "2025-07-07" },
+              { "from": "2025-12-23", "to": "2026-01-02" }
+            ]
+          }
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "Tickets must be purchased at least 21 days prior to departure.",
+          "structured": { "min_days": 21 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "Saturday night stay at destination required.",
+          "structured": { "min_days": 0, "saturday_night_required": true }
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Non-refundable. Changes permitted for USD 300.00 plus fare difference. No-show forfeits ticket value.",
+          "structured": {
+            "refundable": false,
+            "changeable": true,
+            "change_fee": { "amount": "300.00", "currency": "USD" },
+            "no_show_fee": { "amount": "999999.00", "currency": "USD" }
+          }
+        }
+      }
+    },
+    {
+      "rule_id": "SQ-BIZ-001",
+      "carrier": "SQ",
+      "fare_basis": "C",
+      "market": { "origin": "SIN", "destination": "SYD" },
+      "tariff": "YPUB",
+      "rule_number": "0040",
+      "effective_date": "2025-01-01",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions."
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "No advance purchase requirement.",
+          "structured": { "min_days": 0 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "No minimum stay requirement.",
+          "structured": { "min_days": 0, "saturday_night_required": false }
+        },
+        "9": {
+          "name": "Transfers/Routing",
+          "text": "Non-stop flights SIN-SYD only. No connections permitted."
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Fully refundable. Changes permitted without fee.",
+          "structured": {
+            "refundable": true,
+            "changeable": true,
+            "change_fee": null,
+            "no_show_fee": null
+          }
+        }
+      }
+    },
+    {
+      "rule_id": "YY-IND-001",
+      "carrier": "YY",
+      "fare_basis": "Y",
+      "market": { "origin": "JFK", "destination": "LHR" },
+      "tariff": "YPUB",
+      "rule_number": "9999",
+      "effective_date": "2025-01-01",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "Industry fare. Available to airline/travel industry employees and eligible dependents only.",
+          "structured": { "restriction": "industry" }
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "No advance purchase requirement.",
+          "structured": { "min_days": 0 }
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Non-refundable. Subject to space availability. Travel standby only unless confirmed.",
+          "structured": {
+            "refundable": false,
+            "changeable": true,
+            "change_fee": null,
+            "no_show_fee": null
+          }
+        },
+        "18": {
+          "name": "Ticket Endorsements",
+          "text": "ID/AD FARE/SUBJECT TO LOAD"
+        }
+      }
+    },
+    {
+      "rule_id": "UA-ECON-DEEP-001",
+      "carrier": "UA",
+      "fare_basis": "N7NR",
+      "market": { "origin": "SFO", "destination": "LAX" },
+      "tariff": "YPUB",
+      "rule_number": "0050",
+      "effective_date": "2025-01-01",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions."
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "Tickets must be purchased at least 7 days prior to departure.",
+          "structured": { "min_days": 7 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "No minimum stay requirement.",
+          "structured": { "min_days": 0, "saturday_night_required": false }
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Non-refundable. No changes permitted. Ticket has no residual value if unused.",
+          "structured": {
+            "refundable": false,
+            "changeable": false,
+            "change_fee": null,
+            "no_show_fee": { "amount": "999999.00", "currency": "USD" }
+          }
+        },
+        "18": {
+          "name": "Ticket Endorsements",
+          "text": "NON-REF/NON-CHG"
+        }
+      }
+    },
+    {
+      "rule_id": "BA-ECON-AP-001",
+      "carrier": "BA",
+      "fare_basis": "Q21NR",
+      "market": { "origin": "JFK", "destination": "LHR" },
+      "tariff": "YPUB",
+      "rule_number": "0060",
+      "effective_date": "2025-01-01",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions."
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "Tickets must be purchased at least 21 days prior to departure.",
+          "structured": { "min_days": 21 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "Minimum stay of 7 days or Saturday night stay required.",
+          "structured": { "min_days": 7, "saturday_night_required": true }
+        },
+        "7": {
+          "name": "Maximum Stay",
+          "text": "Maximum stay of 3 months.",
+          "structured": { "max_months": 3 }
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Non-refundable. Changes permitted for GBP 100.00 plus fare difference.",
+          "structured": {
+            "refundable": false,
+            "changeable": true,
+            "change_fee": { "amount": "100.00", "currency": "GBP" },
+            "no_show_fee": { "amount": "100.00", "currency": "GBP" }
+          }
+        }
+      }
+    },
+    {
+      "rule_id": "DL-BIZ-001",
+      "carrier": "DL",
+      "fare_basis": "D",
+      "market": { "origin": "JFK", "destination": "LHR" },
+      "tariff": "YPUB",
+      "rule_number": "0070",
+      "effective_date": "2025-01-01",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions."
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "No advance purchase requirement.",
+          "structured": { "min_days": 0 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "No minimum stay required.",
+          "structured": { "min_days": 0, "saturday_night_required": false }
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Refundable with fee of USD 350.00. Changes permitted for USD 150.00.",
+          "structured": {
+            "refundable": true,
+            "changeable": true,
+            "change_fee": { "amount": "150.00", "currency": "USD" },
+            "no_show_fee": { "amount": "150.00", "currency": "USD" }
+          }
+        }
+      }
+    },
+    {
+      "rule_id": "SQ-ECON-001",
+      "carrier": "SQ",
+      "fare_basis": "V14NR",
+      "market": { "origin": "SIN", "destination": "SYD" },
+      "tariff": "YPUB",
+      "rule_number": "0041",
+      "effective_date": "2025-01-01",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions."
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "Tickets must be purchased at least 14 days prior to departure.",
+          "structured": { "min_days": 14 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "Minimum stay 3 days.",
+          "structured": { "min_days": 3, "saturday_night_required": false }
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Non-refundable. Changes permitted for SGD 100.00 plus fare difference.",
+          "structured": {
+            "refundable": false,
+            "changeable": true,
+            "change_fee": { "amount": "100.00", "currency": "SGD" },
+            "no_show_fee": { "amount": "100.00", "currency": "SGD" }
+          }
+        }
+      }
+    },
+    {
+      "rule_id": "AA-FIRST-001",
+      "carrier": "AA",
+      "fare_basis": "F",
+      "market": { "origin": "JFK", "destination": "LHR" },
+      "tariff": "YPUB",
+      "rule_number": "0080",
+      "effective_date": "2025-01-01",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions."
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "No advance purchase requirement.",
+          "structured": { "min_days": 0 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "No minimum stay.",
+          "structured": { "min_days": 0, "saturday_night_required": false }
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Fully refundable. Changes without fee.",
+          "structured": {
+            "refundable": true,
+            "changeable": true,
+            "change_fee": null,
+            "no_show_fee": null
+          }
+        }
+      }
+    },
+    {
+      "rule_id": "UA-ECON-STD-002",
+      "carrier": "UA",
+      "fare_basis": "B14NR",
+      "market": { "origin": "SFO", "destination": "NRT" },
+      "tariff": "YPUB",
+      "rule_number": "0090",
+      "effective_date": "2025-01-01",
+      "discontinue_date": "2025-12-31",
+      "categories": {
+        "1": {
+          "name": "Eligibility",
+          "text": "No restrictions."
+        },
+        "5": {
+          "name": "Advance Purchase",
+          "text": "Tickets must be purchased at least 14 days prior to departure.",
+          "structured": { "min_days": 14 }
+        },
+        "6": {
+          "name": "Minimum Stay",
+          "text": "Minimum stay 7 days or Saturday night.",
+          "structured": { "min_days": 7, "saturday_night_required": true }
+        },
+        "7": {
+          "name": "Maximum Stay",
+          "text": "Maximum stay 6 months.",
+          "structured": { "max_months": 6 }
+        },
+        "16": {
+          "name": "Penalties",
+          "text": "Non-refundable. Changes for USD 250.00 plus fare difference.",
+          "structured": {
+            "refundable": false,
+            "changeable": true,
+            "change_fee": { "amount": "250.00", "currency": "USD" },
+            "no_show_fee": { "amount": "250.00", "currency": "USD" }
+          }
+        }
+      }
+    }
+  ]
+}
