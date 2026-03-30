@@ -19,7 +19,10 @@ Stage 1 — Search Agents (GDS/NDC distribution adapters)
   1.2  Schedule Lookup
   1.3  Connection Builder
   1.4  Fare Shopping
-Stage 2 — Decision Agents (pricing, routing, rebooking)     [planned]
+Stage 2 — Pricing Agents (fare rules, construction, taxes)
+  2.1  Fare Rule Agent
+  2.2  Fare Construction
+  2.3  Tax Calculation
 Stage 3 — Orchestration (multi-agent workflows)             [planned]
 ```
 
@@ -83,6 +86,7 @@ console.log(result.confidence);
 | `@otaip/core` | Agent interface, types, distribution adapter contracts |
 | `@otaip/agents-reference` | Stage 0 reference data agents |
 | `@otaip/agents-search` | Stage 1 search agents (availability, schedule, fares) |
+| `@otaip/agents-pricing` | Stage 2 pricing agents (fare rules, construction, taxes) |
 | `@otaip/adapter-duffel` | Duffel NDC distribution adapter (mock for testing) |
 
 ## Stage 0 Agents
@@ -104,6 +108,16 @@ console.log(result.confidence);
 | 1.3 | Connection Builder | MCT validation (4-level hierarchy), quality scoring, interline checks |
 | 1.4 | Fare Shopping | Fare basis decoding, fare family grouping, passenger type pricing |
 
+## Stage 2 Agents
+
+| ID | Agent | What it does |
+|----|-------|-------------|
+| 2.1 | Fare Rule Agent | ATPCO fare rule parsing (categories 1-20), penalties, advance purchase, min/max stay, seasonality |
+| 2.2 | Fare Construction | NUC × ROE pipeline, mileage validation (TPM/MPM), HIP/BHC/CTM checks, IATA rounding |
+| 2.3 | Tax Calculation | Per-segment taxes (~30 countries, ~50 codes), exemption engine, currency conversion |
+
+All Stage 2 financial math uses `decimal.js` — no floating point for currency.
+
 ## Project Structure
 
 ```
@@ -123,6 +137,11 @@ packages/
         schedule-lookup/          Agent 1.2
         connection-builder/       Agent 1.3
         fare-shopping/            Agent 1.4
+    pricing/                @otaip/agents-pricing — Stage 2 agents
+      src/
+        fare-rule-agent/          Agent 2.1
+        fare-construction/        Agent 2.2
+        tax-calculation/          Agent 2.3
   adapters/
     duffel/                 @otaip/adapter-duffel — Duffel NDC adapter
 agents/
