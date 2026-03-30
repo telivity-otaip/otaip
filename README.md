@@ -23,7 +23,12 @@ Stage 2 — Pricing Agents (fare rules, construction, taxes)
   2.1  Fare Rule Agent
   2.2  Fare Construction
   2.3  Tax Calculation
-Stage 3 — Orchestration (multi-agent workflows)             [planned]
+Stage 3 — Booking Agents (GDS/NDC booking, PNR management)
+  3.1  GDS/NDC Router
+  3.2  PNR Builder
+  3.3  PNR Validation
+  3.4  Queue Management
+  3.5  API Abstraction
 ```
 
 All agents implement the `Agent<TInput, TOutput>` interface from `@otaip/core`:
@@ -87,6 +92,7 @@ console.log(result.confidence);
 | `@otaip/agents-reference` | Stage 0 reference data agents |
 | `@otaip/agents-search` | Stage 1 search agents (availability, schedule, fares) |
 | `@otaip/agents-pricing` | Stage 2 pricing agents (fare rules, construction, taxes) |
+| `@otaip/agents-booking` | Stage 3 booking agents (GDS/NDC routing, PNR, queues) |
 | `@otaip/adapter-duffel` | Duffel NDC distribution adapter (mock for testing) |
 
 ## Stage 0 Agents
@@ -118,6 +124,16 @@ console.log(result.confidence);
 
 All Stage 2 financial math uses `decimal.js` — no floating point for currency.
 
+## Stage 3 Agents
+
+| ID | Agent | What it does |
+|----|-------|-------------|
+| 3.1 | GDS/NDC Router | Airline-to-channel mapping (30 carriers), NDC version selection, codeshare routing |
+| 3.2 | PNR Builder | GDS command generation for Amadeus/Sabre/Travelport — names, segments, contacts, SSR/OSI |
+| 3.3 | PNR Validation | 13 pre-ticketing checks (segment status, TTL, APIS, duplicates, married segments, etc.) |
+| 3.4 | Queue Management | GDS queue monitoring, priority assignment (TTL/schedule/waitlist), action routing |
+| 3.5 | API Abstraction | Circuit breaker, retry with backoff, rate limiting, error normalization across providers |
+
 ## Project Structure
 
 ```
@@ -142,6 +158,13 @@ packages/
         fare-rule-agent/          Agent 2.1
         fare-construction/        Agent 2.2
         tax-calculation/          Agent 2.3
+    booking/                @otaip/agents-booking — Stage 3 agents
+      src/
+        gds-ndc-router/           Agent 3.1
+        pnr-builder/              Agent 3.2
+        pnr-validation/           Agent 3.3
+        queue-management/         Agent 3.4
+        api-abstraction/          Agent 3.5
   adapters/
     duffel/                 @otaip/adapter-duffel — Duffel NDC adapter
 agents/
