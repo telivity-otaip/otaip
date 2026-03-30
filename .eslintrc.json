@@ -4,7 +4,7 @@
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "module",
-    "project": ["./packages/core/tsconfig.json", "./packages/agents/reference/tsconfig.json"]
+    "project": ["./packages/core/tsconfig.json", "./packages/agents/reference/tsconfig.json", "./packages/agents/search/tsconfig.json", "./packages/adapters/duffel/tsconfig.json"]
   },
   "plugins": ["@typescript-eslint"],
   "extends": [

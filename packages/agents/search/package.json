@@ -1,0 +1,28 @@
+{
+  "name": "@otaip/agents-search",
+  "version": "0.1.0",
+  "description": "OTAIP Stage 1 agents — search, schedule, connection, and fare shopping",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@otaip/core": "workspace:*",
+    "@otaip/agents-reference": "workspace:*",
+    "zod": "^3.23.0"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
