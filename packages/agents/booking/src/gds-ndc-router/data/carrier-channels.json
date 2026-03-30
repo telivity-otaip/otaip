@@ -1,0 +1,41 @@
+{
+  "_comment": "Airline-to-distribution-channel mapping for top 30 airlines. channel_priority is ordered preference.",
+  "_version": "0.1.0",
+  "carriers": {
+    "AA": { "name": "American Airlines", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "21.3", "gds_preference": "SABRE", "ndc_capable": true, "ndc_provider_id": "NDC_AA" },
+    "BA": { "name": "British Airways", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "21.3", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": "NDC_BA" },
+    "LH": { "name": "Lufthansa", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "21.3", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": "NDC_LH" },
+    "SQ": { "name": "Singapore Airlines", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "18.1", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": "NDC_SQ" },
+    "UA": { "name": "United Airlines", "channels": ["GDS", "NDC"], "channel_priority": ["GDS", "NDC"], "ndc_version": "17.2", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "DL": { "name": "Delta Air Lines", "channels": ["GDS"], "channel_priority": ["GDS"], "ndc_version": null, "gds_preference": "AMADEUS", "ndc_capable": false, "ndc_provider_id": null },
+    "AF": { "name": "Air France", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "21.3", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "KL": { "name": "KLM", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "21.3", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "EK": { "name": "Emirates", "channels": ["GDS"], "channel_priority": ["GDS"], "ndc_version": null, "gds_preference": "AMADEUS", "ndc_capable": false, "ndc_provider_id": null },
+    "QF": { "name": "Qantas", "channels": ["GDS", "NDC"], "channel_priority": ["GDS", "NDC"], "ndc_version": "17.2", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "CX": { "name": "Cathay Pacific", "channels": ["GDS"], "channel_priority": ["GDS"], "ndc_version": null, "gds_preference": "AMADEUS", "ndc_capable": false, "ndc_provider_id": null },
+    "QR": { "name": "Qatar Airways", "channels": ["GDS"], "channel_priority": ["GDS"], "ndc_version": null, "gds_preference": "AMADEUS", "ndc_capable": false, "ndc_provider_id": null },
+    "EY": { "name": "Etihad Airways", "channels": ["GDS"], "channel_priority": ["GDS"], "ndc_version": null, "gds_preference": "AMADEUS", "ndc_capable": false, "ndc_provider_id": null },
+    "TK": { "name": "Turkish Airlines", "channels": ["GDS"], "channel_priority": ["GDS"], "ndc_version": null, "gds_preference": "AMADEUS", "ndc_capable": false, "ndc_provider_id": null },
+    "NH": { "name": "ANA", "channels": ["GDS"], "channel_priority": ["GDS"], "ndc_version": null, "gds_preference": "AMADEUS", "ndc_capable": false, "ndc_provider_id": null },
+    "JL": { "name": "Japan Airlines", "channels": ["GDS"], "channel_priority": ["GDS"], "ndc_version": null, "gds_preference": "AMADEUS", "ndc_capable": false, "ndc_provider_id": null },
+    "AC": { "name": "Air Canada", "channels": ["GDS", "NDC"], "channel_priority": ["GDS", "NDC"], "ndc_version": "18.1", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "LX": { "name": "SWISS", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "21.3", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "OS": { "name": "Austrian", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "21.3", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "SN": { "name": "Brussels Airlines", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "21.3", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "IB": { "name": "Iberia", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "21.3", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "FI": { "name": "Icelandair", "channels": ["GDS"], "channel_priority": ["GDS"], "ndc_version": null, "gds_preference": "AMADEUS", "ndc_capable": false, "ndc_provider_id": null },
+    "AY": { "name": "Finnair", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "18.1", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "SK": { "name": "SAS", "channels": ["NDC", "GDS"], "channel_priority": ["NDC", "GDS"], "ndc_version": "18.1", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "WN": { "name": "Southwest Airlines", "channels": ["DIRECT"], "channel_priority": ["DIRECT"], "ndc_version": null, "gds_preference": null, "ndc_capable": false, "ndc_provider_id": null },
+    "FR": { "name": "Ryanair", "channels": ["DIRECT"], "channel_priority": ["DIRECT"], "ndc_version": null, "gds_preference": null, "ndc_capable": false, "ndc_provider_id": null },
+    "U2": { "name": "easyJet", "channels": ["DIRECT"], "channel_priority": ["DIRECT"], "ndc_version": null, "gds_preference": null, "ndc_capable": false, "ndc_provider_id": null },
+    "VS": { "name": "Virgin Atlantic", "channels": ["GDS", "NDC"], "channel_priority": ["GDS", "NDC"], "ndc_version": "17.2", "gds_preference": "AMADEUS", "ndc_capable": true, "ndc_provider_id": null },
+    "AS": { "name": "Alaska Airlines", "channels": ["GDS"], "channel_priority": ["GDS"], "ndc_version": null, "gds_preference": "SABRE", "ndc_capable": false, "ndc_provider_id": null },
+    "B6": { "name": "JetBlue", "channels": ["GDS"], "channel_priority": ["GDS"], "ndc_version": null, "gds_preference": "SABRE", "ndc_capable": false, "ndc_provider_id": null }
+  },
+  "codeshare_rules": {
+    "_comment": "When a codeshare flight is found, route by operating carrier's channel config",
+    "default_strategy": "operating_carrier",
+    "fallback_strategy": "marketing_carrier"
+  }
+}

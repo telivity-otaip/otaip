@@ -20,3 +20,19 @@ export type {
   ErrorCategory,
   HttpMethod,
 } from './api-abstraction/index.js';
+
+export { GdsNdcRouter } from './gds-ndc-router/index.js';
+export type {
+  GdsNdcRouterInput,
+  GdsNdcRouterOutput,
+  RoutingSegment,
+  ChannelRouting,
+  CarrierChannelConfig,
+  DistributionChannel,
+  NdcVersion,
+  GdsSystem,
+  GdsPnrFormat,
+  GdsPnrSegment,
+  NdcOrderFormat,
+  NdcOfferItem,
+} from './gds-ndc-router/index.js';
