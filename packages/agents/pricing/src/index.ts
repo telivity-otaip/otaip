@@ -32,3 +32,16 @@ export type {
   CtmCheck,
   AuditStep,
 } from './fare-construction/index.js';
+
+export { TaxCalculation } from './tax-calculation/index.js';
+export type {
+  TaxCalculationInput,
+  TaxCalculationOutput,
+  TaxSegment,
+  AppliedTax,
+  TaxBreakdown,
+  CountryTaxSummary,
+  CabinClass,
+  PassengerType,
+  ExemptionType,
+} from './tax-calculation/index.js';

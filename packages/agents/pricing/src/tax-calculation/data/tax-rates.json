@@ -1,0 +1,113 @@
+{
+  "_comment": "Curated tax-rate snapshot — ~30 countries, ~50 tax codes. Per IATA tax code registry.",
+  "_version": "0.1.0",
+  "taxes": [
+    { "code": "US", "name": "US Transportation Tax", "country": "US", "type": "percentage", "rate": "7.5", "applies_to": "base_fare", "domestic_only": true, "interlineable": true },
+    { "code": "ZP", "name": "US Flight Segment Tax", "country": "US", "type": "fixed", "amount": "4.80", "currency": "USD", "per": "segment", "domestic_only": true, "interlineable": true },
+    { "code": "AY", "name": "US September 11 Security Fee", "country": "US", "type": "fixed", "amount": "5.60", "currency": "USD", "per": "enplanement", "domestic_only": false, "interlineable": true },
+    { "code": "XF", "name": "US Passenger Facility Charge", "country": "US", "type": "fixed", "amount": "4.50", "currency": "USD", "per": "segment", "domestic_only": false, "interlineable": false },
+    { "code": "YC", "name": "US Customs User Fee", "country": "US", "type": "fixed", "amount": "6.85", "currency": "USD", "per": "arrival", "domestic_only": false, "interlineable": true },
+    { "code": "YQ", "name": "Carrier-imposed Fuel Surcharge", "country": "INTL", "type": "fixed", "amount": "0.00", "currency": "USD", "per": "segment", "domestic_only": false, "interlineable": false, "carrier_specific": true },
+    { "code": "YR", "name": "Carrier-imposed Insurance Surcharge", "country": "INTL", "type": "fixed", "amount": "0.00", "currency": "USD", "per": "segment", "domestic_only": false, "interlineable": false, "carrier_specific": true },
+    { "code": "GB", "name": "UK Air Passenger Duty", "country": "GB", "type": "tiered", "tiers": [
+      { "class": "economy", "band": "short", "amount": "13.00", "currency": "GBP" },
+      { "class": "economy", "band": "long", "amount": "87.00", "currency": "GBP" },
+      { "class": "premium", "band": "short", "amount": "26.00", "currency": "GBP" },
+      { "class": "premium", "band": "long", "amount": "191.00", "currency": "GBP" }
+    ], "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "UB", "name": "UK Passenger Service Charge", "country": "GB", "type": "fixed", "amount": "24.50", "currency": "GBP", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "FR", "name": "France Civil Aviation Tax", "country": "FR", "type": "tiered", "tiers": [
+      { "destination": "EU", "amount": "4.63", "currency": "EUR" },
+      { "destination": "non-EU", "amount": "8.32", "currency": "EUR" }
+    ], "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "QX", "name": "France Solidarity Tax", "country": "FR", "type": "tiered", "tiers": [
+      { "class": "economy", "amount": "1.13", "currency": "EUR" },
+      { "class": "premium", "amount": "11.27", "currency": "EUR" }
+    ], "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "DE", "name": "Germany Aviation Tax", "country": "DE", "type": "tiered", "tiers": [
+      { "band": "short", "amount": "12.73", "currency": "EUR" },
+      { "band": "medium", "amount": "32.18", "currency": "EUR" },
+      { "band": "long", "amount": "58.06", "currency": "EUR" }
+    ], "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "RA", "name": "Germany Security Charge", "country": "DE", "type": "fixed", "amount": "10.30", "currency": "EUR", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "IT", "name": "Italy Municipal Tax", "country": "IT", "type": "fixed", "amount": "6.50", "currency": "EUR", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "HB", "name": "Italy Security Charge", "country": "IT", "type": "fixed", "amount": "2.80", "currency": "EUR", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "MX", "name": "Mexico Tourism Tax", "country": "MX", "type": "fixed", "amount": "542.00", "currency": "MXN", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "UK", "name": "Mexico Airport Use Tax", "country": "MX", "type": "fixed", "amount": "1150.00", "currency": "MXN", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "JP", "name": "Japan Passenger Service Charge", "country": "JP", "type": "fixed", "amount": "2610", "currency": "JPY", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "SW", "name": "Japan Security Fee", "country": "JP", "type": "fixed", "amount": "100", "currency": "JPY", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "SG", "name": "Singapore Passenger Service Charge", "country": "SG", "type": "fixed", "amount": "47.30", "currency": "SGD", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "OO", "name": "Singapore Aviation Levy", "country": "SG", "type": "fixed", "amount": "6.00", "currency": "SGD", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "AU", "name": "Australia Passenger Movement Charge", "country": "AU", "type": "fixed", "amount": "65.00", "currency": "AUD", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "WY", "name": "Australia Security Charge", "country": "AU", "type": "fixed", "amount": "12.00", "currency": "AUD", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "CA", "name": "Canada Air Travellers Security Charge", "country": "CA", "type": "tiered", "tiers": [
+      { "destination": "domestic", "amount": "7.94", "currency": "CAD" },
+      { "destination": "transborder", "amount": "12.10", "currency": "CAD" },
+      { "destination": "international", "amount": "25.91", "currency": "CAD" }
+    ], "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "SQ", "name": "Canada Airport Improvement Fee", "country": "CA", "type": "fixed", "amount": "25.00", "currency": "CAD", "per": "departure", "domestic_only": false, "interlineable": false },
+    { "code": "BR", "name": "Brazil Boarding Tax", "country": "BR", "type": "fixed", "amount": "54.37", "currency": "BRL", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "AE", "name": "UAE Tourism Dirham", "country": "AE", "type": "fixed", "amount": "35.00", "currency": "AED", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "ZR", "name": "UAE Security Tax", "country": "AE", "type": "fixed", "amount": "15.00", "currency": "AED", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "IN", "name": "India Passenger Service Fee", "country": "IN", "type": "fixed", "amount": "236.00", "currency": "INR", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "WO", "name": "India User Development Fee", "country": "IN", "type": "fixed", "amount": "546.00", "currency": "INR", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "KR", "name": "South Korea Departure Tax", "country": "KR", "type": "fixed", "amount": "28000", "currency": "KRW", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "BP", "name": "South Korea Security Charge", "country": "KR", "type": "fixed", "amount": "1500", "currency": "KRW", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "TH", "name": "Thailand Passenger Service Charge", "country": "TH", "type": "fixed", "amount": "700.00", "currency": "THB", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "TS", "name": "Thailand Security Charge", "country": "TH", "type": "fixed", "amount": "35.00", "currency": "THB", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "NZ", "name": "New Zealand Border Clearance Levy", "country": "NZ", "type": "fixed", "amount": "18.43", "currency": "NZD", "per": "arrival", "domestic_only": false, "interlineable": true },
+    { "code": "ZA", "name": "South Africa Passenger Safety Charge", "country": "ZA", "type": "fixed", "amount": "224.00", "currency": "ZAR", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "SA", "name": "Saudi Arabia Departure Tax", "country": "SA", "type": "fixed", "amount": "87.00", "currency": "SAR", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "CN", "name": "China Airport Construction Fee", "country": "CN", "type": "fixed", "amount": "50.00", "currency": "CNY", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "MY", "name": "Malaysia Departure Levy", "country": "MY", "type": "tiered", "tiers": [
+      { "destination": "ASEAN", "amount": "8.00", "currency": "MYR" },
+      { "destination": "non-ASEAN", "amount": "20.00", "currency": "MYR" }
+    ], "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "CH", "name": "Switzerland Passenger Tax", "country": "CH", "type": "fixed", "amount": "14.50", "currency": "CHF", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "HK", "name": "Hong Kong Passenger Security Charge", "country": "HK", "type": "fixed", "amount": "45.00", "currency": "HKD", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "ES", "name": "Spain Airport Tax", "country": "ES", "type": "fixed", "amount": "11.70", "currency": "EUR", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "NL", "name": "Netherlands Air Passenger Tax", "country": "NL", "type": "fixed", "amount": "26.43", "currency": "EUR", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "IE", "name": "Ireland Travel Tax", "country": "IE", "type": "fixed", "amount": "3.00", "currency": "EUR", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "PT", "name": "Portugal Passenger Service Charge", "country": "PT", "type": "fixed", "amount": "18.80", "currency": "EUR", "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "SE", "name": "Sweden Aviation Tax", "country": "SE", "type": "tiered", "tiers": [
+      { "band": "short", "amount": "67.00", "currency": "SEK" },
+      { "band": "long", "amount": "275.00", "currency": "SEK" }
+    ], "per": "departure", "domestic_only": false, "interlineable": true },
+    { "code": "NO", "name": "Norway Air Passenger Tax", "country": "NO", "type": "tiered", "tiers": [
+      { "destination": "EU", "amount": "80.00", "currency": "NOK" },
+      { "destination": "non-EU", "amount": "214.00", "currency": "NOK" }
+    ], "per": "departure", "domestic_only": false, "interlineable": true }
+  ],
+  "exemptions": [
+    { "type": "infant", "description": "Infants under 2 not occupying a seat", "exempt_from": "all" },
+    { "type": "transit", "description": "Transit/transfer passengers (connection < 24h, same ticket)", "exempt_from": "departure_taxes" },
+    { "type": "crew", "description": "Airline crew on duty travel", "exempt_from": "all" },
+    { "type": "diplomatic", "description": "Diplomatic passport holders", "exempt_from": "government_taxes" },
+    { "type": "involuntary", "description": "Involuntary reroute or denied boarding", "exempt_from": "carrier_surcharges" }
+  ],
+  "currency_conversions": {
+    "_comment": "Simplified conversion rates to USD for tax aggregation. Use ROE data for fare conversion.",
+    "USD": "1.000000",
+    "EUR": "1.086950",
+    "GBP": "1.260000",
+    "JPY": "0.006690",
+    "CHF": "1.131500",
+    "CAD": "0.740000",
+    "AUD": "0.654000",
+    "SGD": "0.752000",
+    "HKD": "0.127800",
+    "KRW": "0.000752",
+    "THB": "0.028900",
+    "INR": "0.011900",
+    "MYR": "0.214200",
+    "NZD": "0.610000",
+    "ZAR": "0.055200",
+    "AED": "0.272300",
+    "SAR": "0.266700",
+    "BRL": "0.196100",
+    "MXN": "0.058800",
+    "CNY": "0.137500",
+    "SEK": "0.097100",
+    "NOK": "0.094000"
+  }
+}
