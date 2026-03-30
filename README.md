@@ -14,7 +14,11 @@ Stage 0 — Reference Data Agents (offline, static datasets)
   0.4  Class of Service Mapper
   0.6  Currency & Tax Code Resolver
 
-Stage 1 — Live Data Agents (GDS/NDC API integration)       [planned]
+Stage 1 — Search Agents (GDS/NDC distribution adapters)
+  1.1  Availability Search
+  1.2  Schedule Lookup
+  1.3  Connection Builder
+  1.4  Fare Shopping
 Stage 2 — Decision Agents (pricing, routing, rebooking)     [planned]
 Stage 3 — Orchestration (multi-agent workflows)             [planned]
 ```
@@ -76,8 +80,10 @@ console.log(result.confidence);
 
 | Package | Description |
 |---------|-------------|
-| `@otaip/core` | Agent interface, types, and error classes |
+| `@otaip/core` | Agent interface, types, distribution adapter contracts |
 | `@otaip/agents-reference` | Stage 0 reference data agents |
+| `@otaip/agents-search` | Stage 1 search agents (availability, schedule, fares) |
+| `@otaip/adapter-duffel` | Duffel NDC distribution adapter (mock for testing) |
 
 ## Stage 0 Agents
 
@@ -89,11 +95,20 @@ console.log(result.confidence);
 | 0.4 | Class of Service Mapper | Booking class → cabin, fare family, upgrade eligibility |
 | 0.6 | Currency & Tax Code Resolver | ISO currencies, IATA tax codes (YQ, GB, US, etc.) |
 
+## Stage 1 Agents
+
+| ID | Agent | What it does |
+|----|-------|-------------|
+| 1.1 | Availability Search | Multi-adapter parallel search, deduplication, filtering, sorting |
+| 1.2 | Schedule Lookup | SSIM operating days, codeshare detection, connection discovery |
+| 1.3 | Connection Builder | MCT validation (4-level hierarchy), quality scoring, interline checks |
+| 1.4 | Fare Shopping | Fare basis decoding, fare family grouping, passenger type pricing |
+
 ## Project Structure
 
 ```
 packages/
-  core/                     @otaip/core — interfaces and errors
+  core/                     @otaip/core — interfaces, types, errors
   agents/
     reference/              @otaip/agents-reference — Stage 0 agents
       src/
@@ -102,6 +117,14 @@ packages/
         fare-basis-decoder/       Agent 0.3
         class-of-service-mapper/  Agent 0.4
         currency-tax-resolver/    Agent 0.6
+    search/                 @otaip/agents-search — Stage 1 agents
+      src/
+        availability-search/      Agent 1.1
+        schedule-lookup/          Agent 1.2
+        connection-builder/       Agent 1.3
+        fare-shopping/            Agent 1.4
+  adapters/
+    duffel/                 @otaip/adapter-duffel — Duffel NDC adapter
 agents/
   specs/                    Agent specification YAMLs
 scripts/
