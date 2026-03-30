@@ -36,3 +36,18 @@ export type {
   NdcOrderFormat,
   NdcOfferItem,
 } from './gds-ndc-router/index.js';
+
+export { PnrBuilder } from './pnr-builder/index.js';
+export type {
+  PnrBuilderInput,
+  PnrBuilderOutput,
+  PnrCommand,
+  PnrPassenger,
+  PnrSegment,
+  PnrContact,
+  PnrTicketing,
+  SsrElement,
+  OsiElement,
+  PnrGdsSystem,
+  SsrCode,
+} from './pnr-builder/index.js';
