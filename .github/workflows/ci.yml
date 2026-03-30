@@ -35,14 +35,3 @@ jobs:
 
       - name: Test
         run: pnpm run test
-ches: [main]
-  pull_request:
-      branches: [main]
-
-      jobs:
-        ci:
-            runs-on: ubuntu-latest
-                steps:
-                      - uses: actions/checkout@v4
-
-                            - uses: pnpm/
