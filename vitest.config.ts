@@ -8,6 +8,7 @@ export default defineConfig({
       '@otaip/agents-reference': resolve(__dirname, 'packages/agents/reference/src/index.ts'),
       '@otaip/agents-search': resolve(__dirname, 'packages/agents/search/src/index.ts'),
       '@otaip/agents-pricing': resolve(__dirname, 'packages/agents/pricing/src/index.ts'),
+      '@otaip/agents-booking': resolve(__dirname, 'packages/agents/booking/src/index.ts'),
       '@otaip/adapter-duffel': resolve(__dirname, 'packages/adapters/duffel/src/index.ts'),
     },
   },

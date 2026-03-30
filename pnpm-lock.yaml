@@ -42,6 +42,24 @@ importers:
         specifier: workspace:*
         version: link:../../core
 
+  packages/agents/booking:
+    dependencies:
+      '@otaip/agents-pricing':
+        specifier: workspace:*
+        version: link:../pricing
+      '@otaip/agents-reference':
+        specifier: workspace:*
+        version: link:../reference
+      '@otaip/agents-search':
+        specifier: workspace:*
+        version: link:../search
+      '@otaip/core':
+        specifier: workspace:*
+        version: link:../../core
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+
   packages/agents/pricing:
     dependencies:
       '@otaip/agents-reference':

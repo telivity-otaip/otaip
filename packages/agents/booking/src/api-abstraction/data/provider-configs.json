@@ -1,0 +1,126 @@
+{
+  "_comment": "Provider configuration registry. No real API credentials — mock endpoints only.",
+  "_version": "0.1.0",
+  "providers": {
+    "AMADEUS": {
+      "id": "AMADEUS",
+      "name": "Amadeus GDS",
+      "type": "GDS",
+      "base_url": "https://mock.amadeus.example.com/api/v1",
+      "timeout_ms": 5000,
+      "max_retries": 3,
+      "rate_limit_max": 100,
+      "rate_limit_window_ms": 60000,
+      "circuit_breaker_threshold": 5,
+      "circuit_breaker_reset_ms": 30000
+    },
+    "SABRE": {
+      "id": "SABRE",
+      "name": "Sabre GDS",
+      "type": "GDS",
+      "base_url": "https://mock.sabre.example.com/api/v1",
+      "timeout_ms": 5000,
+      "max_retries": 3,
+      "rate_limit_max": 100,
+      "rate_limit_window_ms": 60000,
+      "circuit_breaker_threshold": 5,
+      "circuit_breaker_reset_ms": 30000
+    },
+    "TRAVELPORT": {
+      "id": "TRAVELPORT",
+      "name": "Travelport GDS",
+      "type": "GDS",
+      "base_url": "https://mock.travelport.example.com/api/v1",
+      "timeout_ms": 5000,
+      "max_retries": 3,
+      "rate_limit_max": 80,
+      "rate_limit_window_ms": 60000,
+      "circuit_breaker_threshold": 5,
+      "circuit_breaker_reset_ms": 30000
+    },
+    "NDC_BA": {
+      "id": "NDC_BA",
+      "name": "British Airways NDC",
+      "type": "NDC",
+      "base_url": "https://mock.ndc.ba.example.com/api",
+      "timeout_ms": 10000,
+      "max_retries": 2,
+      "rate_limit_max": 50,
+      "rate_limit_window_ms": 60000,
+      "circuit_breaker_threshold": 3,
+      "circuit_breaker_reset_ms": 60000
+    },
+    "NDC_LH": {
+      "id": "NDC_LH",
+      "name": "Lufthansa NDC",
+      "type": "NDC",
+      "base_url": "https://mock.ndc.lh.example.com/api",
+      "timeout_ms": 10000,
+      "max_retries": 2,
+      "rate_limit_max": 50,
+      "rate_limit_window_ms": 60000,
+      "circuit_breaker_threshold": 3,
+      "circuit_breaker_reset_ms": 60000
+    },
+    "NDC_AA": {
+      "id": "NDC_AA",
+      "name": "American Airlines NDC",
+      "type": "NDC",
+      "base_url": "https://mock.ndc.aa.example.com/api",
+      "timeout_ms": 10000,
+      "max_retries": 2,
+      "rate_limit_max": 60,
+      "rate_limit_window_ms": 60000,
+      "circuit_breaker_threshold": 3,
+      "circuit_breaker_reset_ms": 60000
+    },
+    "NDC_SQ": {
+      "id": "NDC_SQ",
+      "name": "Singapore Airlines NDC",
+      "type": "NDC",
+      "base_url": "https://mock.ndc.sq.example.com/api",
+      "timeout_ms": 10000,
+      "max_retries": 2,
+      "rate_limit_max": 40,
+      "rate_limit_window_ms": 60000,
+      "circuit_breaker_threshold": 3,
+      "circuit_breaker_reset_ms": 60000
+    },
+    "PAYMENT_STRIPE": {
+      "id": "PAYMENT_STRIPE",
+      "name": "Stripe Payment Gateway",
+      "type": "PAYMENT",
+      "base_url": "https://mock.stripe.example.com/v1",
+      "timeout_ms": 30000,
+      "max_retries": 2,
+      "rate_limit_max": 200,
+      "rate_limit_window_ms": 60000,
+      "circuit_breaker_threshold": 3,
+      "circuit_breaker_reset_ms": 60000
+    },
+    "PAYMENT_ADYEN": {
+      "id": "PAYMENT_ADYEN",
+      "name": "Adyen Payment Gateway",
+      "type": "PAYMENT",
+      "base_url": "https://mock.adyen.example.com/v1",
+      "timeout_ms": 30000,
+      "max_retries": 2,
+      "rate_limit_max": 200,
+      "rate_limit_window_ms": 60000,
+      "circuit_breaker_threshold": 3,
+      "circuit_breaker_reset_ms": 60000
+    },
+    "ANCILLARY_SEATMAP": {
+      "id": "ANCILLARY_SEATMAP",
+      "name": "Seat Map Provider",
+      "type": "ANCILLARY",
+      "base_url": "https://mock.seatmap.example.com/api",
+      "timeout_ms": 10000,
+      "max_retries": 1,
+      "rate_limit_max": 100,
+      "rate_limit_window_ms": 60000,
+      "circuit_breaker_threshold": 5,
+      "circuit_breaker_reset_ms": 30000
+    }
+  }
+}
