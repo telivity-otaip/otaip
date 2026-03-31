@@ -1,0 +1,145 @@
+# OTAIP Agent Specification
+# Agent 1.9 — Offer Evaluator Agent
+# Stage 1: Search & Shop
+# Status: DRAFT
+# UDL Classification: Class C (rule-probabilistic)
+
+agent:
+  id: "1.9"
+  name: "Offer Evaluator Agent"
+  stage: "Stage 1: Search & Shop"
+  tier: 1
+  version: "0.1.0"
+
+purpose:
+  one_liner: "Receives raw search offers and traveler intent context, applies deterministic multi-dimensional scoring, and returns a structured selection decision — so the LLM only translates the decision, never makes it."
+  problem_solved: |
+    In a naive LLM booking agent, the LLM both interprets intent AND decides which offer
+    to book. This creates two problems:
+    1. LIABILITY: No audit trail proves what the actual decision criteria were. If a
+       traveler disputes a booking, the LLM's natural language explanation is not a
+       reliable record.
+    2. COST AND CONSISTENCY: Offer selection is deterministic given structured constraints.
+       Running it through LLM inference is expensive and non-deterministic.
+
+    The Offer Evaluator moves selection logic to a deterministic agent. The LLM's role
+    becomes: (1) parse traveler intent into structured constraints, (2) translate the
+    evaluator's structured decision into natural language. The decision never touches
+    LLM inference.
+
+architecture_principle: |
+  LLM = intent parser + language translator
+  OTAIP Offer Evaluator = decision engine
+
+  The LLM receives a structured_explanation object from this agent.
+  It translates that object into natural language for the traveler.
+  It does NOT originate reasoning or alter the selection.
+
+inputs:
+  - name: "offers"
+    type: "array"
+    required: true
+    description: "Raw offer array from Agent 1.1 or 1.4. Each offer must include offer_id, price, itinerary with segments and arrival times, connection count, and expiry."
+
+  - name: "constraints"
+    type: "object"
+    required: true
+    description: "Structured traveler constraints parsed from natural language by the upstream LLM. Defines hard limits (latest arrival, price ceiling, max connections, blacklisted carriers) and soft preferences (prefer direct, preferred carriers)."
+
+  - name: "traveler_profile"
+    type: "string"
+    required: false
+    description: "Context-adaptive weight preset. Auto-detected from constraints if omitted."
+    valid_values: ["BUSINESS_TIME_CRITICAL", "BUSINESS_PRICE_CONSTRAINED", "LEISURE", "CORPORATE_POLICY", "CUSTOM"]
+
+  - name: "chain_confidence"
+    type: "object"
+    required: false
+    description: "Confidence chain from upstream agents (1.1, 1.4). Used to compute effective_confidence via load-bearing floor."
+
+outputs:
+  - name: "selected"
+    type: "object"
+    description: |
+      The winning offer with full scoring context. Includes: offer_id, composite_score, rank,
+      confidence (score + basis), effective_confidence, auto_executable flag, price,
+      arrival details, score_breakdown per dimension, and structured_explanation.
+
+      structured_explanation is a self-contained object the LLM translates to natural
+      language. It includes: selected_summary, buffer_statement, alternatives_summary,
+      top_rejected offers with reasons, and confidence_note. The LLM must not alter
+      the decision or invent reasoning beyond this object.
+
+  - name: "rejected"
+    type: "array"
+    description: "All rejected offers with machine-readable rejection type (HARD/SOFT) and reason codes. Full array retained for audit."
+
+  - name: "evaluation_summary"
+    type: "object"
+    description: |
+      Full run metadata: total offers evaluated, eligible count, hard/soft rejection
+      breakdown, traveler profile used, scoring weights used, confidence, effective
+      confidence, score margin to rank 2, evaluation timestamp, duration in ms, and
+      agent version. This is the liability paper trail.
+
+  - name: "chain_confidence_out"
+    type: "object"
+    description: "Updated chain confidence with this agent appended as load_bearing=true. Pass to downstream agents."
+
+scoring_model:
+  dimensions:
+    - name: "time_buffer"
+      description: "Minutes between offer arrival and the traveler's deadline. Non-linear — reflects real operational risk of tight margins."
+    - name: "price"
+      description: "Relative price against cheapest eligible offer. Softened within a band to prevent over-penalising marginal differences."
+    - name: "connection_quality"
+      description: "Accounts for connection count AND layover duration. Short layovers carry mis-connect risk beyond their score impact."
+    - name: "journey_duration"
+      description: "Total travel time relative to the fastest eligible option."
+  note: "Scoring weights are context-adaptive based on traveler_profile. Implementation is proprietary."
+
+hard_filters:
+  description: "Applied before scoring. Any match eliminates the offer."
+  filter_codes:
+    - MISSING_CRITICAL_DATA
+    - OFFER_EXPIRED
+    - ARRIVES_TOO_LATE
+    - EXCEEDS_MAX_CONNECTIONS
+    - EXCEEDS_PRICE_CEILING
+    - BLACKLISTED_CARRIER
+    - TIGHT_CONNECTION_BELOW_MINIMUM
+
+confidence_model:
+  description: |
+    Confidence reflects how decisive the selection is — based on the score margin
+    between rank 1 and rank 2. Applied per UDL Class C.
+  levels: [HIGH_DATA, MEDIUM_DATA, LOW_DATA, NO_DATA]
+  effective_confidence: "min(own_score, load_bearing_chain_floor) — cannot be more confident than the weakest load-bearing upstream agent"
+  auto_execute_threshold: 0.65
+
+dependencies:
+  agents: ["1.1 Availability Search Agent", "1.4 Fare Shopping Agent"]
+  downstream: ["3.1 GDS/NDC Router", "9.1 Orchestrator", "9.4 Audit & Compliance"]
+
+liability_note: |
+  The LLM receives this agent's output as structured data and translates it.
+  The LLM does NOT make the selection decision.
+  All selection reasoning is deterministic, logged, and auditable.
+  If a traveler disputes a booking, the evaluation_summary is the authoritative
+  record — not the LLM's natural language explanation, which is presentation only.
+
+domain_rules:
+  - rule: "Buffer time is from scheduled arrival to appointment. Airport transit (train, taxi) must be factored into latest_arrival by the upstream LLM — this agent enforces the deadline provided, it does not add transit time."
+    source: "Domain input"
+  - rule: "Connection count is stops, not segments. LHR→FRA→AMS = 1 connection."
+    source: "Domain input"
+  - rule: "Offer expiry is set by the airline/NDC source. Expired offers are excluded. A new search is required to refresh."
+    source: "Domain input"
+  - rule: "Price comparison must always use the same currency. Cross-currency comparison without normalization is invalid."
+    source: "Domain input"
+
+performance_targets:
+  correct_selection_rate: ">= 0.92 (validated against human travel expert review)"
+  auto_execute_precision: ">= 0.95"
+  latency_target_ms: 50
+  note: "Stateless in-process computation — no API calls."
