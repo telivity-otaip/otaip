@@ -77,7 +77,7 @@ const tools: Anthropic.Tool[] = [
         passenger_born_on: { type: 'string', description: 'YYYY-MM-DD' },
         passenger_gender: { type: 'string', enum: ['m', 'f'] },
         passenger_email: { type: 'string' },
-        passenger_phone: { type: 'string', description: 'E.164 e.g. +447700900000' },
+        passenger_phone: { type: 'string', description: 'E.164 e.g. +442080160509' },
       },
       required: [
         'offer_id',
@@ -202,7 +202,7 @@ async function run() {
     `account for getting out of the airport. ` +
     `I prefer direct flights but will take one stop if the timing works significantly better. ` +
     `Economy is fine, I'm not trying to spend more than necessary but time is more important than saving 30 pounds. ` +
-    `Passenger: Mr. John Test, born 1985-06-15, john.test@example.com, +447700900000, male. ` +
+    `Passenger: Mr. John Test, born 1985-06-15, john.test@example.com, +442080160509, male. ` +
     `Make the booking and tell me what you chose and why.`;
 
   const systemPrompt =

@@ -5,7 +5,8 @@
   "description": "LLM booking demo - Claude tool_use as intelligent booking agent via OTAIP -> Duffel sandbox",
   "type": "module",
   "scripts": {
-    "book": "tsx book-flight.ts"
+    "book": "tsx book-flight.ts",
+    "book:direct": "tsx book-flight-direct.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

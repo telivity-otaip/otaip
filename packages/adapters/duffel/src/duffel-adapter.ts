@@ -170,6 +170,7 @@ export interface BookRequest {
   }>;
 }
 
+
 export interface BookResponse {
   booking_reference: string;
   order_id: string;
@@ -256,16 +257,30 @@ export class DuffelAdapter implements DistributionAdapter {
   }
 
   async book(request: BookRequest): Promise<BookResponse> {
+    // Fetch the offer to get Duffel passenger IDs and total for payment
+    const offerResponse = await this.request('GET', `/air/offers/${request.offer_id}?return_available_services=false`);
+    const offer = offerResponse?.data;
+    if (!offer) {
+      throw new Error('Could not fetch offer details for booking');
+    }
+
+    // Map Duffel passenger IDs to the provided passenger details
+    const duffelPassengers: Array<{ id?: string; type?: string }> = offer.passengers ?? [];
+    const passengers = request.passengers.map((pax, i) => ({
+      ...pax,
+      id: duffelPassengers[i]?.id ?? '',
+    }));
+
     const body = {
       data: {
         selected_offers: [request.offer_id],
-        passengers: request.passengers,
+        passengers,
         type: 'instant',
         payments: [
           {
             type: 'balance',
-            currency: 'GBP',
-            amount: '0',
+            currency: offer.total_currency ?? 'GBP',
+            amount: offer.total_amount ?? '0',
           },
         ],
       },
