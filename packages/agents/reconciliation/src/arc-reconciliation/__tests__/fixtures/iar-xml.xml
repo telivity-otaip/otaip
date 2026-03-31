@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iar_report settlement_week="2026-W13">
+  <transaction>
+    <document_number>1251234567890</document_number>
+    <passenger_name>SMITH/JOHN</passenger_name>
+    <origin>LHR</origin>
+    <destination>JFK</destination>
+    <airline_code>BA</airline_code>
+    <issue_date>2026-03-15</issue_date>
+    <base_fare>450.00</base_fare>
+    <tax_amount>120.00</tax_amount>
+    <total_amount>570.00</total_amount>
+    <commission_amount>31.50</commission_amount>
+    <transaction_type>SALE</transaction_type>
+    <adm_issue_date></adm_issue_date>
+    <currency>USD</currency>
+    <settlement_week>2026-W13</settlement_week>
+  </transaction>
+  <transaction>
+    <document_number>1251234567891</document_number>
+    <passenger_name>JONES/MARY</passenger_name>
+    <origin>CDG</origin>
+    <destination>LAX</destination>
+    <airline_code>AF</airline_code>
+    <issue_date>2026-03-16</issue_date>
+    <base_fare>680.00</base_fare>
+    <tax_amount>95.00</tax_amount>
+    <total_amount>775.00</total_amount>
+    <commission_amount>47.60</commission_amount>
+    <transaction_type>SALE</transaction_type>
+    <adm_issue_date></adm_issue_date>
+    <currency>EUR</currency>
+    <settlement_week>2026-W13</settlement_week>
+  </transaction>
+</iar_report>

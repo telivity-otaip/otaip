@@ -93,6 +93,21 @@ importers:
         specifier: ^3.23.0
         version: 3.25.76
 
+  packages/agents/reconciliation:
+    dependencies:
+      '@otaip/agents-reference':
+        specifier: workspace:*
+        version: link:../reference
+      '@otaip/core':
+        specifier: workspace:*
+        version: link:../../core
+      decimal.js:
+        specifier: ^10.4.3
+        version: 10.6.0
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+
   packages/agents/reference:
     dependencies:
       '@otaip/core':
