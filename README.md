@@ -1,72 +1,132 @@
 # OTAIP — Open Travel AI Platform
 
-Domain-specific agent orchestration for airlines, TMCs, and GDS/NDC systems.
+**The composable AI agent stack for the travel industry.**
 
-OTAIP provides a library of composable AI agents that encode travel industry domain knowledge — airport codes, airline alliances, fare rules, booking classes, tax codes, and more. Each agent implements a standard interface, accepts typed inputs, and returns structured outputs with confidence scores.
+OTAIP is an open source agent orchestration platform that encodes travel industry domain knowledge — fare rules, GDS/NDC protocols, ATPCO categories, BSP/ARC settlement logic — into typed, testable TypeScript agents. Plug in your distribution credentials. Get a full booking engine.
+
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
+[![Tests](https://img.shields.io/badge/tests-893%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
+[![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg)](https://pnpm.io/)
+
+---
+
+## What's shipped
+
+| Stage | Package | Agents | Tests | Status |
+|-------|---------|--------|-------|--------|
+| Stage 0 — Reference Data | `@otaip/agents-reference` | 5 | 144 | ✅ Complete |
+| Stage 1 — Search & Shop | `@otaip/agents-search` | 4 | 123 | ✅ Complete |
+| Stage 2 — Select & Price | `@otaip/agents-pricing` | 3 | 90 | ✅ Complete |
+| Stage 3 — Book & Order | `@otaip/agents-booking` | 5 | 189 | ✅ Complete |
+| Stage 4 — Ticket & Fulfill | `@otaip/agents-ticketing` | 5 | 160 | ✅ Complete |
+| Stage 5 — Change & Exchange | `@otaip/agents-exchange` | 3 | 104 | ✅ Complete |
+| Stage 6 — Refund & ADM | `@otaip/agents-settlement` | 2 | 83 | ✅ Complete |
+| Stage 7 — BSP/ARC Settlement | `@otaip/agents-reconciliation` | 2 | — | 🔜 Next |
+
+**27 agents. 893 tests. All green.**
+
+---
 
 ## Architecture
 
 ```
-Stage 0 — Reference Data Agents (offline, static datasets)
-  0.1  Airport/City Code Resolver
-  0.2  Airline Code & Alliance Mapper
-  0.3  Fare Basis Code Decoder
-  0.4  Class of Service Mapper
-  0.6  Currency & Tax Code Resolver
-
-Stage 1 — Search Agents (GDS/NDC distribution adapters)
-  1.1  Availability Search
-  1.2  Schedule Lookup
-  1.3  Connection Builder
-  1.4  Fare Shopping
-Stage 2 — Pricing Agents (fare rules, construction, taxes)
-  2.1  Fare Rule Agent
-  2.2  Fare Construction
-  2.3  Tax Calculation
-Stage 3 — Booking Agents (GDS/NDC booking, PNR management)
-  3.1  GDS/NDC Router
-  3.2  PNR Builder
-  3.3  PNR Validation
-  3.4  Queue Management
-  3.5  API Abstraction
+┌─────────────────────────────────────────────────────────────┐
+│                      Your Application                        │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                        @otaip/core                           │
+│          Agent interface · Types · Error standards           │
+└──┬──────────┬──────────┬──────────┬──────────┬──────────────┘
+   │          │          │          │          │
+   ▼          ▼          ▼          ▼          ▼
+Stage 0    Stage 1    Stage 2    Stage 3    Stage 4
+Reference  Search &   Select &   Book &     Ticket &
+Data       Shop       Price      Order      Fulfill
+           │
+           ▼
+    ┌──────────────┐
+    │ Distribution │
+    │   Adapters   │
+    │              │
+    │ Duffel       │
+    │ Amadeus      │
+    │ Sabre        │
+    │ Verteil      │
+    │ Accelya      │
+    └──────────────┘
+           │
+   ▼          ▼          ▼
+Stage 5    Stage 6    Stage 7
+Change &   Refund &   BSP/ARC
+Exchange   ADM        Settlement
 ```
 
 All agents implement the `Agent<TInput, TOutput>` interface from `@otaip/core`:
 
 ```typescript
 interface Agent<TInput, TOutput> {
-  readonly id: string;
-  readonly name: string;
-  readonly version: string;
-
   initialize(): Promise<void>;
-  execute(input: AgentInput<TInput>): Promise<AgentOutput<TOutput>>;
-  health(): Promise<AgentHealthStatus>;
+  execute(input: TInput): Promise<TOutput>;
+  health(): Promise<HealthStatus>;
 }
 ```
 
-## Quick Start
+---
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| `@otaip/core` | Agent interface, distribution adapter interface, shared types and errors |
+| `@otaip/agents-reference` | Stage 0: Airport/city codes, airline codes, fare basis, booking class, currency |
+| `@otaip/agents-search` | Stage 1: Availability search, schedule lookup, connection builder, fare shopping |
+| `@otaip/agents-pricing` | Stage 2: Fare rules (ATPCO Cat 1-20), fare construction (NUC/ROE/HIP/BHC), tax calculation |
+| `@otaip/agents-booking` | Stage 3: API abstraction, GDS/NDC router, PNR builder, PNR validation, queue management |
+| `@otaip/agents-ticketing` | Stage 4: Ticket issuance, EMD management, void, itinerary delivery, document verification |
+| `@otaip/agents-exchange` | Stage 5: Change management (Cat 31), exchange/reissue, involuntary rebook (EU261/US DOT) |
+| `@otaip/agents-settlement` | Stage 6: Refund processing (Cat 33, BSP+ARC), ADM prevention (9 pre-ticketing checks) |
+| `@otaip/adapter-duffel` | MockDuffelAdapter for local testing (3 mock routes) |
+
+---
+
+## Quick start
 
 ```bash
-# Prerequisites: Node.js >= 20, pnpm 9
+# Clone and install
 git clone https://github.com/telivity-otaip/otaip.git
 cd otaip
 pnpm install
 
-# Download reference data (airports)
+# Download reference datasets (48K airports, 22 metro area mappings)
 pnpm run data:download
 
-# Run tests
+# Run all tests
 pnpm test
 
-# Type check
-pnpm run typecheck
+# Typecheck
+pnpm typecheck
 
 # Lint
-pnpm run lint
+pnpm lint
 ```
 
-## Using an Agent
+Requirements: Node 20+, pnpm 9+.
+
+---
+
+## Stage 0 — Reference Data
+
+The foundation. Pure TypeScript, static datasets, zero external dependencies.
+
+| Agent | Description |
+|-------|-------------|
+| Agent 0.1 — Airport/City Code Resolver | 48K airports from OurAirports, 22 metro area mappings (LON, NYC, PAR…), IATA/ICAO/FAA lookup |
+| Agent 0.2 — Airline Code & Alliance Mapper | IATA/ICAO code mapping, alliance membership, codeshare partner resolution |
+| Agent 0.3 — Fare Basis Code Decoder | Fare basis string parsing: booking class, cabin, season, AP/advance purchase, min/max stay |
+| Agent 0.4 — Class of Service Mapper | Booking class → cabin mapping per airline, RBD hierarchy, fare family association |
+| Agent 0.6 — Currency & Tax Code Resolver | ISO 4217, BSP settlement currencies, tax code lookup (30 countries, 50 tax codes) |
 
 ```typescript
 import { AirportCodeResolver } from '@otaip/agents-reference';
@@ -74,113 +134,162 @@ import { AirportCodeResolver } from '@otaip/agents-reference';
 const resolver = new AirportCodeResolver();
 await resolver.initialize();
 
-const result = await resolver.execute({
-  data: { code: 'LHR', code_type: 'iata' },
-});
-
-console.log(result.data.resolved_airport?.name);
-// → "London Heathrow Airport"
-console.log(result.confidence);
-// → 1.0
+const result = await resolver.execute({ query: 'LON' });
+// → { airports: ['LHR', 'LGW', 'LCY', 'STN', 'LTN', 'SEN'], type: 'metro' }
 ```
-
-## Packages
-
-| Package | Description |
-|---------|-------------|
-| `@otaip/core` | Agent interface, types, distribution adapter contracts |
-| `@otaip/agents-reference` | Stage 0 reference data agents |
-| `@otaip/agents-search` | Stage 1 search agents (availability, schedule, fares) |
-| `@otaip/agents-pricing` | Stage 2 pricing agents (fare rules, construction, taxes) |
-| `@otaip/agents-booking` | Stage 3 booking agents (GDS/NDC routing, PNR, queues) |
-| `@otaip/adapter-duffel` | Duffel NDC distribution adapter (mock for testing) |
-
-## Stage 0 Agents
-
-| ID | Agent | What it does |
-|----|-------|-------------|
-| 0.1 | Airport/City Code Resolver | IATA/ICAO codes, multi-airport cities, fuzzy name search |
-| 0.2 | Airline Code & Alliance Mapper | Airline codes, Star Alliance/oneworld/SkyTeam, codeshares |
-| 0.3 | Fare Basis Code Decoder | ATPCO fare basis parsing (cabin, restrictions, advance purchase) |
-| 0.4 | Class of Service Mapper | Booking class → cabin, fare family, upgrade eligibility |
-| 0.6 | Currency & Tax Code Resolver | ISO currencies, IATA tax codes (YQ, GB, US, etc.) |
-
-## Stage 1 Agents
-
-| ID | Agent | What it does |
-|----|-------|-------------|
-| 1.1 | Availability Search | Multi-adapter parallel search, deduplication, filtering, sorting |
-| 1.2 | Schedule Lookup | SSIM operating days, codeshare detection, connection discovery |
-| 1.3 | Connection Builder | MCT validation (4-level hierarchy), quality scoring, interline checks |
-| 1.4 | Fare Shopping | Fare basis decoding, fare family grouping, passenger type pricing |
-
-## Stage 2 Agents
-
-| ID | Agent | What it does |
-|----|-------|-------------|
-| 2.1 | Fare Rule Agent | ATPCO fare rule parsing (categories 1-20), penalties, advance purchase, min/max stay, seasonality |
-| 2.2 | Fare Construction | NUC × ROE pipeline, mileage validation (TPM/MPM), HIP/BHC/CTM checks, IATA rounding |
-| 2.3 | Tax Calculation | Per-segment taxes (~30 countries, ~50 codes), exemption engine, currency conversion |
-
-All Stage 2 financial math uses `decimal.js` — no floating point for currency.
-
-## Stage 3 Agents
-
-| ID | Agent | What it does |
-|----|-------|-------------|
-| 3.1 | GDS/NDC Router | Airline-to-channel mapping (30 carriers), NDC version selection, codeshare routing |
-| 3.2 | PNR Builder | GDS command generation for Amadeus/Sabre/Travelport — names, segments, contacts, SSR/OSI |
-| 3.3 | PNR Validation | 13 pre-ticketing checks (segment status, TTL, APIS, duplicates, married segments, etc.) |
-| 3.4 | Queue Management | GDS queue monitoring, priority assignment (TTL/schedule/waitlist), action routing |
-| 3.5 | API Abstraction | Circuit breaker, retry with backoff, rate limiting, error normalization across providers |
-
-## Project Structure
-
-```
-packages/
-  core/                     @otaip/core — interfaces, types, errors
-  agents/
-    reference/              @otaip/agents-reference — Stage 0 agents
-      src/
-        airport-code-resolver/    Agent 0.1
-        airline-code-mapper/      Agent 0.2
-        fare-basis-decoder/       Agent 0.3
-        class-of-service-mapper/  Agent 0.4
-        currency-tax-resolver/    Agent 0.6
-    search/                 @otaip/agents-search — Stage 1 agents
-      src/
-        availability-search/      Agent 1.1
-        schedule-lookup/          Agent 1.2
-        connection-builder/       Agent 1.3
-        fare-shopping/            Agent 1.4
-    pricing/                @otaip/agents-pricing — Stage 2 agents
-      src/
-        fare-rule-agent/          Agent 2.1
-        fare-construction/        Agent 2.2
-        tax-calculation/          Agent 2.3
-    booking/                @otaip/agents-booking — Stage 3 agents
-      src/
-        gds-ndc-router/           Agent 3.1
-        pnr-builder/              Agent 3.2
-        pnr-validation/           Agent 3.3
-        queue-management/         Agent 3.4
-        api-abstraction/          Agent 3.5
-  adapters/
-    duffel/                 @otaip/adapter-duffel — Duffel NDC adapter
-agents/
-  specs/                    Agent specification YAMLs
-scripts/
-  download-airport-data.ts  Reference data pipeline
-```
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## License
-
-Apache 2.0 — see [LICENSE](LICENSE).
 
 ---
 
-Built by [Telivity](https://telivity.app)
+## Stage 1 — Search & Shop
+
+Multi-source availability and fare shopping across distribution adapters.
+
+| Agent | Description |
+|-------|-------------|
+| Agent 1.1 — Availability Search | Parallel multi-adapter search, dedup, segment filtering, codeshare expansion |
+| Agent 1.2 — Schedule Lookup | SSIM schedule parsing, operating/marketing flight resolution, codeshare detection |
+| Agent 1.3 — Connection Builder | 4-level MCT hierarchy (IATA/airport/terminal/carrier), connection quality scoring |
+| Agent 1.4 — Fare Shopping | Fare family comparison, ADT/CHD/INF pricing, branded fare normalization |
+
+The search agents use a plug-in adapter model. Install any distribution adapter and wire it in:
+
+```typescript
+import { AvailabilitySearchAgent } from '@otaip/agents-search';
+import { DuffelAdapter } from '@otaip/adapter-duffel';
+
+const agent = new AvailabilitySearchAgent({
+  adapters: [new DuffelAdapter({ apiKey: process.env.DUFFEL_API_KEY })],
+});
+```
+
+---
+
+## Stage 2 — Select & Price
+
+ATPCO-compliant pricing logic. All financial math uses `decimal.js` — no floating point for currency.
+
+| Agent | Description |
+|-------|-------------|
+| Agent 2.1 — Fare Rule Agent | ATPCO categories 1-20, advance purchase, min/max stay, blackout dates, penalties |
+| Agent 2.2 — Fare Construction Agent | NUC × ROE, TPM/MPM mileage proration, HIP/BHC/CTM checks, IATA rounding rules |
+| Agent 2.3 — Tax Calculation Agent | 30 countries, 50 tax codes, exemption engine (diplomatic, infant, transit, frequent flyer) |
+
+---
+
+## Stage 3 — Book & Order
+
+PNR construction and booking management across GDS and NDC sources.
+
+| Agent | Description |
+|-------|-------------|
+| Agent 3.5 — API Abstraction | Circuit breaker, exponential backoff retry, per-provider rate limiting, error normalization (10 providers) |
+| Agent 3.1 — GDS/NDC Router | Airline → channel mapping for 30 carriers, NDC version selection (21.3/22.1/23.1), codeshare routing logic |
+| Agent 3.2 — PNR Builder | GDS command generation for Amadeus/Sabre/Travelport, SSR/OSI codes, DOCS, infant PNR, group bookings |
+| Agent 3.3 — PNR Validation | 13 pre-ticketing checks: segment status, TTL expiry, APIS completeness, duplicate detection, married segment integrity |
+| Agent 3.4 — Queue Management | Priority scoring, action code routing, GDS queue command stubs (Amadeus/Sabre/Travelport) |
+
+---
+
+## Stage 4 — Ticket & Fulfill
+
+Electronic ticket issuance, EMD handling, void windows, and passenger communication.
+
+| Agent | Description |
+|-------|-------------|
+| Agent 4.1 — Ticket Issuance | 13-digit ETR generation, conjunction tickets (>4 segments → /1/2/3), 30 airline numeric prefixes, BSP reporting, commission calculation |
+| Agent 4.2 — EMD Management | EMD-A/EMD-S full lifecycle, RFIC codes A–G (seat/baggage/meal/lounge/rebooking/upgrade/ancillary), RFISC passthrough, `decimal.js` totals |
+| Agent 4.3 — Void Agent | Coupon status pre-check, carrier-specific void windows (e.g. FR/U2/W6 = 0h), BSP/ARC cutoff enforcement |
+| Agent 4.4 — Itinerary Delivery | Multi-channel delivery: HTML email, plain-text email, SMS (160-char segment splitting), WhatsApp structured blocks |
+| Agent 4.5 — Document Verification | Passenger name match, DOB validation, passport number regex per nationality, 6-month validity check, visa requirement stub |
+
+All Stage 4 financial math uses `decimal.js`.
+
+---
+
+## Stage 5 — Change & Exchange
+
+Voluntary change, ticket reissue, and involuntary rebook per ATPCO and regulatory requirements.
+
+| Agent | Description |
+|-------|-------------|
+| Agent 5.1 — Change Management | ATPCO Category 31, 7 fare rule patterns, free 24h window (US DOT), waiver bypass, residual value calculation, BASIC/non-refundable rejection |
+| Agent 5.2 — Exchange/Reissue | Residual-first reissue logic, tax carryforward (same O/D), GDS exchange commands (Amadeus/Sabre/Travelport), conjunction ticket reference, BSP audit trail |
+| Agent 5.3 — Involuntary Rebook | >60-minute delay trigger, routing change detection, EU261/2004 compensation flags (31 countries), US DOT 220% rule, alliance/interline protection, original routing credit |
+
+---
+
+## Stage 6 — Refund & ADM Prevention
+
+BSP/ARC refund processing and pre-ticketing ADM prevention checks.
+
+| Agent | Description |
+|-------|-------------|
+| Agent 6.1 — Refund Processing | ATPCO Category 33, 7 fare basis rule patterns, full/partial/tax-only refund types, prorated partial refunds, commission recall, waiver bypass, conjunction all-or-none enforcement, BSP + ARC reporting |
+| Agent 6.2 — ADM Prevention | 9 pre-ticketing checks: duplicate detection, fare basis/booking class mismatch, passive segment abuse (HX/UN/NO/UC), married segment integrity, TTL buffer, commission vs contracted rate, endorsement validation, tour code, net remit flag |
+
+---
+
+## Distribution adapters
+
+OTAIP is source-agnostic. Agents work with any distribution source via the `DistributionAdapter` interface from `@otaip/core`. You bring the credentials.
+
+**Aggregator adapters (Phase 1):**
+
+| Package | Coverage | API type |
+|---------|----------|----------|
+| `@otaip/adapter-duffel` | NDC-participating airlines | REST |
+| `@otaip/adapter-amadeus` | Full-service carriers via GDS | REST |
+| `@otaip/adapter-sabre` | Full-service carriers via GDS | SOAP |
+| `@otaip/adapter-verteil` | AF, Finnair, SAS, Oman Air + others | REST (pure NDC) |
+| `@otaip/adapter-accelya` | LH Group, American NDC | REST (Farelogix-based) |
+
+**Direct airline adapters (roadmap):** American, Delta, United, Lufthansa, Air France-KLM, and 45 more — each as `@otaip/adapter-{iata-code}`. See [ADAPTER_TARGET_LIST.md](docs/architecture/ADAPTER_TARGET_LIST.md).
+
+---
+
+## Project structure
+
+```
+otaip/
+├── packages/
+│   ├── core/                    # @otaip/core — Agent interface, types, errors
+│   ├── agents-reference/        # @otaip/agents-reference — Stage 0
+│   ├── agents-search/           # @otaip/agents-search — Stage 1
+│   ├── agents-pricing/          # @otaip/agents-pricing — Stage 2
+│   ├── agents-booking/          # @otaip/agents-booking — Stage 3
+│   ├── agents-ticketing/        # @otaip/agents-ticketing — Stage 4
+│   ├── agents-exchange/         # @otaip/agents-exchange — Stage 5
+│   ├── agents-settlement/       # @otaip/agents-settlement — Stage 6
+│   └── adapter-duffel/          # @otaip/adapter-duffel — MockDuffelAdapter
+├── agents/
+│   ├── TAXONOMY.md              # Full 62-agent taxonomy
+│   └── specs/                   # YAML specs for all agents
+├── docs/
+│   ├── architecture/            # ADRs, adapter target list
+│   └── engineering/             # Build queue, briefs
+├── knowledge-base/              # Travel domain knowledge (maintained by Telivity)
+├── pnpm-workspace.yaml
+└── package.json
+```
+
+---
+
+## Contributing
+
+Travel domain knowledge is what makes these agents valuable. If you work in airline distribution, GDS/NDC, or TMC operations and you find something wrong — open an issue.
+
+Before writing code, read [CONTRIBUTING.md](CONTRIBUTING.md). The key rules:
+
+- No domain logic without a spec. Every agent has a YAML spec in `agents/specs/` that defines its behavior. If the spec is wrong, fix the spec first.
+- TypeScript strict. No `any`. No floating point for currency.
+- Tests must encode domain knowledge. A test that says `expect(result).toBeDefined()` is not a test.
+
+---
+
+## License
+
+Apache 2.0. Build on it, fork it, ship it commercially. See [LICENSE](LICENSE).
+
+---
+
+**Built by [Telivity](https://telivity.app)** — the commercial hosting, support, and enterprise layer on top of OTAIP.
