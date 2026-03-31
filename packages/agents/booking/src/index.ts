@@ -79,3 +79,41 @@ export type {
   QueueGdsSystem,
   QueueAction,
 } from './queue-management/index.js';
+
+export { OrderManagement } from './order-management/index.js';
+export type {
+  OrderManagementInput,
+  OrderManagementOutput,
+  Order,
+  OrderItem,
+  OrderStatus,
+  OrderOperationType,
+  OrderErrorCode,
+  OrderHistoryEntry,
+  CreateOrderData,
+  ModifyOrderData,
+  CancelOrderData,
+  GetOrderData,
+  ListOrdersData,
+  ListOrdersFilter,
+} from './order-management/index.js';
+
+export { PaymentProcessing } from './payment-processing/index.js';
+export type {
+  PaymentProcessingInput,
+  PaymentProcessingOutput,
+  FormOfPayment,
+  FOPType,
+  CardBrand,
+  PaymentOperationType,
+  PaymentRecordStatus,
+  PaymentErrorCode,
+  PaymentInstruction,
+  PaymentRecord,
+  FOPValidationResult,
+  ValidateFOPData,
+  BuildPaymentInstructionData,
+  RecordPaymentData,
+  GetPaymentRecordData,
+  BuildGDSFOPStringData,
+} from './payment-processing/index.js';

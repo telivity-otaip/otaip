@@ -21,6 +21,7 @@
     "@otaip/agents-reference": "workspace:*",
     "@otaip/agents-search": "workspace:*",
     "@otaip/agents-pricing": "workspace:*",
+    "decimal.js": "^10.4.3",
     "zod": "^3.23.0"
   },
   "license": "Apache-2.0",

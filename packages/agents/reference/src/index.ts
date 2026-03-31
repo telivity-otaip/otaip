@@ -55,3 +55,15 @@ export type {
   TaxAppliesTo,
 } from './currency-tax-resolver/index.js';
 
+export { EquipmentTypeResolver } from './equipment-type-resolver/index.js';
+export type {
+  EquipmentTypeInput, EquipmentTypeOutput, EquipmentInfo,
+  Manufacturer, BodyType, CabinCode, TypicalSeats, EquipmentOperation,
+} from './equipment-type-resolver/index.js';
+
+export { CountryRegulatoryResolver, REGULATORY_DATA_DISCLAIMER } from './country-regulatory-resolver/index.js';
+export type {
+  CountryRegulatoryInput, CountryRegulatoryOutput,
+  APISRequirements, VisaRequirement, RestrictionInfo,
+  APISField, VisaRequirementType, RestrictionLevel, RegulatoryOperation,
+} from './country-regulatory-resolver/index.js';
