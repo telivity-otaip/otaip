@@ -1,0 +1,135 @@
+/**
+ * Ticket Issuance Engine — ETR generation and conjunction ticketing.
+ */
+
+import Decimal from 'decimal.js';
+import { createRequire } from 'node:module';
+import type {
+  TicketIssuanceInput,
+  TicketIssuanceOutput,
+  TicketRecord,
+  TicketSegment,
+  CouponStatus,
+} from './types.js';
+
+const require = createRequire(import.meta.url);
+const prefixData = require('./data/airline-ticket-prefixes.json') as {
+  prefixes: Record<string, string>;
+};
+
+const MAX_COUPONS_PER_TICKET = 4;
+
+/** Generate a deterministic 10-digit ticket serial from record locator + index */
+function generateTicketSerial(recordLocator: string, index: number): string {
+  // In production this would come from a GDS ticket stock allocation.
+  // For deterministic testing, derive from inputs.
+  let hash = 0;
+  const seed = `${recordLocator}-${index}`;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+  }
+  const serial = Math.abs(hash).toString().padStart(10, '0').slice(0, 10);
+  return serial;
+}
+
+function resolvePrefix(input: TicketIssuanceInput): string {
+  if (input.ticket_number_prefix) return input.ticket_number_prefix;
+  const mapped = prefixData.prefixes[input.issuing_carrier];
+  if (mapped) return mapped;
+  // TODO: [NEEDS DOMAIN INPUT] Complete airline prefix table
+  return '999';
+}
+
+function buildCoupons(
+  input: TicketIssuanceInput,
+  startIdx: number,
+  count: number,
+): TicketSegment[] {
+  const coupons: TicketSegment[] = [];
+  for (let i = 0; i < count; i++) {
+    const seg = input.segments[startIdx + i]!;
+    coupons.push({
+      coupon_number: i + 1,
+      carrier: seg.carrier,
+      flight_number: seg.flight_number,
+      origin: seg.origin,
+      destination: seg.destination,
+      departure_date: seg.departure_date,
+      departure_time: seg.departure_time,
+      booking_class: seg.booking_class,
+      fare_basis: seg.fare_basis,
+      not_valid_before: seg.not_valid_before,
+      not_valid_after: seg.not_valid_after,
+      baggage_allowance: seg.baggage_allowance,
+      status: 'O' as CouponStatus,
+    });
+  }
+  return coupons;
+}
+
+function computeTotalTax(input: TicketIssuanceInput): string {
+  let total = new Decimal(0);
+  for (const tax of input.taxes) {
+    total = total.plus(new Decimal(tax.amount));
+  }
+  return total.toFixed(2);
+}
+
+function computeTotal(baseFare: string, totalTax: string): string {
+  return new Decimal(baseFare).plus(new Decimal(totalTax)).toFixed(2);
+}
+
+export function issueTickets(input: TicketIssuanceInput): TicketIssuanceOutput {
+  const prefix = resolvePrefix(input);
+  const issueDate = input.issue_date ?? new Date().toISOString().slice(0, 10);
+  const totalTax = computeTotalTax(input);
+  const baseFare = input.equivalent_fare ?? input.base_fare;
+  const totalAmount = computeTotal(baseFare, totalTax);
+
+  const segmentCount = input.segments.length;
+  const ticketCount = Math.ceil(segmentCount / MAX_COUPONS_PER_TICKET);
+  const isConjunction = ticketCount > 1;
+
+  const tickets: TicketRecord[] = [];
+
+  for (let t = 0; t < ticketCount; t++) {
+    const startIdx = t * MAX_COUPONS_PER_TICKET;
+    const count = Math.min(MAX_COUPONS_PER_TICKET, segmentCount - startIdx);
+    const serial = generateTicketSerial(input.record_locator, t);
+    const ticketNumber = `${prefix}${serial}`;
+    const conjunctionSuffix = isConjunction ? `/${t + 1}` : undefined;
+
+    const coupons = buildCoupons(input, startIdx, count);
+
+    const ticket: TicketRecord = {
+      ticket_number: ticketNumber,
+      conjunction_suffix: conjunctionSuffix,
+      record_locator: input.record_locator,
+      issuing_carrier: input.issuing_carrier,
+      issue_date: issueDate,
+      passenger_name: input.passenger_name,
+      coupons,
+      base_fare: input.base_fare,
+      base_fare_currency: input.base_fare_currency,
+      equivalent_fare: input.equivalent_fare,
+      equivalent_fare_currency: input.equivalent_fare_currency,
+      total_tax: totalTax,
+      taxes: input.taxes,
+      total_amount: totalAmount,
+      fare_calculation: input.fare_calculation,
+      form_of_payment: input.form_of_payment,
+      endorsements: input.endorsements,
+      commission: input.commission,
+      bsp_reporting: input.bsp_reporting,
+      original_issue: input.original_issue,
+    };
+
+    tickets.push(ticket);
+  }
+
+  return {
+    tickets,
+    total_coupons: segmentCount,
+    is_conjunction: isConjunction,
+  };
+}
