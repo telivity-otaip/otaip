@@ -60,6 +60,21 @@ importers:
         specifier: ^3.23.0
         version: 3.25.76
 
+  packages/agents/exchange:
+    dependencies:
+      '@otaip/agents-ticketing':
+        specifier: workspace:*
+        version: link:../ticketing
+      '@otaip/core':
+        specifier: workspace:*
+        version: link:../../core
+      decimal.js:
+        specifier: ^10.4.3
+        version: 10.6.0
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+
   packages/agents/pricing:
     dependencies:
       '@otaip/agents-reference':

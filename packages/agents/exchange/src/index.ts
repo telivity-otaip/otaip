@@ -1,0 +1,44 @@
+/**
+ * @otaip/agents-exchange — Stage 5 change & exchange agents.
+ *
+ * Re-exports all Stage 5 agent classes.
+ */
+
+export { ChangeManagement } from './change-management/index.js';
+export type {
+  ChangeManagementInput,
+  ChangeManagementOutput,
+  ChangeAssessment,
+  OriginalTicketSummary,
+  RequestedItinerary,
+  ChangeFeeRule,
+  ChangeAction,
+} from './change-management/index.js';
+
+export { ExchangeReissue } from './exchange-reissue/index.js';
+export type {
+  ExchangeReissueInput,
+  ExchangeReissueOutput,
+  ReissueRecord,
+  ReissuedCoupon,
+  ExchangeAuditTrail,
+  ExchangeCommand,
+  ExchangeGdsSystem,
+  ExchangeSegment,
+  TaxItem,
+  FormOfPayment,
+} from './exchange-reissue/index.js';
+
+export { InvoluntaryRebook } from './involuntary-rebook/index.js';
+export type {
+  InvoluntaryRebookInput,
+  InvoluntaryRebookOutput,
+  InvoluntaryRebookResult,
+  InvoluntaryTrigger,
+  ProtectionPath,
+  ProtectionOption,
+  RegulatoryFlag,
+  RegulatoryFramework,
+  ScheduleChangeNotification,
+  OriginalPnrSummary,
+} from './involuntary-rebook/index.js';

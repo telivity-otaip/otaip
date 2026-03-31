@@ -1,0 +1,29 @@
+{
+  "name": "@otaip/agents-exchange",
+  "version": "0.1.0",
+  "description": "OTAIP Stage 5 agents — change management, exchange/reissue, involuntary rebook",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@otaip/core": "workspace:*",
+    "@otaip/agents-ticketing": "workspace:*",
+    "decimal.js": "^10.4.3",
+    "zod": "^3.23.0"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

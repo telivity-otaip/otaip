@@ -1,0 +1,62 @@
+{
+  "description": "ATPCO Category 31 change fee rules by fare basis pattern. Based on common industry patterns.",
+  "rules": [
+    {
+      "fare_basis_pattern": "^Y",
+      "change_fee": "0.00",
+      "currency": "USD",
+      "free_change_hours": 0,
+      "forfeit_difference_on_downgrade": false,
+      "notes": "Full-fare economy — free changes"
+    },
+    {
+      "fare_basis_pattern": "^[CDJRIP]",
+      "change_fee": "0.00",
+      "currency": "USD",
+      "free_change_hours": 0,
+      "forfeit_difference_on_downgrade": false,
+      "notes": "Business/First class fares — free changes"
+    },
+    {
+      "fare_basis_pattern": "^[BHKLMNQSTUVWX].*PE$",
+      "change_fee": "75.00",
+      "currency": "USD",
+      "free_change_hours": 24,
+      "forfeit_difference_on_downgrade": false,
+      "notes": "Premium economy restricted fares — reduced change fee"
+    },
+    {
+      "fare_basis_pattern": "^[BHKLMNQSTUVWX]",
+      "change_fee": "200.00",
+      "currency": "USD",
+      "free_change_hours": 24,
+      "forfeit_difference_on_downgrade": true,
+      "notes": "Restricted economy fares — standard change fee"
+    },
+    {
+      "fare_basis_pattern": "^[EG]",
+      "change_fee": "300.00",
+      "currency": "USD",
+      "free_change_hours": 24,
+      "forfeit_difference_on_downgrade": true,
+      "notes": "Deep discount fares — higher change fee"
+    },
+    {
+      "fare_basis_pattern": ".*BASIC$",
+      "change_fee": "0.00",
+      "currency": "USD",
+      "free_change_hours": 0,
+      "forfeit_difference_on_downgrade": true,
+      "notes": "Basic economy — changes not permitted (REJECT)"
+    },
+    {
+      "fare_basis_pattern": ".*NR$",
+      "change_fee": "0.00",
+      "currency": "USD",
+      "free_change_hours": 0,
+      "forfeit_difference_on_downgrade": true,
+      "notes": "Non-refundable, non-rebookable fares (REJECT)"
+    }
+  ],
+  "reject_patterns": [".*BASIC$", ".*NR$"]
+}
