@@ -6,7 +6,7 @@ OTAIP is an open source agent orchestration platform that encodes travel industr
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
-[![Tests](https://img.shields.io/badge/tests-1067%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
+[![Tests](https://img.shields.io/badge/tests-1164%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
 [![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg)](https://pnpm.io/)
 
 ---
@@ -24,9 +24,9 @@ OTAIP is an open source agent orchestration platform that encodes travel industr
 | Stage 6 — Refund & ADM | `@otaip/agents-settlement` | 2 | 83 | ✅ Complete |
 | Stage 7 — BSP/ARC Settlement | `@otaip/agents-reconciliation` | 2 | 73 | ✅ Complete |
 | Stage 8 — TMC & Agency Ops | `@otaip/agents-tmc` | 5 | 101 | ✅ Complete |
-| Stage 9 — Platform & Integration | `@otaip/agents-platform` | — | — | 🔜 Next |
+| Stage 9 — Platform & Integration | `@otaip/agents-platform` | 5 | 97 | ✅ Complete |
 
-**34 agents. 1067 tests. All green.**
+**39 agents. 1164 tests. All green.**
 
 ---
 
@@ -59,10 +59,10 @@ Data       Shop       Price      Order      Fulfill
     │ Accelya      │
     └──────────────┘
            │
-   ▼          ▼          ▼          ▼
-Stage 5    Stage 6    Stage 7    Stage 8
-Change &   Refund &   BSP/ARC    TMC &
-Exchange   ADM        Settlement Agency Ops
+   ▼          ▼          ▼
+Stage 5    Stage 6    Stage 7
+Change &   Refund &   BSP/ARC
+Exchange   ADM        Settlement
 ```
 
 All agents implement the `Agent<TInput, TOutput>` interface from `@otaip/core`:
@@ -91,6 +91,7 @@ interface Agent<TInput, TOutput> {
 | `@otaip/agents-settlement` | Stage 6: Refund processing (Cat 33, BSP+ARC), ADM prevention (9 pre-ticketing checks) |
 | `@otaip/agents-reconciliation` | Stage 7: BSP reconciliation (HOT file), ARC reconciliation (IAR), discrepancy detection, ADM/ACM dispute tracking |
 | `@otaip/agents-tmc` | Stage 8: Traveler profiles, corporate accounts, mid-office automation, reporting, duty of care |
+| `@otaip/agents-platform` | Stage 9: Orchestrator, knowledge retrieval, monitoring & alerting, audit & compliance, plugin manager |
 | `@otaip/adapter-duffel` | MockDuffelAdapter for local testing (3 mock routes) |
 
 ---
@@ -258,6 +259,20 @@ Traveler profiles, corporate policy enforcement, mid-office automation, reportin
 
 ---
 
+## Stage 9 — Platform & Integration
+
+Orchestration, knowledge retrieval, observability, audit, and plugin management.
+
+| Agent | Description |
+|-------|-------------|
+| Agent 9.1 — Orchestrator | 5 workflow pipelines (search_to_price, book_to_ticket, full_booking, exchange_flow, refund_flow), injectable StepExecutor, stop_on_error, timeout with partial result, per-step duration tracking |
+| Agent 9.2 — Knowledge Retrieval | Keyword-overlap relevance scoring (0–1), 15 seed documents across 8 travel topics, topic filtering, max_results, query_time_ms |
+| Agent 9.3 — Monitoring & Alerting | P50/P95 latency percentiles, error rate %, health thresholds (healthy/degraded/down), auto-fire alerts on state transition, idempotent acknowledge, SLA report with availability % |
+| Agent 9.4 — Audit & Compliance | Event logging with retention rules (2555d IATA/PCI, 1095d GDPR), PII redaction (passport/DOB/card/phone/email, nested), GDPR right-to-erasure, compliance issue flagging (4 types, 4 severities) |
+| Agent 9.5 — Plugin Manager | Register/unregister/enable/disable, semver validation, duplicate detection, capability discovery (enabled-only), 3 seed plugins (Duffel, Amadeus, expense reporter) |
+
+---
+
 ## Distribution adapters
 
 OTAIP is source-agnostic. Agents work with any distribution source via the `DistributionAdapter` interface from `@otaip/core`. You bring the credentials.
@@ -291,6 +306,7 @@ otaip/
 │   ├── agents-settlement/       # @otaip/agents-settlement — Stage 6
 │   ├── agents-reconciliation/   # @otaip/agents-reconciliation — Stage 7
 │   ├── agents-tmc/              # @otaip/agents-tmc — Stage 8
+│   ├── agents-platform/         # @otaip/agents-platform — Stage 9
 │   └── adapter-duffel/          # @otaip/adapter-duffel — MockDuffelAdapter
 ├── agents/
 │   ├── TAXONOMY.md              # Full 62-agent taxonomy
