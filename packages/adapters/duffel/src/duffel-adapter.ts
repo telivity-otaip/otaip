@@ -156,6 +156,28 @@ function mapDuffelOffer(offer: DuffelOffer): SearchOffer {
   };
 }
 
+export interface BookRequest {
+  offer_id: string;
+  passengers: Array<{
+    title: 'mr' | 'ms' | 'mrs' | 'miss' | 'dr';
+    given_name: string;
+    family_name: string;
+    born_on: string;
+    email: string;
+    phone_number: string;
+    gender: 'm' | 'f';
+    type: 'adult' | 'child' | 'infant_without_seat';
+  }>;
+}
+
+export interface BookResponse {
+  booking_reference: string;
+  order_id: string;
+  total_amount: string;
+  total_currency: string;
+  passengers: unknown[];
+}
+
 export class DuffelAdapter implements DistributionAdapter {
   readonly name = 'duffel';
   private readonly apiKey: string;
@@ -231,6 +253,38 @@ export class DuffelAdapter implements DistributionAdapter {
     } catch {
       return false;
     }
+  }
+
+  async book(request: BookRequest): Promise<BookResponse> {
+    const body = {
+      data: {
+        selected_offers: [request.offer_id],
+        passengers: request.passengers,
+        type: 'instant',
+        payments: [
+          {
+            type: 'balance',
+            currency: 'GBP',
+            amount: '0',
+          },
+        ],
+      },
+    };
+
+    const response = await this.request('POST', '/air/orders', body);
+    const order = response?.data;
+
+    if (!order) {
+      throw new Error('Duffel order creation returned no data');
+    }
+
+    return {
+      booking_reference: order.booking_reference ?? '',
+      order_id: order.id ?? '',
+      total_amount: order.total_amount ?? '0',
+      total_currency: order.total_currency ?? 'GBP',
+      passengers: order.passengers ?? [],
+    };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

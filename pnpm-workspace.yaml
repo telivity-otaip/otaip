@@ -2,3 +2,4 @@ packages:
   - "packages/*"
   - "packages/agents/*"
   - "packages/adapters/*"
+  - "demo"
