@@ -93,6 +93,36 @@ interface DuffelApiError {
   errors?: Array<{ message?: string; type?: string; code?: string }>;
 }
 
+/** Typed response wrappers for Duffel API endpoints */
+interface DuffelOfferRequestResponse {
+  data: {
+    id?: string;
+    offers?: DuffelOffer[];
+  };
+}
+
+interface DuffelOfferResponse {
+  data: DuffelOffer;
+}
+
+interface DuffelOrderResponse {
+  data: {
+    id?: string;
+    booking_reference?: string;
+    total_amount?: string;
+    total_currency?: string;
+    passengers?: Array<Record<string, unknown>>;
+  };
+}
+
+interface DuffelOfferWithPassengers {
+  data: DuffelOffer & {
+    passengers?: Array<{ id?: string; type?: string }>;
+    total_amount?: string;
+    total_currency?: string;
+  };
+}
+
 function mapDuffelOffer(offer: DuffelOffer): SearchOffer {
   const segments: FlightSegment[] = [];
   let totalDuration = 0;
@@ -218,19 +248,19 @@ export class DuffelAdapter implements DistributionAdapter {
       (body['data'] as Record<string, unknown>)['currency'] = request.currency;
     }
 
-    const response = await this.request('POST', '/air/offer_requests', body);
-    const offers: DuffelOffer[] = response?.data?.offers ?? [];
+    const response = await this.request('POST', '/air/offer_requests', body) as DuffelOfferRequestResponse;
+    const offers: DuffelOffer[] = response.data?.offers ?? [];
 
     return {
       offers: offers.map(mapDuffelOffer),
       truncated: false,
-      metadata: { source: 'duffel', offer_request_id: response?.data?.id },
+      metadata: { source: 'duffel', offer_request_id: response.data?.id },
     };
   }
 
   async price(request: PriceRequest): Promise<PriceResponse> {
-    const response = await this.request('GET', `/air/offers/${request.offer_id}`);
-    const offer: DuffelOffer | undefined = response?.data;
+    const response = await this.request('GET', `/air/offers/${request.offer_id}`) as DuffelOfferResponse;
+    const offer: DuffelOffer | undefined = response.data;
 
     if (!offer) {
       return {
@@ -258,8 +288,8 @@ export class DuffelAdapter implements DistributionAdapter {
 
   async book(request: BookRequest): Promise<BookResponse> {
     // Fetch the offer to get Duffel passenger IDs and total for payment
-    const offerResponse = await this.request('GET', `/air/offers/${request.offer_id}?return_available_services=false`);
-    const offer = offerResponse?.data;
+    const offerResponse = await this.request('GET', `/air/offers/${request.offer_id}?return_available_services=false`) as DuffelOfferWithPassengers;
+    const offer = offerResponse.data;
     if (!offer) {
       throw new Error('Could not fetch offer details for booking');
     }
@@ -275,10 +305,10 @@ export class DuffelAdapter implements DistributionAdapter {
       data: {
         selected_offers: [request.offer_id],
         passengers,
-        type: 'instant',
+        type: 'instant' as const,
         payments: [
           {
-            type: 'balance',
+            type: 'balance' as const,
             currency: offer.total_currency ?? 'GBP',
             amount: offer.total_amount ?? '0',
           },
@@ -286,8 +316,8 @@ export class DuffelAdapter implements DistributionAdapter {
       },
     };
 
-    const response = await this.request('POST', '/air/orders', body);
-    const order = response?.data;
+    const response = await this.request('POST', '/air/orders', body) as DuffelOrderResponse;
+    const order = response.data;
 
     if (!order) {
       throw new Error('Duffel order creation returned no data');
@@ -302,8 +332,7 @@ export class DuffelAdapter implements DistributionAdapter {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async request(method: string, path: string, body?: Record<string, unknown>): Promise<any> {
+  private async request(method: string, path: string, body?: Record<string, unknown>): Promise<unknown> {
     const url = `${this.baseUrl}${path}`;
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${this.apiKey}`,
@@ -329,7 +358,7 @@ export class DuffelAdapter implements DistributionAdapter {
     if (!response.ok) {
       let errorDetail = '';
       try {
-        const errorBody = await response.json() as DuffelApiError;
+        const errorBody = (await response.json()) as DuffelApiError;
         errorDetail = errorBody.errors?.[0]?.message ?? '';
       } catch {
         // ignore parse errors

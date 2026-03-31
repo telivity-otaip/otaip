@@ -37,7 +37,7 @@ export class OrchestratorAgent
 
   constructor(executor?: StepExecutor) {
     // Default executor that throws — tests must inject their own
-    this.executor = executor ?? (async (_agentId: string, _input: Record<string, unknown>) => {
+    this.executor = executor ?? (async (_agentId: string, _input: Record<string, unknown>): Promise<Record<string, unknown>> => {
       throw new Error('No step executor configured. Inject one via constructor.');
     });
   }

@@ -6,6 +6,25 @@ export {
   AgentDataUnavailableError,
 } from './errors/agent-errors.js';
 
+export { OfferEvaluatorAgent, evaluateOffers } from './agents/shopping/index.js';
+export type {
+  OfferEvaluatorRequest,
+  OfferEvaluatorResponse,
+  EvaluatorResult,
+  EvaluatorOffer,
+  TravelerConstraints,
+  TravelerProfile,
+  ScoringWeights,
+  SelectedOffer,
+  RejectedOffer,
+  EvaluationSummary,
+  ChainConfidence,
+  ConfidenceBasis,
+  ConfidenceResult,
+  ScoreBreakdown,
+  StructuredExplanation,
+} from './agents/shopping/index.js';
+
 export type {
   PassengerType,
   PassengerCount,

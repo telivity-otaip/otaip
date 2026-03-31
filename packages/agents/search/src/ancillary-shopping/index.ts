@@ -1,10 +1,6 @@
 import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
-import type { AncillaryShoppingInput, AncillaryShoppingOutput, AncillaryOffer, AncillaryCategory, RficCode } from './types.js';
-
-const RFIC_MAP: Record<AncillaryCategory, RficCode> = {
-  BAGGAGE: 'C', SEAT: 'A', MEAL: 'G', LOUNGE: 'E', WIFI: 'G', PRIORITY: 'E', OTHER: 'I',
-};
+import type { AncillaryShoppingInput, AncillaryShoppingOutput, AncillaryOffer } from './types.js';
 
 export interface AncillaryAdapter { name: string; searchAncillaries(input: AncillaryShoppingInput): Promise<AncillaryOffer[]>; }
 
