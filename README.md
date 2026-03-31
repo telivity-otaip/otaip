@@ -6,7 +6,7 @@ OTAIP is an open source agent orchestration platform that encodes travel industr
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
-[![Tests](https://img.shields.io/badge/tests-893%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
+[![Tests](https://img.shields.io/badge/tests-966%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
 [![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg)](https://pnpm.io/)
 
 ---
@@ -22,9 +22,10 @@ OTAIP is an open source agent orchestration platform that encodes travel industr
 | Stage 4 — Ticket & Fulfill | `@otaip/agents-ticketing` | 5 | 160 | ✅ Complete |
 | Stage 5 — Change & Exchange | `@otaip/agents-exchange` | 3 | 104 | ✅ Complete |
 | Stage 6 — Refund & ADM | `@otaip/agents-settlement` | 2 | 83 | ✅ Complete |
-| Stage 7 — BSP/ARC Settlement | `@otaip/agents-reconciliation` | 2 | — | 🔜 Next |
+| Stage 7 — BSP/ARC Settlement | `@otaip/agents-reconciliation` | 2 | 73 | ✅ Complete |
+| Stage 8 — Interline & Proration | `@otaip/agents-interline` | 3 | — | 🔜 Next |
 
-**27 agents. 893 tests. All green.**
+**29 agents. 966 tests. All green.**
 
 ---
 
@@ -57,10 +58,10 @@ Data       Shop       Price      Order      Fulfill
     │ Accelya      │
     └──────────────┘
            │
-   ▼          ▼          ▼
-Stage 5    Stage 6    Stage 7
-Change &   Refund &   BSP/ARC
-Exchange   ADM        Settlement
+   ▼          ▼          ▼          ▼
+Stage 5    Stage 6    Stage 7    Stage 8
+Change &   Refund &   BSP/ARC    Interline &
+Exchange   ADM        Settlement Proration
 ```
 
 All agents implement the `Agent<TInput, TOutput>` interface from `@otaip/core`:
@@ -87,6 +88,7 @@ interface Agent<TInput, TOutput> {
 | `@otaip/agents-ticketing` | Stage 4: Ticket issuance, EMD management, void, itinerary delivery, document verification |
 | `@otaip/agents-exchange` | Stage 5: Change management (Cat 31), exchange/reissue, involuntary rebook (EU261/US DOT) |
 | `@otaip/agents-settlement` | Stage 6: Refund processing (Cat 33, BSP+ARC), ADM prevention (9 pre-ticketing checks) |
+| `@otaip/agents-reconciliation` | Stage 7: BSP reconciliation (HOT file), ARC reconciliation (IAR), discrepancy detection, ADM/ACM dispute tracking |
 | `@otaip/adapter-duffel` | MockDuffelAdapter for local testing (3 mock routes) |
 
 ---
@@ -229,6 +231,17 @@ BSP/ARC refund processing and pre-ticketing ADM prevention checks.
 
 ---
 
+## Stage 7 — BSP & ARC Settlement
+
+BSP HOT file and ARC IAR reconciliation with discrepancy detection and dispute tracking.
+
+| Agent | Description |
+|-------|-------------|
+| Agent 7.1 — BSP Reconciliation | HOT file parsing (EDI X12 + fixed-width ASCII), agency-to-BSP matching, discrepancy detection (missing/duplicate/amount/commission/currency/ADM/ACM), pattern detection (>=10 samples), remittance deadline warning, `decimal.js` throughout |
+| Agent 7.2 — ARC Reconciliation | IAR parsing (EDI X12/CSV/XML), commission rate validation against airline contracts, ADM dispute window tracking (15-day window, 5-day expiry warning), net remittance calculation, duplicate detection, pattern detection |
+
+---
+
 ## Distribution adapters
 
 OTAIP is source-agnostic. Agents work with any distribution source via the `DistributionAdapter` interface from `@otaip/core`. You bring the credentials.
@@ -260,6 +273,7 @@ otaip/
 │   ├── agents-ticketing/        # @otaip/agents-ticketing — Stage 4
 │   ├── agents-exchange/         # @otaip/agents-exchange — Stage 5
 │   ├── agents-settlement/       # @otaip/agents-settlement — Stage 6
+│   ├── agents-reconciliation/   # @otaip/agents-reconciliation — Stage 7
 │   └── adapter-duffel/          # @otaip/adapter-duffel — MockDuffelAdapter
 ├── agents/
 │   ├── TAXONOMY.md              # Full 62-agent taxonomy
