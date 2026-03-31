@@ -1,7 +1,7 @@
 {
   "name": "@otaip/adapter-duffel",
   "version": "0.1.0",
-  "description": "OTAIP distribution adapter for Duffel NDC API (mock implementation for testing)",
+  "description": "OTAIP distribution adapter for Duffel NDC API (mock + live implementations)",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -17,7 +17,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@otaip/core": "workspace:*"
+    "@otaip/core": "workspace:*",
+    "decimal.js": "^10.4.3"
   },
   "license": "Apache-2.0",
   "engines": {

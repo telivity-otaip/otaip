@@ -1,0 +1,315 @@
+/**
+ * DuffelAdapter — Unit Tests
+ *
+ * All tests use mocked fetch — no real network calls.
+ */
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { DuffelAdapter, parseDurationToMinutes } from '../duffel-adapter.js';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function mockFetchResponse(status: number, body: unknown): void {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    ok: status >= 200 && status < 300,
+    status,
+    statusText: status === 200 ? 'OK' : 'Error',
+    json: () => Promise.resolve(body),
+  }));
+}
+
+function mockFetchNetworkError(message: string): void {
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error(message)));
+}
+
+const DUFFEL_OFFER = {
+  id: 'off_test_123',
+  slices: [{
+    segments: [{
+      marketing_carrier: { iata_code: 'BA' },
+      operating_carrier: { iata_code: 'BA' },
+      marketing_carrier_flight_number: '115',
+      origin: { iata_code: 'LHR' },
+      destination: { iata_code: 'JFK' },
+      departing_at: '2026-06-15T10:00:00',
+      arriving_at: '2026-06-15T13:30:00',
+      duration: 'PT7H30M',
+      aircraft: { name: '787-9' },
+      passengers: [{ cabin_class: 'economy', fare_basis_code: 'Y26NR' }],
+    }],
+    duration: 'PT7H30M',
+  }],
+  total_amount: '595.50',
+  total_currency: 'GBP',
+  base_amount: '450.00',
+  tax_amount: '145.50',
+  passengers: [{ type: 'adult', fare_basis_codes: [{ fare_basis_code: 'Y26NR' }] }],
+  expires_at: '2026-06-14T23:59:59Z',
+  payment_requirements: { requires_instant_payment: true },
+};
+
+const SEARCH_REQUEST = {
+  segments: [{ origin: 'LHR', destination: 'JFK', departure_date: '2026-06-15' }],
+  passengers: [{ type: 'ADT' as const, count: 1 }],
+};
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+// ---------------------------------------------------------------------------
+// parseDurationToMinutes
+// ---------------------------------------------------------------------------
+
+describe('parseDurationToMinutes', () => {
+  it('parses PT7H30M to 450', () => {
+    expect(parseDurationToMinutes('PT7H30M')).toBe(450);
+  });
+
+  it('parses PT2H to 120', () => {
+    expect(parseDurationToMinutes('PT2H')).toBe(120);
+  });
+
+  it('parses PT45M to 45', () => {
+    expect(parseDurationToMinutes('PT45M')).toBe(45);
+  });
+
+  it('returns 0 for null/undefined', () => {
+    expect(parseDurationToMinutes(null)).toBe(0);
+    expect(parseDurationToMinutes(undefined)).toBe(0);
+  });
+
+  it('returns 0 for invalid format', () => {
+    expect(parseDurationToMinutes('not-a-duration')).toBe(0);
+  });
+
+  it('handles hours-only duration', () => {
+    expect(parseDurationToMinutes('PT11H')).toBe(660);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Constructor
+// ---------------------------------------------------------------------------
+
+describe('DuffelAdapter constructor', () => {
+  it('throws on empty API key', () => {
+    expect(() => new DuffelAdapter('')).toThrow('valid API key');
+  });
+
+  it('throws on whitespace-only API key', () => {
+    expect(() => new DuffelAdapter('   ')).toThrow('valid API key');
+  });
+
+  it('creates adapter with valid key', () => {
+    const adapter = new DuffelAdapter('duffel_test_abc123');
+    expect(adapter.name).toBe('duffel');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// search()
+// ---------------------------------------------------------------------------
+
+describe('DuffelAdapter search', () => {
+  let adapter: DuffelAdapter;
+  beforeEach(() => {
+    adapter = new DuffelAdapter('duffel_test_key');
+  });
+
+  it('returns mapped offers from API response', async () => {
+    mockFetchResponse(200, {
+      data: { id: 'orq_test_1', offers: [DUFFEL_OFFER] },
+    });
+
+    const result = await adapter.search(SEARCH_REQUEST);
+    expect(result.offers).toHaveLength(1);
+
+    const offer = result.offers[0]!;
+    expect(offer.offer_id).toBe('off_test_123');
+    expect(offer.source).toBe('duffel');
+    expect(offer.itinerary.segments).toHaveLength(1);
+    expect(offer.itinerary.segments[0]!.carrier).toBe('BA');
+    expect(offer.itinerary.segments[0]!.flight_number).toBe('115');
+    expect(offer.itinerary.segments[0]!.origin).toBe('LHR');
+    expect(offer.itinerary.segments[0]!.destination).toBe('JFK');
+    expect(offer.itinerary.segments[0]!.duration_minutes).toBe(450);
+    expect(offer.itinerary.segments[0]!.aircraft).toBe('787-9');
+    expect(offer.itinerary.segments[0]!.cabin_class).toBe('economy');
+    expect(offer.itinerary.total_duration_minutes).toBe(450);
+    expect(offer.itinerary.connection_count).toBe(0);
+  });
+
+  it('maps price correctly using decimal.js', async () => {
+    mockFetchResponse(200, { data: { id: 'orq_1', offers: [DUFFEL_OFFER] } });
+
+    const result = await adapter.search(SEARCH_REQUEST);
+    const price = result.offers[0]!.price;
+    expect(price.base_fare).toBe(450);
+    expect(price.taxes).toBe(145.5);
+    expect(price.total).toBe(595.5);
+    expect(price.currency).toBe('GBP');
+  });
+
+  it('maps fare basis codes', async () => {
+    mockFetchResponse(200, { data: { id: 'orq_1', offers: [DUFFEL_OFFER] } });
+
+    const result = await adapter.search(SEARCH_REQUEST);
+    expect(result.offers[0]!.fare_basis).toEqual(['Y26NR']);
+  });
+
+  it('maps instant_ticketing from payment_requirements', async () => {
+    mockFetchResponse(200, { data: { id: 'orq_1', offers: [DUFFEL_OFFER] } });
+
+    const result = await adapter.search(SEARCH_REQUEST);
+    expect(result.offers[0]!.instant_ticketing).toBe(true);
+  });
+
+  it('returns empty offers for empty API response', async () => {
+    mockFetchResponse(200, { data: { id: 'orq_1', offers: [] } });
+
+    const result = await adapter.search(SEARCH_REQUEST);
+    expect(result.offers).toHaveLength(0);
+  });
+
+  it('sends correct headers', async () => {
+    mockFetchResponse(200, { data: { id: 'orq_1', offers: [] } });
+
+    await adapter.search(SEARCH_REQUEST);
+    const fetchCall = vi.mocked(fetch).mock.calls[0]!;
+    const headers = fetchCall[1]!.headers as Record<string, string>;
+    expect(headers['Authorization']).toBe('Bearer duffel_test_key');
+    expect(headers['Duffel-Version']).toBe('v2');
+    expect(headers['Content-Type']).toBe('application/json');
+  });
+
+  it('sends cabin_class in request body', async () => {
+    mockFetchResponse(200, { data: { id: 'orq_1', offers: [] } });
+
+    await adapter.search({ ...SEARCH_REQUEST, cabin_class: 'business' });
+    const fetchCall = vi.mocked(fetch).mock.calls[0]!;
+    const body = JSON.parse(fetchCall[1]!.body as string);
+    expect(body.data.cabin_class).toBe('business');
+  });
+
+  it('sets max_connections=0 when direct_only', async () => {
+    mockFetchResponse(200, { data: { id: 'orq_1', offers: [] } });
+
+    await adapter.search({ ...SEARCH_REQUEST, direct_only: true });
+    const fetchCall = vi.mocked(fetch).mock.calls[0]!;
+    const body = JSON.parse(fetchCall[1]!.body as string);
+    expect(body.data.max_connections).toBe(0);
+  });
+
+  it('handles connecting itinerary with multiple segments', async () => {
+    const connectingOffer = {
+      ...DUFFEL_OFFER,
+      id: 'off_connecting',
+      slices: [{
+        segments: [
+          { ...DUFFEL_OFFER.slices[0]!.segments[0], destination: { iata_code: 'ORD' }, duration: 'PT2H' },
+          { ...DUFFEL_OFFER.slices[0]!.segments[0], origin: { iata_code: 'ORD' }, destination: { iata_code: 'JFK' }, duration: 'PT3H' },
+        ],
+      }],
+    };
+    mockFetchResponse(200, { data: { id: 'orq_1', offers: [connectingOffer] } });
+
+    const result = await adapter.search(SEARCH_REQUEST);
+    expect(result.offers[0]!.itinerary.segments).toHaveLength(2);
+    expect(result.offers[0]!.itinerary.connection_count).toBe(1);
+    expect(result.offers[0]!.itinerary.total_duration_minutes).toBe(300);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// price()
+// ---------------------------------------------------------------------------
+
+describe('DuffelAdapter price', () => {
+  let adapter: DuffelAdapter;
+  beforeEach(() => {
+    adapter = new DuffelAdapter('duffel_test_key');
+  });
+
+  it('returns priced offer', async () => {
+    mockFetchResponse(200, { data: DUFFEL_OFFER });
+
+    const result = await adapter.price({
+      offer_id: 'off_test_123',
+      source: 'duffel',
+      passengers: [{ type: 'ADT', count: 1 }],
+    });
+    expect(result.available).toBe(true);
+    expect(result.price.total).toBe(595.5);
+    expect(result.expires_at).toBe('2026-06-14T23:59:59Z');
+  });
+
+  it('returns unavailable when offer not found', async () => {
+    mockFetchResponse(200, { data: null });
+
+    const result = await adapter.price({
+      offer_id: 'off_missing',
+      source: 'duffel',
+      passengers: [{ type: 'ADT', count: 1 }],
+    });
+    expect(result.available).toBe(false);
+    expect(result.price.total).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isAvailable()
+// ---------------------------------------------------------------------------
+
+describe('DuffelAdapter isAvailable', () => {
+  it('returns true when API responds 200', async () => {
+    mockFetchResponse(200, { data: [] });
+    const adapter = new DuffelAdapter('duffel_test_key');
+    expect(await adapter.isAvailable()).toBe(true);
+  });
+
+  it('returns false on network failure', async () => {
+    mockFetchNetworkError('ECONNREFUSED');
+    const adapter = new DuffelAdapter('duffel_test_key');
+    expect(await adapter.isAvailable()).toBe(false);
+  });
+
+  it('returns false on 401', async () => {
+    mockFetchResponse(401, { errors: [{ message: 'Invalid token' }] });
+    const adapter = new DuffelAdapter('duffel_test_key');
+    expect(await adapter.isAvailable()).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Error handling
+// ---------------------------------------------------------------------------
+
+describe('DuffelAdapter error handling', () => {
+  let adapter: DuffelAdapter;
+  beforeEach(() => {
+    adapter = new DuffelAdapter('duffel_test_key');
+  });
+
+  it('throws on network failure with clear message', async () => {
+    mockFetchNetworkError('ECONNREFUSED');
+    await expect(adapter.search(SEARCH_REQUEST)).rejects.toThrow('Duffel API network error: ECONNREFUSED');
+  });
+
+  it('throws on 429 rate limit', async () => {
+    mockFetchResponse(429, { errors: [{ message: 'Rate limit exceeded' }] });
+    await expect(adapter.search(SEARCH_REQUEST)).rejects.toThrow('rate limited (429)');
+  });
+
+  it('throws on 4xx API error with detail', async () => {
+    mockFetchResponse(422, { errors: [{ message: 'Invalid origin' }] });
+    await expect(adapter.search(SEARCH_REQUEST)).rejects.toThrow('Duffel API error 422: Invalid origin');
+  });
+
+  it('throws on 500 server error', async () => {
+    mockFetchResponse(500, {});
+    await expect(adapter.search(SEARCH_REQUEST)).rejects.toThrow('Duffel API error 500');
+  });
+});
