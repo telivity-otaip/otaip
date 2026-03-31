@@ -42,6 +42,18 @@ importers:
         specifier: workspace:*
         version: link:../../core
 
+  packages/agents-platform:
+    dependencies:
+      '@otaip/core':
+        specifier: workspace:*
+        version: link:../core
+      decimal.js:
+        specifier: ^10.4.3
+        version: 10.6.0
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+
   packages/agents-tmc:
     dependencies:
       '@otaip/core':
