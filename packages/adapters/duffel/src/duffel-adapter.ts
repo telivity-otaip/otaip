@@ -161,11 +161,12 @@ export class DuffelAdapter implements DistributionAdapter {
   private readonly apiKey: string;
   private readonly baseUrl: string;
 
-  constructor(apiKey: string, baseUrl?: string) {
-    if (!apiKey || apiKey.trim().length === 0) {
-      throw new Error('DuffelAdapter requires a valid API key.');
+  constructor(apiKey?: string, baseUrl?: string) {
+    const resolvedKey = apiKey ?? process.env['DUFFEL_API_KEY'] ?? '';
+    if (!resolvedKey || resolvedKey.trim().length === 0) {
+      throw new Error('DuffelAdapter requires a valid API key. Pass it to the constructor or set DUFFEL_API_KEY env var.');
     }
-    this.apiKey = apiKey;
+    this.apiKey = resolvedKey;
     this.baseUrl = baseUrl ?? DUFFEL_BASE_URL;
   }
 

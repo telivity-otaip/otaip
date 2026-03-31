@@ -96,11 +96,17 @@ describe('parseDurationToMinutes', () => {
 
 describe('DuffelAdapter constructor', () => {
   it('throws on empty API key', () => {
+    const orig = process.env['DUFFEL_API_KEY'];
+    delete process.env['DUFFEL_API_KEY'];
     expect(() => new DuffelAdapter('')).toThrow('valid API key');
+    if (orig !== undefined) process.env['DUFFEL_API_KEY'] = orig;
   });
 
   it('throws on whitespace-only API key', () => {
+    const orig = process.env['DUFFEL_API_KEY'];
+    delete process.env['DUFFEL_API_KEY'];
     expect(() => new DuffelAdapter('   ')).toThrow('valid API key');
+    if (orig !== undefined) process.env['DUFFEL_API_KEY'] = orig;
   });
 
   it('creates adapter with valid key', () => {
