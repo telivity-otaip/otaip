@@ -1,0 +1,54 @@
+{
+  "description": "ATPCO Category 33 refund penalty rules by fare basis pattern. Order matters — more specific patterns first.",
+  "rules": [
+    {
+      "fare_basis_pattern": ".*BASIC$",
+      "penalty_amount": "0.00",
+      "currency": "USD",
+      "forfeit_base_fare": true,
+      "notes": "Basic economy — non-refundable, base fare forfeited"
+    },
+    {
+      "fare_basis_pattern": ".*NR$",
+      "penalty_amount": "0.00",
+      "currency": "USD",
+      "forfeit_base_fare": true,
+      "notes": "Non-refundable fares — base fare forfeited, taxes refundable"
+    },
+    {
+      "fare_basis_pattern": "^Y",
+      "penalty_amount": "0.00",
+      "currency": "USD",
+      "forfeit_base_fare": false,
+      "notes": "Full-fare economy — fully refundable, no penalty"
+    },
+    {
+      "fare_basis_pattern": "^[CDJRIP]",
+      "penalty_amount": "0.00",
+      "currency": "USD",
+      "forfeit_base_fare": false,
+      "notes": "Business/First class fares — fully refundable, no penalty"
+    },
+    {
+      "fare_basis_pattern": "^[BHKLMNQSTUVWX].*PE$",
+      "penalty_amount": "75.00",
+      "currency": "USD",
+      "forfeit_base_fare": false,
+      "notes": "Premium economy restricted fares — reduced penalty"
+    },
+    {
+      "fare_basis_pattern": "^[BHKLMNQSTUVWX]",
+      "penalty_amount": "200.00",
+      "currency": "USD",
+      "forfeit_base_fare": false,
+      "notes": "Restricted economy fares — standard penalty"
+    },
+    {
+      "fare_basis_pattern": "^[EG]",
+      "penalty_amount": "300.00",
+      "currency": "USD",
+      "forfeit_base_fare": false,
+      "notes": "Deep discount fares — higher penalty"
+    }
+  ]
+}
