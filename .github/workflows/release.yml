@@ -29,8 +29,9 @@ jobs:
         id: tests
         run: |
           OUTPUT=$(pnpm test 2>&1 || true)
-          TEST_COUNT=$(echo "$OUTPUT" | sed -n 's/.*Tests[[:space:]]\+\([0-9]\+\) passed.*/\1/p' | tail -1)
-          TEST_FILES=$(echo "$OUTPUT" | sed -n 's/.*Test Files[[:space:]]\+\([0-9]\+\) passed.*/\1/p' | tail -1)
+          CLEAN=$(echo "$OUTPUT" | sed 's/\x1b\[[0-9;]*m//g')
+          TEST_COUNT=$(echo "$CLEAN" | sed -n 's/.*Tests  *\([0-9][0-9]*\) passed.*/\1/p' | tail -1)
+          TEST_FILES=$(echo "$CLEAN" | sed -n 's/.*Test Files  *\([0-9][0-9]*\) passed.*/\1/p' | tail -1)
           echo "count=${TEST_COUNT:-0}" >> "$GITHUB_OUTPUT"
           echo "files=${TEST_FILES:-0}" >> "$GITHUB_OUTPUT"
 
