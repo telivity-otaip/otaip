@@ -15,6 +15,32 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests and capture count
+        id: tests
+        run: |
+          OUTPUT=$(pnpm test 2>&1 || true)
+          TEST_COUNT=$(echo "$OUTPUT" | grep -oP 'Tests\s+\K[0-9]+(?= passed)' || echo "0")
+          TEST_FILES=$(echo "$OUTPUT" | grep -oP 'Test Files\s+\K[0-9]+(?= passed)' || echo "0")
+          echo "count=${TEST_COUNT}" >> "$GITHUB_OUTPUT"
+          echo "files=${TEST_FILES}" >> "$GITHUB_OUTPUT"
+
+      - name: Count agents
+        id: agents
+        run: |
+          AGENT_COUNT=$(find packages/agents packages/core/src/agents -name 'index.ts' -path '*/src/*' ! -name '__tests__' | wc -l | tr -d ' ')
+          echo "count=${AGENT_COUNT}" >> "$GITHUB_OUTPUT"
+
       - name: Get latest tag
         id: tag
         run: |
@@ -25,7 +51,6 @@ jobs:
         id: bump
         run: |
           TAG="${{ steps.tag.outputs.latest }}"
-          # Strip leading v
           VERSION="${TAG#v}"
           MAJOR=$(echo "$VERSION" | cut -d. -f1)
           MINOR=$(echo "$VERSION" | cut -d. -f2)
@@ -34,11 +59,65 @@ jobs:
           NEW_TAG="v${MAJOR}.${MINOR}.${NEW_PATCH}"
           echo "new_tag=${NEW_TAG}" >> "$GITHUB_OUTPUT"
 
+      - name: Build release notes
+        id: notes
+        run: |
+          TAG="${{ steps.tag.outputs.latest }}"
+          NEW_TAG="${{ steps.bump.outputs.new_tag }}"
+          AGENT_COUNT="${{ steps.agents.outputs.count }}"
+          TEST_COUNT="${{ steps.tests.outputs.count }}"
+          TEST_FILES="${{ steps.tests.outputs.files }}"
+
+          # Collect commits since last tag, grouped by conventional-commit type
+          FEATS=$(git log "${TAG}..HEAD" --pretty=format:"- %s" --grep="^feat" 2>/dev/null || true)
+          FIXES=$(git log "${TAG}..HEAD" --pretty=format:"- %s" --grep="^fix" 2>/dev/null || true)
+          DOCS=$(git log "${TAG}..HEAD" --pretty=format:"- %s" --grep="^docs" 2>/dev/null || true)
+          CI=$(git log "${TAG}..HEAD" --pretty=format:"- %s" --grep="^ci" 2>/dev/null || true)
+          OTHER=$(git log "${TAG}..HEAD" --pretty=format:"- %s" --invert-grep --grep="^feat" --grep="^fix" --grep="^docs" --grep="^ci" 2>/dev/null || true)
+
+          {
+            echo "${AGENT_COUNT} agents. ${TEST_COUNT} tests passing across ${TEST_FILES} files."
+            echo ""
+
+            if [ -n "$FEATS" ]; then
+              echo "### Features"
+              echo "$FEATS"
+              echo ""
+            fi
+
+            if [ -n "$FIXES" ]; then
+              echo "### Fixes"
+              echo "$FIXES"
+              echo ""
+            fi
+
+            if [ -n "$DOCS" ]; then
+              echo "### Docs"
+              echo "$DOCS"
+              echo ""
+            fi
+
+            if [ -n "$CI" ]; then
+              echo "### CI / Infra"
+              echo "$CI"
+              echo ""
+            fi
+
+            if [ -n "$OTHER" ]; then
+              echo "### Other"
+              echo "$OTHER"
+              echo ""
+            fi
+
+            echo "---"
+            echo "Apache 2.0 · Full travel transaction lifecycle"
+          } > /tmp/release-notes.md
+
       - name: Create release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "${{ steps.bump.outputs.new_tag }}" \
             --title "${{ steps.bump.outputs.new_tag }}" \
-            --generate-notes \
+            --notes-file /tmp/release-notes.md \
             --latest
