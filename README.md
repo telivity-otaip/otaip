@@ -6,7 +6,7 @@ OTAIP is an open source agent orchestration platform that encodes travel industr
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
-[![Tests](https://img.shields.io/badge/tests-1730%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
+[![Tests](https://img.shields.io/badge/tests-1923%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
 [![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg)](https://pnpm.io/)
 
 ---
@@ -28,7 +28,7 @@ OTAIP is an open source agent orchestration platform that encodes travel industr
 
 *4 agents marked coming soon (1.8, 2.6, 2.7, 7.4) - stubs exported, pending domain input or future phase.*
 
-**62 agents. 1,730 tests. All green.**
+**63 agents. 1,923 tests. All green.**
 
 ---
 
@@ -95,6 +95,7 @@ interface Agent<TInput, TOutput> {
 | `@otaip/agents-tmc` | Stage 8: Traveler profiles, corporate accounts, mid-office automation, reporting, duty of care |
 | `@otaip/agents-platform` | Stage 9: Orchestrator, knowledge retrieval, monitoring & alerting, audit & compliance, plugin manager |
 | `@otaip/adapter-duffel` | Duffel NDC adapter - MockDuffelAdapter for testing, live DuffelAdapter for real API calls |
+| `@otaip/connect` | Universal supplier adapter framework - Sabre GDS (BFM v5 + Booking Management v1), TripPro |
 
 ---
 
@@ -302,13 +303,18 @@ Orchestration, knowledge retrieval, observability, audit, and plugin management.
 
 OTAIP is source-agnostic. Agents work with any distribution source via the `DistributionAdapter` interface from `@otaip/core`. You bring the credentials.
 
-**Aggregator adapters (Phase 1):**
+**Implemented:**
+
+| Package | Coverage | API type | Status |
+|---------|----------|----------|--------|
+| `@otaip/adapter-duffel` | NDC-participating airlines | REST | Live |
+| `@otaip/connect` (Sabre) | Full-service carriers via GDS | REST (Sabre APIs v5/v1) | Live |
+
+**Roadmap:**
 
 | Package | Coverage | API type |
 |---------|----------|----------|
-| `@otaip/adapter-duffel` | NDC-participating airlines | REST |
 | `@otaip/adapter-amadeus` | Full-service carriers via GDS | REST |
-| `@otaip/adapter-sabre` | Full-service carriers via GDS | SOAP |
 | `@otaip/adapter-verteil` | AF, Finnair, SAS, Oman Air + others | REST (pure NDC) |
 | `@otaip/adapter-accelya` | LH Group, American NDC | REST (Farelogix-based) |
 
@@ -333,8 +339,9 @@ otaip/
 |   +-- agents-tmc/              # @otaip/agents-tmc - Stage 8
 |   +-- agents-platform/         # @otaip/agents-platform - Stage 9
 |   +-- adapter-duffel/          # @otaip/adapter-duffel - Mock + live Duffel adapter
+|   +-- connect/                # @otaip/connect - Sabre GDS, TripPro supplier adapters
 +-- agents/
-|   +-- TAXONOMY.md              # Full 62-agent taxonomy
+|   +-- TAXONOMY.md              # Full 63-agent taxonomy
 |   +-- specs/                   # YAML specs for all agents
 +-- docs/
 |   +-- architecture/            # ADRs, adapter target list
