@@ -29,15 +29,15 @@ jobs:
         id: tests
         run: |
           OUTPUT=$(pnpm test 2>&1 || true)
-          TEST_COUNT=$(echo "$OUTPUT" | grep -oP 'Tests\s+\K[0-9]+(?= passed)' || echo "0")
-          TEST_FILES=$(echo "$OUTPUT" | grep -oP 'Test Files\s+\K[0-9]+(?= passed)' || echo "0")
-          echo "count=${TEST_COUNT}" >> "$GITHUB_OUTPUT"
-          echo "files=${TEST_FILES}" >> "$GITHUB_OUTPUT"
+          TEST_COUNT=$(echo "$OUTPUT" | sed -n 's/.*Tests[[:space:]]\+\([0-9]\+\) passed.*/\1/p' | tail -1)
+          TEST_FILES=$(echo "$OUTPUT" | sed -n 's/.*Test Files[[:space:]]\+\([0-9]\+\) passed.*/\1/p' | tail -1)
+          echo "count=${TEST_COUNT:-0}" >> "$GITHUB_OUTPUT"
+          echo "files=${TEST_FILES:-0}" >> "$GITHUB_OUTPUT"
 
       - name: Count agents
         id: agents
         run: |
-          AGENT_COUNT=$(find packages/agents packages/core/src/agents -name 'index.ts' -path '*/src/*' ! -name '__tests__' | wc -l | tr -d ' ')
+          AGENT_COUNT=$(find packages/agents packages/adapters packages/core/src/agents -name 'index.ts' -path '*/src/*' ! -name '__tests__' | wc -l | tr -d ' ')
           echo "count=${AGENT_COUNT}" >> "$GITHUB_OUTPUT"
 
       - name: Get latest tag
