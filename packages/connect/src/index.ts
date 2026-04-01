@@ -44,6 +44,10 @@ export {
 export { TripProAdapter } from './suppliers/trippro/index.js';
 export type { TripProConfig } from './suppliers/trippro/config.js';
 
+// Sabre adapter
+export { SabreAdapter } from './suppliers/sabre/index.js';
+export type { SabreConfig } from './suppliers/sabre/config.js';
+
 // Channel stubs (types only — implementations are stubs)
 export type { OpenAPIGeneratorConfig } from './channels/chatgpt/openapi-generator.js';
 export type { GptInstructionsConfig } from './channels/chatgpt/gpt-instructions.js';

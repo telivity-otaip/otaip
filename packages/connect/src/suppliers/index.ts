@@ -3,6 +3,7 @@
  */
 
 import type { ConnectAdapter } from '../types.js';
+import { SabreAdapter } from './sabre/index.js';
 import { TripProAdapter } from './trippro/index.js';
 
 const SUPPLIER_FACTORIES: Record<
@@ -36,3 +37,6 @@ export function listSuppliers(): string[] {
 
 // Auto-register TripPro
 registerSupplier('trippro', (config) => new TripProAdapter(config));
+
+// Auto-register Sabre
+registerSupplier('sabre', (config) => new SabreAdapter(config));
