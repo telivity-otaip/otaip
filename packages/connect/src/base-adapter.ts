@@ -9,7 +9,7 @@ export class ConnectError extends Error {
     public readonly supplier: string,
     public readonly operation: string,
     public readonly retryable: boolean = false,
-    public readonly cause?: unknown,
+    public override readonly cause?: unknown,
   ) {
     super(message);
     this.name = 'ConnectError';

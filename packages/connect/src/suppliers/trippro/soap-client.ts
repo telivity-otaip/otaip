@@ -73,7 +73,7 @@ export function buildReadETicketBody(ticketNumber: string): string {
 export function extractXmlValue(xml: string, tagName: string): string | null {
   const regex = new RegExp(`<${tagName}[^>]*>([^<]*)</${tagName}>`, 'i');
   const match = xml.match(regex);
-  return match ? match[1] : null;
+  return match ? match[1] ?? null : null;
 }
 
 /** Extract all text values of a named XML element. */
@@ -82,7 +82,7 @@ export function extractXmlValues(xml: string, tagName: string): string[] {
   const values: string[] = [];
   let match: RegExpExecArray | null;
   while ((match = regex.exec(xml)) !== null) {
-    values.push(match[1]);
+    values.push(match[1] ?? '');
   }
   return values;
 }
