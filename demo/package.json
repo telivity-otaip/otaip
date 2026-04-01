@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "book": "tsx book-flight.ts",
+    "book:sabre": "tsx book-flight-sabre.ts",
     "book:direct": "tsx book-flight-direct.ts"
   },
   "dependencies": {

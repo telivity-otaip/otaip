@@ -95,7 +95,7 @@ interface Agent<TInput, TOutput> {
 | `@otaip/agents-tmc` | Stage 8: Traveler profiles, corporate accounts, mid-office automation, reporting, duty of care |
 | `@otaip/agents-platform` | Stage 9: Orchestrator, knowledge retrieval, monitoring & alerting, audit & compliance, plugin manager |
 | `@otaip/adapter-duffel` | Duffel NDC adapter - MockDuffelAdapter for testing, live DuffelAdapter for real API calls |
-| `@otaip/connect` | Universal supplier adapter framework - Sabre GDS (BFM v5 + Booking Management v1), TripPro |
+| `@otaip/connect` | Universal supplier adapter framework - Sabre GDS (BFM v5 + Booking Management v1), TripPro. See [usage guide](packages/connect/GUIDE.md) |
 
 ---
 
