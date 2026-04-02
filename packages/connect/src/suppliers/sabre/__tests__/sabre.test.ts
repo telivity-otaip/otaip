@@ -398,7 +398,7 @@ describe('SabreAuth', () => {
     await auth.getToken();
     const [_url, opts] = mockFetch.mock.calls[0] as [string, RequestInit];
     const headers = opts.headers as Record<string, string>;
-    const expected = btoa('test-client-id:test-client-secret');
+    const expected = btoa(`${btoa('test-client-id')}:${btoa('test-client-secret')}`);
     expect(headers['Authorization']).toBe(`Basic ${expected}`);
   });
 

@@ -22,7 +22,8 @@ export class SabreAuth {
 
   constructor(config: SabreConfig) {
     this.baseUrl = getBaseUrl(config.environment);
-    this.credentials = btoa(`${config.clientId}:${config.clientSecret}`);
+    // Sabre requires double base64: base64(base64(clientId):base64(clientSecret))
+    this.credentials = btoa(`${btoa(config.clientId)}:${btoa(config.clientSecret)}`);
   }
 
   async getToken(): Promise<string> {
