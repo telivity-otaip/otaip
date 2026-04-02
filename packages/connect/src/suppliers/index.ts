@@ -3,6 +3,7 @@
  */
 
 import type { ConnectAdapter } from '../types.js';
+import { NavitaireAdapter } from './navitaire/index.js';
 import { SabreAdapter } from './sabre/index.js';
 import { TripProAdapter } from './trippro/index.js';
 
@@ -40,3 +41,6 @@ registerSupplier('trippro', (config) => new TripProAdapter(config));
 
 // Auto-register Sabre
 registerSupplier('sabre', (config) => new SabreAdapter(config));
+
+// Auto-register Navitaire
+registerSupplier('navitaire', (config) => new NavitaireAdapter(config));
