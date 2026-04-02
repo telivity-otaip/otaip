@@ -30,15 +30,11 @@ import type {
   AvailabilityJourney,
   AvailabilityRequestv3,
   AvailabilityResponse,
-  BookingBreakdown,
   BookingCommitData,
   BookingData,
-  BookingPassenger,
   BookingPriceResponse,
   BookingSegment,
-  PassengerFare,
   PrimaryContactRequest,
-  ServiceCharge,
   TripSellRequestv2,
 } from './types.js';
 
@@ -121,22 +117,6 @@ function calculateDurationMinutes(departure: string, arrival: string): number {
   return Math.round((arr - dep) / 60_000);
 }
 
-function sumServiceCharges(charges: ServiceCharge[] | undefined, currency: string): MoneyAmount {
-  if (!charges?.length) return { amount: '0', currency };
-  const total = charges.reduce((sum, c) => sum.plus(new Decimal(c.amount ?? 0)), new Decimal(0));
-  return { amount: total.toString(), currency };
-}
-
-function sumServiceChargesByType(
-  charges: ServiceCharge[] | undefined,
-  types: string[],
-  currency: string,
-): MoneyAmount {
-  if (!charges?.length) return { amount: '0', currency };
-  const filtered = charges.filter((c) => types.includes(c.type));
-  const total = filtered.reduce((sum, c) => sum.plus(new Decimal(c.amount ?? 0)), new Decimal(0));
-  return { amount: total.toString(), currency };
-}
 
 // ============================================================
 // SEARCH REQUEST MAPPER
@@ -181,7 +161,7 @@ export function mapSearchRequest(
   };
 }
 
-function buildFilters(input: SearchFlightsInput) {
+function buildFilters(input: SearchFlightsInput): { connectionType?: 'None' | 'Direct'; carrierCode?: string } | undefined {
   const filters: {
     connectionType?: 'None' | 'Direct';
     carrierCode?: string;
