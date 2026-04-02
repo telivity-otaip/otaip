@@ -48,6 +48,10 @@ export type { TripProConfig } from './suppliers/trippro/config.js';
 export { SabreAdapter } from './suppliers/sabre/index.js';
 export type { SabreConfig } from './suppliers/sabre/config.js';
 
+// Navitaire adapter
+export { NavitaireAdapter } from './suppliers/navitaire/index.js';
+export type { NavitaireConfig } from './suppliers/navitaire/config.js';
+
 // Channel generators
 export { generateOpenAPISpec } from './channels/chatgpt/openapi-generator.js';
 export type { OpenAPIGeneratorConfig } from './channels/chatgpt/openapi-generator.js';

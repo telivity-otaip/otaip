@@ -1,0 +1,117 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Navitaire Digital API",
+    "version": "4.7.0",
+    "description": "Navitaire New Skies / dotREZ Digital API. This is a reference placeholder — the full spec (741 endpoints, 1,727 schemas) should be obtained from Navitaire and placed here."
+  },
+  "servers": [
+    {
+      "url": "https://dotrezapi.test.1n.navitaire.com",
+      "description": "Navitaire Test/CERT Environment"
+    }
+  ],
+  "paths": {
+    "/api/auth/v1/token/user": {
+      "post": {
+        "summary": "Create agent user token",
+        "operationId": "createToken",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/auth/v1/token": {
+      "put": {
+        "summary": "Refresh token",
+        "operationId": "refreshToken",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/nsk/v4/availability/search": {
+      "post": {
+        "summary": "Search availability",
+        "operationId": "searchAvailability",
+        "tags": ["Availability"]
+      }
+    },
+    "/api/nsk/v4/trip/sell": {
+      "post": {
+        "summary": "Sell journey into booking state",
+        "operationId": "tripSell",
+        "tags": ["Trip"]
+      }
+    },
+    "/api/nsk/v1/booking/price": {
+      "put": {
+        "summary": "Price booking in state",
+        "operationId": "priceBooking",
+        "tags": ["Booking"]
+      }
+    },
+    "/api/nsk/v1/trip/passengers": {
+      "post": {
+        "summary": "Add passengers to booking state",
+        "operationId": "addPassengers",
+        "tags": ["Trip"]
+      }
+    },
+    "/api/nsk/v1/booking/contacts/primary": {
+      "post": {
+        "summary": "Add primary contact to booking",
+        "operationId": "addPrimaryContact",
+        "tags": ["Booking"]
+      }
+    },
+    "/api/nsk/v5/booking/payments": {
+      "post": {
+        "summary": "Add payment to booking in state",
+        "operationId": "addPayment",
+        "tags": ["Booking"]
+      }
+    },
+    "/api/nsk/v3/booking": {
+      "post": {
+        "summary": "Commit booking (create PNR)",
+        "operationId": "commitBooking",
+        "tags": ["Booking"]
+      }
+    },
+    "/api/nsk/v1/booking": {
+      "get": {
+        "summary": "Get current booking in session state",
+        "operationId": "getBookingState",
+        "tags": ["Booking"]
+      }
+    },
+    "/api/nsk/v1/booking/retrieve/byRecordLocator/{recordLocator}": {
+      "get": {
+        "summary": "Retrieve booking by record locator",
+        "operationId": "retrieveBookingByRL",
+        "tags": ["Booking"]
+      }
+    },
+    "/api/nsk/v1/booking/eTickets/validation": {
+      "get": {
+        "summary": "Validate booking for e-ticket issuance",
+        "operationId": "validateETickets",
+        "tags": ["Ticketing"]
+      }
+    },
+    "/api/nsk/v1/booking/eTickets": {
+      "post": {
+        "summary": "Issue new e-tickets",
+        "operationId": "issueETickets",
+        "tags": ["Ticketing"]
+      }
+    },
+    "/api/nsk/v1/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "healthCheck",
+        "tags": ["Health"]
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}
