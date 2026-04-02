@@ -143,3 +143,4 @@ internal/
 
 # Cowork working files — session state, logs, skills
 .cowork/
+.claude/worktrees/
