@@ -98,7 +98,7 @@ export class NavitaireAdapter extends BaseAdapter implements ConnectAdapter {
 
   async priceItinerary(
     offerId: string,
-    passengers: PassengerCount,
+    _passengers: PassengerCount,
   ): Promise<PricedItinerary> {
     return this.withRetry('priceItinerary', async () => {
       const { journeyKey, fareAvailabilityKey } = parseOfferId(offerId);
@@ -390,7 +390,7 @@ export class NavitaireAdapter extends BaseAdapter implements ConnectAdapter {
     method: string,
     url: string,
     token: string,
-    body: unknown | undefined,
+    body: unknown,
     operation: string,
   ): Promise<T> {
     const headers: Record<string, string> = {
