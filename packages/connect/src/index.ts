@@ -48,11 +48,18 @@ export type { TripProConfig } from './suppliers/trippro/config.js';
 export { SabreAdapter } from './suppliers/sabre/index.js';
 export type { SabreConfig } from './suppliers/sabre/config.js';
 
-// Channel stubs (types only — implementations are stubs)
+// Channel generators
+export { generateOpenAPISpec } from './channels/chatgpt/openapi-generator.js';
 export type { OpenAPIGeneratorConfig } from './channels/chatgpt/openapi-generator.js';
+export { generateGptInstructions } from './channels/chatgpt/gpt-instructions.js';
 export type { GptInstructionsConfig } from './channels/chatgpt/gpt-instructions.js';
+export { generateMcpServer } from './channels/claude/mcp-server.js';
 export type { McpServerConfig } from './channels/claude/mcp-server.js';
+export { generateMcpTools } from './channels/claude/tool-generator.js';
 export type { McpToolDefinition } from './channels/claude/tool-generator.js';
+
+// White-label config
+export type { WhiteLabelConfig } from './types.js';
 
 // Pipeline stubs (types only — implementations are stubs)
 export type { BookingPipelineConfig, BookingPipelineStep } from './pipeline/booking-flow.js';

@@ -179,3 +179,15 @@ export interface ConnectAdapter {
   cancelBooking?(bookingId: string): Promise<{ success: boolean; message: string }>;
   healthCheck(): Promise<{ healthy: boolean; latencyMs: number }>;
 }
+
+// ============================================================
+// WHITE-LABEL CONFIG
+// ============================================================
+
+export interface WhiteLabelConfig {
+  brandName: string;
+  companyDescription?: string;
+  supportEmail?: string;
+  logoUrl?: string;
+  customInstructions?: string[];
+}
