@@ -6,7 +6,7 @@ OTAIP is an open source agent orchestration platform that encodes travel industr
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
-[![Tests](https://img.shields.io/badge/tests-2023%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
+[![Tests](https://img.shields.io/badge/tests-2132%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
 [![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg)](https://pnpm.io/)
 
 ---
@@ -28,7 +28,7 @@ OTAIP is an open source agent orchestration platform that encodes travel industr
 
 *4 agents marked coming soon (1.8, 2.6, 2.7, 7.4) - stubs exported, pending domain input or future phase.*
 
-**63 agents. 2,023 tests. All green.**
+**63 agents. 2,132 tests. All green.**
 
 ---
 
@@ -95,7 +95,7 @@ interface Agent<TInput, TOutput> {
 | `@otaip/agents-tmc` | Stage 8: Traveler profiles, corporate accounts, mid-office automation, reporting, duty of care |
 | `@otaip/agents-platform` | Stage 9: Orchestrator, knowledge retrieval, monitoring & alerting, audit & compliance, plugin manager |
 | `@otaip/adapter-duffel` | Duffel NDC adapter - MockDuffelAdapter for testing, live DuffelAdapter for real API calls |
-| `@otaip/connect` | Universal supplier adapter framework - Sabre GDS (BFM v5 + Booking Management v1), TripPro. Channel generators: ChatGPT (Custom GPT via OpenAPI 3.1), Claude (MCP Server). Full white-label support. See [usage guide](packages/connect/GUIDE.md) |
+| `@otaip/connect` | Universal supplier adapter framework - Sabre GDS (BFM v5 + Booking Management v1), Navitaire (New Skies/dotREZ, session-stateful), TripPro. Channel generators: ChatGPT (Custom GPT via OpenAPI 3.1), Claude (MCP Server). Full white-label support. See [usage guide](packages/connect/GUIDE.md) |
 
 ---
 
@@ -309,6 +309,7 @@ OTAIP is source-agnostic. Agents work with any distribution source via the `Dist
 |---------|----------|----------|--------|
 | `@otaip/adapter-duffel` | NDC-participating airlines | REST | Live |
 | `@otaip/connect` (Sabre) | Full-service carriers via GDS | REST (Sabre APIs v5/v1) | Live |
+| `@otaip/connect` (Navitaire) | LCCs via Navitaire (New Skies/dotREZ) | REST (session-stateful) | Live |
 
 **Roadmap:**
 
@@ -339,7 +340,7 @@ otaip/
 |   +-- agents-tmc/              # @otaip/agents-tmc - Stage 8
 |   +-- agents-platform/         # @otaip/agents-platform - Stage 9
 |   +-- adapter-duffel/          # @otaip/adapter-duffel - Mock + live Duffel adapter
-|   +-- connect/                # @otaip/connect - Sabre GDS, TripPro adapters + ChatGPT/Claude channel generators
+|   +-- connect/                # @otaip/connect - Sabre GDS, Navitaire, TripPro adapters + ChatGPT/Claude channel generators
 +-- agents/
 |   +-- TAXONOMY.md              # Full 63-agent taxonomy
 |   +-- specs/                   # YAML specs for all agents
