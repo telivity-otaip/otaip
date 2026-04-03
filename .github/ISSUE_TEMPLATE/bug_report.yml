@@ -1,0 +1,82 @@
+name: Bug Report
+description: Something isn't working correctly
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Which package is affected?
+      options:
+        - "@otaip/core"
+        - "@otaip/agents-reference"
+        - "@otaip/agents-lodging"
+        - "@otaip/agents-search"
+        - "@otaip/agents-pricing"
+        - "@otaip/agents-booking"
+        - "@otaip/agents-ticketing"
+        - "@otaip/agents-exchange"
+        - "@otaip/agents-settlement"
+        - "@otaip/agents-reconciliation"
+        - "@otaip/agents-tmc"
+        - "@otaip/agents-platform"
+        - "@otaip/adapter-duffel"
+        - "@otaip/connect"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: agent
+    attributes:
+      label: Agent ID
+      description: "Which agent? (e.g., 0.1, 4.2, 6.1)"
+      placeholder: "4.2"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Clear description of the bug. Include the input you sent and the output you got.
+      placeholder: |
+        I called PropertyDeduplicationAgent.execute() with two properties that have
+        the same coordinates but different chain codes. Expected them to be flagged
+        for review (score ~0.75) but they were auto-merged (score 0.91).
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have happened?
+      description: What's the correct behavior according to the spec or domain knowledge?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal code or test case that reproduces the issue.
+      render: typescript
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "Package version (from package.json)"
+      placeholder: "0.2.0"
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      placeholder: "20.11.0"
+    validations:
+      required: false

@@ -1,0 +1,73 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: What type of feature?
+      options:
+        - "New agent"
+        - "Enhancement to existing agent"
+        - "New adapter"
+        - "Core infrastructure"
+        - "Developer tooling"
+        - "Documentation"
+        - "Other"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Which package?
+      description: Which package would this affect?
+      options:
+        - "@otaip/core"
+        - "@otaip/agents-reference"
+        - "@otaip/agents-lodging"
+        - "@otaip/agents-search"
+        - "@otaip/agents-pricing"
+        - "@otaip/agents-booking"
+        - "@otaip/agents-ticketing"
+        - "@otaip/agents-exchange"
+        - "@otaip/agents-settlement"
+        - "@otaip/agents-reconciliation"
+        - "@otaip/agents-tmc"
+        - "@otaip/agents-platform"
+        - "@otaip/adapter-duffel"
+        - "@otaip/connect"
+        - "New package"
+        - "Multiple packages"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case. What are you trying to do that you can't do today?
+      placeholder: |
+        When comparing hotel rates across sources, there's no way to detect
+        rate parity violations between the hotel's direct channel and OTAs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How should this work? Include input/output types if you have them.
+    validations:
+      required: true
+
+  - type: textarea
+    id: domain
+    attributes:
+      label: Domain knowledge
+      description: |
+        If this involves travel industry logic, explain it here. Link to IATA docs,
+        ATPCO references, GDS documentation, or describe industry practice.
+        We don't accept domain logic without a source.
+    validations:
+      required: false
