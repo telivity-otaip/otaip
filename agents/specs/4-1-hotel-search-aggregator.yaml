@@ -1,0 +1,127 @@
+agent:
+  id: "4.1"
+  name: Hotel Search Aggregator
+  version: 0.1.0
+  domain: lodging
+  package: packages/agents/lodging/src/hotel-search/
+
+description: >
+  Parallel multi-source hotel search with per-adapter timeouts and partial
+  result handling. Queries multiple hotel source adapters (Amadeus, Hotelbeds,
+  Duffel Stays) concurrently, returns raw unmerged results with adapter-level
+  metadata. Downstream: feeds Agent 4.2 (Property Deduplication).
+
+input:
+  type: HotelSearchInput
+  fields:
+    - name: destination
+      type: string
+      required: true
+      description: City name, airport code, or coordinates
+    - name: checkIn
+      type: string
+      required: true
+      description: ISO date (YYYY-MM-DD)
+    - name: checkOut
+      type: string
+      required: true
+      description: ISO date (YYYY-MM-DD)
+    - name: rooms
+      type: number
+      required: true
+      description: Number of rooms needed
+    - name: adults
+      type: number
+      required: true
+      description: Adults per room
+    - name: children
+      type: number
+      required: false
+      description: Child guests per room
+    - name: starRating
+      type: number
+      required: false
+      description: Minimum star rating filter
+    - name: maxRatePerNight
+      type: string
+      required: false
+      description: Maximum nightly rate (decimal string)
+    - name: currency
+      type: string
+      required: false
+      default: USD
+      description: ISO 4217 currency code
+    - name: rateType
+      type: RateType
+      required: false
+      description: Rate type filter (bar, corporate, consortium, etc.)
+    - name: chainPreference
+      type: string
+      required: false
+      description: GDS chain code (e.g., "MC" for Marriott)
+    - name: timeoutMs
+      type: number
+      required: false
+      default: 5000
+      description: Per-adapter timeout in milliseconds
+    - name: adapterIds
+      type: string[]
+      required: false
+      description: Specific adapter IDs to query (all if omitted)
+
+output:
+  type: HotelSearchOutput
+  fields:
+    - name: properties
+      type: RawHotelResult[]
+      description: Raw unmerged hotel results from all adapters
+    - name: totalResults
+      type: number
+      description: Total number of raw results
+    - name: adapterResults
+      type: AdapterResult[]
+      description: Per-adapter metadata (count, latency, timeout, error)
+    - name: partialResults
+      type: boolean
+      description: True if one or more adapters timed out or errored
+    - name: searchId
+      type: string
+      description: Unique search ID for this request
+
+types:
+  AdapterResult:
+    adapterId: string
+    adapterName: string
+    resultCount: number
+    responseTimeMs: number
+    timedOut: boolean
+    error: string | undefined
+
+  RawHotelResult:
+    source: HotelSource
+    propertyName: string
+    address: HotelAddress
+    coordinates: GeoCoordinates
+    chainCode: string | undefined
+    starRating: number | undefined
+    amenities: string[]
+    roomTypes: RawRoomType[]
+    rates: RawRate[]
+    photos: HotelPhoto[]
+
+confidence_scoring:
+  all_adapters_responded: 1.0
+  partial_results: 0.7
+
+test_cases:
+  - description: Multi-adapter search returns combined results
+    input: { destination: "New York", checkIn: "2025-06-01", checkOut: "2025-06-03", rooms: 1, adults: 2 }
+    expected: { totalResults: ">= 1", partialResults: false }
+
+  - description: Adapter timeout returns partial results
+    input: { destination: "London", checkIn: "2025-07-01", checkOut: "2025-07-03", rooms: 1, adults: 2, timeoutMs: 1 }
+    expected: { partialResults: true }
+
+  - description: Star rating filter applied
+    input: { destination: "Paris", checkIn: "2025-08-01", checkOut: "2025-08-03", rooms: 1, adults: 2, starRating: 4 }
+    expected: { properties: "all starRating >= 4" }

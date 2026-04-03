@@ -1,0 +1,96 @@
+agent:
+  id: "4.2"
+  name: Property Deduplication
+  version: 0.1.0
+  domain: lodging
+  package: packages/agents/lodging/src/property-dedup/
+
+description: >
+  Deduplicates hotel properties from multiple sources into canonical records.
+  Uses multi-signal scoring: Jaro-Winkler name similarity (0.3 weight),
+  Levenshtein address similarity (0.2), Haversine coordinate proximity (0.25),
+  chain code match (0.15), star rating match (0.1). Groups via Union-Find with
+  configurable auto-merge/review/separate thresholds. Upstream: Agent 4.1.
+  Downstream: Agents 4.3 and 4.4.
+
+input:
+  type: DedupInput
+  fields:
+    - name: properties
+      type: RawHotelResult[]
+      required: true
+      description: Raw hotel results from Agent 4.1
+    - name: thresholds
+      type: DedupThresholds
+      required: false
+      description: Custom merge thresholds
+
+output:
+  type: DedupOutput
+  fields:
+    - name: canonical
+      type: CanonicalProperty[]
+      description: One canonical property per physical hotel
+    - name: mergeLog
+      type: MergeDecision[]
+      description: Full audit trail of merge decisions with score breakdowns
+    - name: stats
+      type: DedupStats
+      description: Input/output counts, auto-merged, review-flagged, separated
+
+types:
+  DedupThresholds:
+    autoMerge: number   # default 0.85
+    review: number      # default 0.65
+
+  ScoreBreakdown:
+    name: number        # Jaro-Winkler (weight 0.3)
+    address: number     # Levenshtein (weight 0.2)
+    coordinates: number # Haversine (weight 0.25)
+    chainCode: number   # Exact match (weight 0.15)
+    starRating: number  # Match score (weight 0.1)
+    weighted: number    # Composite
+
+  MergeDecision:
+    propertyIds: string[]
+    score: number
+    decision: "'auto_merge' | 'review' | 'separate'"
+    scoreBreakdown: ScoreBreakdown
+
+  DedupStats:
+    inputCount: number
+    outputCount: number
+    autoMerged: number
+    reviewFlagged: number
+    separated: number
+
+  CanonicalProperty:
+    canonicalId: string
+    propertyName: string
+    address: HotelAddress
+    coordinates: GeoCoordinates
+    chainCode: string | undefined
+    starRating: number | undefined
+    sources: HotelSource[]
+    sourceResults: RawHotelResult[]
+    mergeConfidence: number
+    mergeReasoning: string
+    reviewRequired: boolean
+
+confidence_scoring:
+  all_above_auto_merge: 1.0
+  some_review_flagged: 0.8
+  many_review_flagged: 0.6
+
+test_cases:
+  - description: Same hotel from two sources merges automatically
+    input: { properties: "[two results for Marriott Marquis NYC from different sources]", thresholds: { autoMerge: 0.85, review: 0.65 } }
+    expected: { stats.outputCount: 1, stats.autoMerged: 1 }
+
+  - description: Different hotels in same city remain separate
+    input: { properties: "[Hilton Midtown and Marriott Marquis NYC]" }
+    expected: { stats.outputCount: 2, stats.separated: 1 }
+
+  - description: Similar names different cities stay separate
+    input: { properties: "[Hilton NYC and Hilton London]" }
+    expected: { stats.outputCount: 2 }

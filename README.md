@@ -1,12 +1,34 @@
-# OTAIP - Open Travel AI Platform
+# OTAIP — Open Travel AI Platform
 
-**The composable AI agent stack for the travel industry.**
+**70 production agents for airline distribution, hotel booking, GDS/NDC, and settlement — typed, tested, composable.**
 
-OTAIP is an open source agent orchestration platform that encodes travel industry domain knowledge - fare rules, GDS/NDC protocols, ATPCO categories, BSP/ARC settlement logic - into typed, testable TypeScript agents. Plug in your distribution credentials. Get a full booking engine.
+```typescript
+import { AirportCodeResolver } from '@otaip/agents-reference';
+import { PropertyDeduplicationAgent } from '@otaip/agents-lodging';
+
+// Resolve a multi-airport city in one call
+const resolver = new AirportCodeResolver();
+await resolver.initialize();
+const airports = await resolver.execute({ data: { code: 'NYC' } });
+// → JFK (primary), LGA, EWR — with confidence scores, metro awareness, timezone data
+
+// Deduplicate the same hotel from 4 different sources
+const dedup = new PropertyDeduplicationAgent();
+await dedup.initialize();
+const hotels = await dedup.execute({
+  data: {
+    properties: rawHotelResults,
+    thresholds: { auto_merge: 0.85, review: 0.65 },
+  },
+});
+// → Canonical properties with merged content, best photos, unified amenities
+```
+
+Every agent implements one interface. Every output includes confidence scores. No LLM required — this is deterministic domain logic.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
-[![Tests](https://img.shields.io/badge/tests-2132%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
+[![Tests](https://img.shields.io/badge/tests-2247%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
 [![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg)](https://pnpm.io/)
 
 ---
@@ -25,10 +47,11 @@ OTAIP is an open source agent orchestration platform that encodes travel industr
 | Stage 7 - BSP/ARC Settlement | `@otaip/agents-reconciliation` | 6 | 193 | Complete |
 | Stage 8 - TMC & Agency Ops | `@otaip/agents-tmc` | 5 | 101 | Complete |
 | Stage 9 - Platform & Integration | `@otaip/agents-platform` | 5 | 97 | Complete |
+| Domain 4 - Lodging | `@otaip/agents-lodging` | 7 | 158 | Complete |
 
 *4 agents marked coming soon (1.8, 2.6, 2.7, 7.4) - stubs exported, pending domain input or future phase.*
 
-**63 agents. 2,132 tests. All green.**
+**70 agents. 2,247 tests. All green.**
 
 ---
 
@@ -44,10 +67,10 @@ OTAIP is an open source agent orchestration platform that encodes travel industr
 |          Agent interface - Types - Error standards            |
 +---+----------+----------+----------+----------+--------------+
     |          |          |          |          |
-    v          v          v          v          v
- Stage 0    Stage 1    Stage 2    Stage 3    Stage 4
- Reference  Search &   Select &   Book &     Ticket &
- Data       Shop       Price      Order      Fulfill
+    v          v          v          v          v          v
+ Stage 0    Stage 1    Stage 2    Stage 3    Stage 4    Domain 4
+ Reference  Search &   Select &   Book &     Ticket &   Lodging
+ Data       Shop       Price      Order      Fulfill    (Hotel Pipeline)
             |
             v
      +--------------+
@@ -94,6 +117,7 @@ interface Agent<TInput, TOutput> {
 | `@otaip/agents-reconciliation` | Stage 7: BSP reconciliation (HOT file), ARC reconciliation (IAR), discrepancy detection, ADM/ACM dispute tracking |
 | `@otaip/agents-tmc` | Stage 8: Traveler profiles, corporate accounts, mid-office automation, reporting, duty of care |
 | `@otaip/agents-platform` | Stage 9: Orchestrator, knowledge retrieval, monitoring & alerting, audit & compliance, plugin manager |
+| `@otaip/agents-lodging` | Domain 4: Hotel search, property deduplication, content normalization, rate comparison, booking, modification/cancellation, confirmation verification |
 | `@otaip/adapter-duffel` | Duffel NDC adapter - MockDuffelAdapter for testing, live DuffelAdapter for real API calls |
 | `@otaip/connect` | Universal supplier adapter framework - Sabre GDS (BFM v5 + Booking Management v1), Navitaire (New Skies/dotREZ, session-stateful), TripPro. Channel generators: ChatGPT (Custom GPT via OpenAPI 3.1), Claude (MCP Server). Full white-label support. See [usage guide](packages/connect/GUIDE.md) |
 
@@ -299,6 +323,37 @@ Orchestration, knowledge retrieval, observability, audit, and plugin management.
 
 ---
 
+## Domain 4 - Lodging
+
+Hotel booking lifecycle from search through post-stay verification.
+
+| Agent | Description |
+|-------|-------------|
+| Agent 4.1 - Hotel Search Aggregator | Parallel multi-source search with per-adapter timeouts, partial results on failure |
+| Agent 4.2 - Property Deduplication | Multi-algorithm scoring (Jaro-Winkler, Levenshtein, Haversine), Union-Find grouping, configurable thresholds |
+| Agent 4.3 - Content Normalization | Room type taxonomy, amenity mapping (11 categories), photo quality scoring |
+| Agent 4.4 - Rate Comparison | String-based decimal arithmetic, mandatory fee calculation, rate parity detection |
+| Agent 4.5 - Hotel Booking | Three-layer confirmation codes (CRS/PMS/channel), virtual card dual folio, payment routing |
+| Agent 4.6 - Modification & Cancellation | Free mod vs cancel/rebook classification, California 24hr rule, stepped penalty calculation |
+| Agent 4.7 - Confirmation Verification | CRS↔PMS cross-check, waitlist/tentative escalation, pre-check-in verification |
+
+```typescript
+import { PropertyDeduplicationAgent } from '@otaip/agents-lodging';
+
+const dedup = new PropertyDeduplicationAgent();
+await dedup.initialize();
+
+const result = await dedup.execute({
+  data: {
+    properties: rawHotelResults,  // same hotel from 4 different sources
+    thresholds: { autoMerge: 0.85, review: 0.65 },
+  },
+});
+// → Deduplicated properties with merged content, best photos, unified amenities
+```
+
+---
+
 ## Distribution adapters
 
 OTAIP is source-agnostic. Agents work with any distribution source via the `DistributionAdapter` interface from `@otaip/core`. You bring the credentials.
@@ -339,6 +394,9 @@ otaip/
 |   +-- agents-reconciliation/   # @otaip/agents-reconciliation - Stage 7
 |   +-- agents-tmc/              # @otaip/agents-tmc - Stage 8
 |   +-- agents-platform/         # @otaip/agents-platform - Stage 9
+|   +-- agents/
+|   |   +-- reference/           # Reference data agents
+|   |   +-- lodging/             # Domain 4 - Hotel booking lifecycle
 |   +-- adapter-duffel/          # @otaip/adapter-duffel - Mock + live Duffel adapter
 |   +-- connect/                # @otaip/connect - Sabre GDS, Navitaire, TripPro adapters + ChatGPT/Claude channel generators
 +-- agents/

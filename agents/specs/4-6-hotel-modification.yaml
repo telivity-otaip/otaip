@@ -1,0 +1,111 @@
+agent:
+  id: "4.6"
+  name: Hotel Modification & Cancellation
+  version: 0.1.0
+  domain: lodging
+  package: packages/agents/lodging/src/hotel-modification/
+
+description: >
+  Handles post-booking changes: free modifications (name, bed type, smoking,
+  special requests), date changes (classified as cancel/rebook, NOT modifications),
+  cancellations with deadline-based penalty calculation, and no-show processing.
+  Implements California 24-hour free cancellation rule. Penalty is always calculated
+  against the booked nightly rate, not the current rate. Upstream: Agent 4.5.
+
+input:
+  type: ModificationInput
+  fields:
+    - name: operation
+      type: "'modify' | 'cancel' | 'check_penalty' | 'process_no_show'"
+      required: true
+      description: Modification operation to perform
+    - name: bookingId
+      type: string
+      required: true
+      description: Existing booking ID
+    - name: modifications
+      type: FreeModifications
+      required: false
+      description: Free modifications (for 'modify' operation)
+    - name: dateChange
+      type: DateChangeRequest
+      required: false
+      description: Date change request (triggers cancel/rebook flow)
+    - name: bookedAt
+      type: string
+      required: false
+      description: Original booking timestamp (ISO string) for California 24hr rule
+    - name: cancellationPolicy
+      type: CancellationPolicy
+      required: false
+      description: Current cancellation policy for penalty calculation
+    - name: checkInDate
+      type: string
+      required: false
+      description: Check-in date for deadline calculations
+    - name: nightlyRate
+      type: MonetaryAmount
+      required: false
+      description: Nightly rate from the booking record (penalty calculated against booked rate)
+
+output:
+  type: ModificationOutput
+  fields:
+    - name: success
+      type: boolean
+      description: Whether the operation succeeded
+    - name: classification
+      type: "'free_modification' | 'cancel_rebook_required' | 'not_modifiable'"
+      description: How the requested change was classified
+    - name: isFreeMod
+      type: boolean
+      description: Whether this is a free modification
+    - name: penalty
+      type: PenaltyCalculation
+      description: Penalty details (for cancellations)
+    - name: rebookRequired
+      type: boolean
+      description: Whether a rebook is required (for date changes)
+    - name: newBookingId
+      type: string
+      description: Updated booking ID (for successful modifications)
+    - name: message
+      type: string
+      description: Status or error message
+
+types:
+  FreeModifications:
+    guestFirstName: string | undefined
+    guestLastName: string | undefined
+    bedTypePreference: string | undefined
+    smokingPreference: boolean | undefined
+    specialRequests: string | undefined
+    accessibilityNeeds: string | undefined
+    guestCount: number | undefined
+
+  DateChangeRequest:
+    newCheckIn: string
+    newCheckOut: string
+
+  PenaltyCalculation:
+    penaltyAmount: MonetaryAmount
+    penaltyType: string
+    deadline: string
+    isWithinFreeWindow: boolean
+    californiaRuleApplies: boolean
+
+confidence_scoring:
+  deterministic: 1.0
+
+test_cases:
+  - description: Date change classified as cancel/rebook
+    input: { operation: "modify", bookingId: "BK-001", dateChange: { newCheckIn: "2025-07-15", newCheckOut: "2025-07-18" } }
+    expected: { classification: "cancel_rebook_required", rebookRequired: true }
+
+  - description: Name change is a free modification
+    input: { operation: "modify", bookingId: "BK-001", modifications: { guestFirstName: "Jane" } }
+    expected: { classification: "free_modification", isFreeMod: true }
+
+  - description: California 24hr rule allows free cancellation
+    input: { operation: "cancel", bookingId: "BK-001", bookedAt: "[1 hour ago]", cancellationPolicy: { freeCancel24hrBooking: true }, checkInDate: "[next week]", nightlyRate: { amount: "299.00", currency: "USD" } }
+    expected: { "penalty.isWithinFreeWindow": true, "penalty.californiaRuleApplies": true }

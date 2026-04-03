@@ -1,0 +1,92 @@
+agent:
+  id: "4.4"
+  name: Hotel Rate Comparison
+  version: 0.1.0
+  domain: lodging
+  package: packages/agents/lodging/src/rate-comparison/
+
+description: >
+  Compares rates for the same canonical property across all sources. Calculates
+  total cost breakdowns (room charges + mandatory fees + taxes), identifies best
+  available rate per rate type, and detects rate parity violations (>2% spread).
+  All arithmetic uses string-based decimal precision. Upstream: Agent 4.2/4.3.
+  Downstream: Agent 4.5 (Hotel Booking).
+
+input:
+  type: RateCompInput
+  fields:
+    - name: properties
+      type: CanonicalProperty[]
+      required: true
+      description: Canonical properties with source results containing rates
+    - name: currency
+      type: string
+      required: false
+      default: USD
+      description: Preferred currency for display (ISO 4217)
+    - name: nights
+      type: number
+      required: false
+      default: 1
+      description: Number of nights for the stay (caller specifies explicitly)
+
+output:
+  type: RateCompOutput
+  fields:
+    - name: comparisons
+      type: PropertyRateComparison[]
+      description: Rate comparisons per canonical property
+    - name: totalProperties
+      type: number
+      description: Total properties compared
+    - name: parityViolations
+      type: number
+      description: Count of properties with rate parity violations
+
+types:
+  TotalCostBreakdown:
+    roomCharges: MonetaryAmount
+    mandatoryFees: MonetaryAmount
+    taxes: MonetaryAmount
+    grandTotal: MonetaryAmount
+
+  ComparedRate:
+    sourceId: string
+    sourcePropertyId: string
+    rateId: string
+    roomTypeId: string
+    rateType: RateType
+    paymentModel: PaymentModel
+    totalCost: TotalCostBreakdown
+    cancellationPolicy: CancellationPolicy
+    mealPlan: string | undefined
+    originalRate: RawRate
+
+  ParityResult:
+    isAtParity: boolean
+    lowestSource: string
+    highestSource: string
+    spreadPercent: number
+
+  PropertyRateComparison:
+    canonicalId: string
+    propertyName: string
+    rates: ComparedRate[]
+    bestByRateType: "Record<string, ComparedRate>"
+    parity: ParityResult | null
+
+confidence_scoring:
+  deterministic: 1.0
+
+test_cases:
+  - description: Rates sorted by total cost (lowest first)
+    input: { properties: "[property with 3 rates from different sources]" }
+    expected: { "comparisons[0].rates": "sorted ascending by grandTotal" }
+
+  - description: Rate parity violation detected
+    input: { properties: "[property with >2% spread across sources]" }
+    expected: { parityViolations: 1, "parity.isAtParity": false }
+
+  - description: Mandatory fees included in total cost
+    input: { properties: "[property with $25/night resort fee]" }
+    expected: { "totalCost.mandatoryFees.amount": "> 0" }

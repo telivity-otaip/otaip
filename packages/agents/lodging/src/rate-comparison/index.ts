@@ -47,11 +47,9 @@ export class RateComparisonAgent
 
     this.validateInput(input.data);
 
+    const nights = input.data.nights ?? DEFAULT_NIGHTS;
     const comparisons = input.data.properties.map((property) => {
-      // TODO: DOMAIN_QUESTION: Should nights be derived from the original search dates
-      // passed through the pipeline, or should RateCompInput include check-in/check-out?
-      // For now, using the rate's totalRate which already accounts for stay length.
-      return comparePropertyRates(property, DEFAULT_NIGHTS, DEFAULT_GUESTS);
+      return comparePropertyRates(property, nights, DEFAULT_GUESTS);
     });
 
     let parityViolations = 0;

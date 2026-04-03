@@ -111,7 +111,7 @@ export class HotelModificationAgent
       input.checkInDate,
       new Date().toISOString(),
       input.bookedAt,
-      { amount: '299.00', currency: 'USD' }, // TODO: DOMAIN_QUESTION: Should nightly rate come from booking record?
+      input.nightlyRate ?? { amount: '0.00', currency: 'USD' },
     );
 
     return {
@@ -130,8 +130,8 @@ export class HotelModificationAgent
     return this.handleCancellation(input);
   }
 
-  private handleNoShow(_input: ModificationInput): ModificationOutput {
-    const penalty = calculateNoShowPenalty({ amount: '299.00', currency: 'USD' });
+  private handleNoShow(input: ModificationInput): ModificationOutput {
+    const penalty = calculateNoShowPenalty(input.nightlyRate ?? { amount: '0.00', currency: 'USD' });
 
     return {
       success: true,

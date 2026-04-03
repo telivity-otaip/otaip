@@ -1,0 +1,86 @@
+agent:
+  id: "4.3"
+  name: Content Normalization
+  version: 0.1.0
+  domain: lodging
+  package: packages/agents/lodging/src/content-normalization/
+
+description: >
+  Normalizes hotel content from diverse sources into a consistent taxonomy.
+  Maps free-text room descriptions to a room type taxonomy (bed type, category,
+  view type), normalizes amenities into 11 categories, and scores photos by
+  quality (resolution, aspect ratio, category coverage). Unmapped items are
+  preserved in audit trail fields. Upstream: Agent 4.2. Downstream: Agent 4.4.
+
+input:
+  type: ContentNormInput
+  fields:
+    - name: properties
+      type: CanonicalProperty[]
+      required: true
+      description: Canonical properties from Agent 4.2
+
+output:
+  type: ContentNormOutput
+  fields:
+    - name: properties
+      type: NormalizedPropertyContent[]
+      description: Properties with normalized rooms, amenities, and scored photos
+    - name: stats
+      type: ContentNormStats
+      description: Mapping success rates for rooms and amenities
+
+types:
+  NormalizedPropertyContent:
+    canonicalId: string
+    property: CanonicalProperty
+    normalizedRoomTypes: NormalizedRoomType[]
+    normalizedAmenities: NormalizedAmenity[]
+    scoredPhotos: ScoredPhoto[]
+    unmappedRoomTypes: RawRoomType[]
+    unmappedAmenities: string[]
+
+  NormalizedRoomType:
+    originalDescription: string
+    bedType: "'king' | 'queen' | 'double' | 'twin' | 'single' | 'sofa' | 'bunk' | 'murphy' | 'other'"
+    category: "'standard' | 'superior' | 'deluxe' | 'suite' | 'junior_suite' | 'studio' | 'apartment' | 'villa' | 'penthouse' | 'other'"
+    viewType: "'city' | 'ocean' | 'garden' | 'pool' | 'mountain' | 'river' | 'park' | 'courtyard' | 'none' | 'other'"
+    maxOccupancy: number | undefined
+    confidence: number
+
+  NormalizedAmenity:
+    original: string
+    category: "'connectivity' | 'bathroom' | 'kitchen' | 'entertainment' | 'climate' | 'bedding' | 'workspace' | 'accessibility' | 'fitness' | 'pool_spa' | 'dining'"
+    normalized: string
+    confidence: number
+
+  ScoredPhoto:
+    url: string
+    caption: string | undefined
+    category: "'exterior' | 'room' | 'bathroom' | 'lobby' | 'pool' | 'dining' | 'fitness' | 'view' | 'other'"
+    qualityScore: number
+    isPrimary: boolean
+
+  ContentNormStats:
+    totalProperties: number
+    totalRoomTypesMapped: number
+    totalRoomTypesUnmapped: number
+    totalAmenitiesMapped: number
+    totalAmenitiesUnmapped: number
+
+confidence_scoring:
+  all_mapped: 1.0
+  some_unmapped: 0.8
+
+test_cases:
+  - description: Room description maps to correct taxonomy
+    input: { properties: "[property with room 'Deluxe King Ocean View']" }
+    expected: { "bedType": "king", "category": "deluxe", "viewType": "ocean" }
+
+  - description: Amenities normalized to categories
+    input: { properties: "[property with amenities ['Free WiFi', 'Swimming Pool', 'Gym']]" }
+    expected: { "categories include": ["connectivity", "pool_spa", "fitness"] }
+
+  - description: Unmapped items preserved in audit trail
+    input: { properties: "[property with unusual room 'Royal Emperor Suite']" }
+    expected: { unmappedRoomTypes: "non-empty if no taxonomy match" }
