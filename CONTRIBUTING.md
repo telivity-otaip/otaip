@@ -4,7 +4,7 @@ Thank you for your interest in contributing to the Open Travel AI Platform.
 
 ## Requirements
 
-- Node.js >= 20
+- Node.js >= 24
 - pnpm 9 (`corepack enable && corepack prepare pnpm@9.15.0 --activate`)
 - TypeScript strict mode — no `any` types, no implicit returns
 

@@ -27,11 +27,11 @@ export interface TripProConfig {
 }
 
 export const tripProConfigSchema = z.object({
-  searchUrl: z.string().url().default(TRIPPRO_DEFAULT_SEARCH_URL),
-  calendarSearchUrl: z.string().url().default(TRIPPRO_DEFAULT_CALENDAR_SEARCH_URL),
-  repriceUrl: z.string().url().default(TRIPPRO_DEFAULT_REPRICE_URL),
-  bookUrl: z.string().url().default(TRIPPRO_DEFAULT_BOOK_URL),
-  soapBaseUrl: z.string().url(),
+  searchUrl: z.url().default(TRIPPRO_DEFAULT_SEARCH_URL),
+  calendarSearchUrl: z.url().default(TRIPPRO_DEFAULT_CALENDAR_SEARCH_URL),
+  repriceUrl: z.url().default(TRIPPRO_DEFAULT_REPRICE_URL),
+  bookUrl: z.url().default(TRIPPRO_DEFAULT_BOOK_URL),
+  soapBaseUrl: z.url(),
   accessToken: z.string().min(1),
   searchAccessToken: z.string().min(1),
   whitelistedIp: z.string().min(1),
