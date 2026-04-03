@@ -47,6 +47,8 @@ export interface ModificationInput {
   cancellationPolicy?: CancellationPolicy;
   /** Check-in date for deadline calculations */
   checkInDate?: string;
+  /** Nightly rate from the booking record (penalty calculated against booked rate, not current rate) */
+  nightlyRate?: MonetaryAmount;
 }
 
 // ---------------------------------------------------------------------------

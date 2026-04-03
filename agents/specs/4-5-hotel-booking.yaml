@@ -1,0 +1,101 @@
+agent:
+  id: "4.5"
+  name: Hotel Booking
+  version: 0.1.0
+  domain: lodging
+  package: packages/agents/lodging/src/hotel-booking/
+
+description: >
+  Executes hotel bookings with rate verification, three-layer confirmation codes
+  (CRS/PMS/channel), and payment routing. Supports prepaid, pay-at-property, and
+  virtual card (VCN) payment models with dual folio handling. Also provides rate
+  verification and booking retrieval operations. Upstream: Agent 4.4.
+  Downstream: Agents 4.6 and 4.7.
+
+input:
+  type: BookingInput
+  fields:
+    - name: operation
+      type: "'book' | 'verify_rate' | 'get_booking'"
+      required: true
+      description: Booking operation to perform
+    - name: bookingRequest
+      type: BookingRequest
+      required: false
+      description: Required for 'book' and 'verify_rate' operations
+    - name: bookingId
+      type: string
+      required: false
+      description: Required for 'get_booking' operation
+
+output:
+  type: BookingOutput
+  fields:
+    - name: success
+      type: boolean
+      description: Whether the operation succeeded
+    - name: booking
+      type: BookingRecord
+      description: Full booking record (when successful)
+    - name: error
+      type: string
+      description: Error message (when failed)
+    - name: rateChanged
+      type: boolean
+      description: Whether the rate changed since search (verify_rate)
+    - name: newRate
+      type: MonetaryAmount
+      description: Updated rate if rate changed
+
+types:
+  BookingRequest:
+    canonicalPropertyId: string
+    rateId: string
+    source: HotelSource
+    checkIn: string
+    checkOut: string
+    rooms: number
+    guest: GuestInfo
+    paymentModel: PaymentModel
+    specialRequests: string | undefined
+
+  BookingRecord:
+    bookingId: string
+    confirmation: HotelConfirmation
+    status: HotelBookingStatus
+    bookedAt: string
+    totalCharged: MonetaryAmount
+    paymentModel: PaymentModel
+    virtualCard: VirtualCardInfo | undefined
+    cancellationPolicy: CancellationPolicy
+    cancellationDeadline: string | undefined
+    guest: GuestInfo
+    request: BookingRequest
+
+  HotelConfirmation:
+    crsConfirmation: string
+    pmsConfirmation: string | undefined
+    channelConfirmation: string | undefined
+    source: HotelSource
+
+  VirtualCardInfo:
+    lastFour: string
+    expiryDate: string
+    authorizedAmount: MonetaryAmount
+    dualFolioRequired: true
+
+confidence_scoring:
+  deterministic: 1.0
+
+test_cases:
+  - description: Successful booking returns three-layer confirmation
+    input: { operation: "book", bookingRequest: "{valid request}" }
+    expected: { success: true, "booking.confirmation.crsConfirmation": "non-empty" }
+
+  - description: Rate verification detects changed rate
+    input: { operation: "verify_rate", bookingRequest: "{request with stale rate}" }
+    expected: { rateChanged: true }
+
+  - description: Virtual card booking includes dual folio
+    input: { operation: "book", bookingRequest: "{paymentModel: 'virtual_card'}" }
+    expected: { "booking.virtualCard.dualFolioRequired": true }

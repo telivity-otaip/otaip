@@ -25,6 +25,8 @@ export interface RateCompInput {
   properties: CanonicalProperty[];
   /** Preferred currency for display (default: USD) */
   currency?: string;
+  /** Number of nights for the stay (caller specifies explicitly; defaults to 1) */
+  nights?: number;
 }
 
 // ---------------------------------------------------------------------------
