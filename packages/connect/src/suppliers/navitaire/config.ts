@@ -21,7 +21,7 @@ export interface NavitaireConfig {
 
 export const navitaireConfigSchema = z.object({
   environment: z.enum(['test', 'production']).default('test'),
-  baseUrl: z.string().url(),
+  baseUrl: z.url(),
   credentials: z.object({
     domain: z.string().min(1),
     username: z.string().min(1),

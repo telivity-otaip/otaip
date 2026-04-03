@@ -244,7 +244,7 @@ export interface YourConfig {
 
 export const yourConfigSchema = z.object({
   apiKey: z.string().min(1),
-  baseUrl: z.string().url(),
+  baseUrl: z.url(),
   defaultCurrency: z.string().length(3).default('USD'),
 });
 

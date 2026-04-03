@@ -14,7 +14,7 @@ export const baseAdapterConfigSchema = z.object({
 export type BaseAdapterConfig = z.infer<typeof baseAdapterConfigSchema>;
 
 export function validateConfig<TOutput, TInput = unknown>(
-  schema: z.ZodType<TOutput, z.ZodTypeDef, TInput>,
+  schema: z.ZodType<TOutput, TInput>,
   config: unknown,
   supplierName: string,
 ): TOutput {
