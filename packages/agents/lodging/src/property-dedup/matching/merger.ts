@@ -169,8 +169,3 @@ function buildMergeReasoning(decision: MergeDecision, results: RawHotelResult[])
   ];
   return parts.join('; ');
 }
-
-/** Reset the internal ID counter (for testing). */
-export function resetIdCounter(): void {
-  idCounter = 0;
-}
