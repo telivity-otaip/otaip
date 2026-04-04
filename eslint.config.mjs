@@ -40,6 +40,7 @@ export default defineConfig([
                 "./packages/agents/exchange/tsconfig.json",
                 "./packages/agents/settlement/tsconfig.json",
                 "./packages/agents/reconciliation/tsconfig.json",
+                "./packages/agents/lodging/tsconfig.json",
                 "./packages/agents-tmc/tsconfig.json",
                 "./packages/agents-platform/tsconfig.json",
                 "./packages/adapters/duffel/tsconfig.json",
