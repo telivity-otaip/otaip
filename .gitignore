@@ -1,3 +1,6 @@
+# reference data
+/data/*
+
 # Logs
 logs
 *.log
