@@ -1,10 +1,10 @@
 /**
- * Agent 4.3 — Hotel Content Normalization Agent
+ * Agent 20.3 — Hotel Content Normalization Agent
  *
  * Standardizes hotel content (room types, amenity names, descriptions, photos)
  * into a consistent OTAIP taxonomy for downstream comparison and display.
  *
- * Downstream: Feeds Agent 4.4 (Rate Comparison) with normalized content
+ * Downstream: Feeds Agent 20.4 (Rate Comparison) with normalized content
  */
 
 import type {
@@ -25,7 +25,7 @@ import { scorePhotos } from './photo-scorer.js';
 export class ContentNormalizationAgent
   implements Agent<ContentNormInput, ContentNormOutput>
 {
-  readonly id = '4.3';
+  readonly id = '20.3';
   readonly name = 'Hotel Content Normalization';
   readonly version = '0.1.0';
 

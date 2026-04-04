@@ -8,7 +8,7 @@ import type { CancellationPolicy } from '../../types/hotel-common.js';
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('Agent 4.6 — Hotel Modification & Cancellation', () => {
+describe('Agent 20.6 — Hotel Modification & Cancellation', () => {
   let agent: HotelModificationAgent;
 
   beforeAll(async () => {
@@ -222,7 +222,7 @@ describe('Agent 4.6 — Hotel Modification & Cancellation', () => {
 
   describe('Agent interface compliance', () => {
     it('has correct agent metadata', () => {
-      expect(agent.id).toBe('4.6');
+      expect(agent.id).toBe('20.6');
       expect(agent.name).toBe('Hotel Modification & Cancellation');
       expect(agent.version).toBe('0.1.0');
     });

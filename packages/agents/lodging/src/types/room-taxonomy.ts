@@ -87,7 +87,7 @@ export interface NormalizedRoomType {
  * SGL = Single, DBL = Double, TWIN = Twin, TRPL = Triple, QDPL = Quad,
  * STD = Standard, SUP = Superior, DLX = Deluxe, STE = Suite
  *
- * These are used by the content normalization agent (4.3) as hints
+ * These are used by the content normalization agent (20.3) as hints
  * during room type classification.
  */
 export const GDS_ROOM_CODE_HINTS: Record<string, Partial<NormalizedRoomType>> = {

@@ -1,11 +1,11 @@
 /**
- * Agent 4.4 — Hotel Rate Comparison Agent
+ * Agent 20.4 — Hotel Rate Comparison Agent
  *
  * Compares rates for the same canonical property across all sources,
  * identifies best available rate per rate type, detects rate parity violations,
  * and presents pricing transparently with ALL mandatory fees included.
  *
- * Downstream: Feeds Agent 4.5 (Hotel Booking) with best rate selection
+ * Downstream: Feeds Agent 20.5 (Hotel Booking) with best rate selection
  */
 
 import type {
@@ -28,7 +28,7 @@ const DEFAULT_GUESTS = 2;
 export class RateComparisonAgent
   implements Agent<RateCompInput, RateCompOutput>
 {
-  readonly id = '4.4';
+  readonly id = '20.4';
   readonly name = 'Hotel Rate Comparison';
   readonly version = '0.1.0';
 

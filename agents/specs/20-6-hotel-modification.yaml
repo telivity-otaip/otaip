@@ -1,5 +1,5 @@
 agent:
-  id: "4.6"
+  id: "20.6"
   name: Hotel Modification & Cancellation
   version: 0.1.0
   domain: lodging
@@ -10,7 +10,7 @@ description: >
   special requests), date changes (classified as cancel/rebook, NOT modifications),
   cancellations with deadline-based penalty calculation, and no-show processing.
   Implements California 24-hour free cancellation rule. Penalty is always calculated
-  against the booked nightly rate, not the current rate. Upstream: Agent 4.5.
+  against the booked nightly rate, not the current rate. Upstream: Agent 20.5.
 
 input:
   type: ModificationInput

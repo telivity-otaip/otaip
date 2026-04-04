@@ -75,7 +75,7 @@ const PROPERTY_WITH_AMENITY_SYNONYMS = makeCanonical({
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('Agent 4.3 — Content Normalization', () => {
+describe('Agent 20.3 — Content Normalization', () => {
   let agent: ContentNormalizationAgent;
 
   beforeAll(async () => {
@@ -215,7 +215,7 @@ describe('Agent 4.3 — Content Normalization', () => {
 
   describe('Agent interface compliance', () => {
     it('has correct agent metadata', () => {
-      expect(agent.id).toBe('4.3');
+      expect(agent.id).toBe('20.3');
       expect(agent.name).toBe('Hotel Content Normalization');
       expect(agent.version).toBe('0.1.0');
     });

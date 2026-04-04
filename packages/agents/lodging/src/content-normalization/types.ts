@@ -1,7 +1,7 @@
 /**
  * Content Normalization Agent — Input/Output types
  *
- * Agent 4.3: Standardizes hotel content (room types, amenity names, descriptions,
+ * Agent 20.3: Standardizes hotel content (room types, amenity names, descriptions,
  * photos) into a consistent taxonomy for comparison and display.
  *
  * Domain source: OTAIP Lodging Knowledge Base §5 (Hotel Content Challenges)
@@ -16,7 +16,7 @@ import type { NormalizedAmenity } from '../types/amenity-taxonomy.js';
 // ---------------------------------------------------------------------------
 
 export interface ContentNormInput {
-  /** Canonical property records from Agent 4.2 */
+  /** Canonical property records from Agent 20.2 */
   properties: CanonicalProperty[];
 }
 
@@ -37,7 +37,7 @@ export interface ScoredPhoto {
 }
 
 export interface NormalizedPropertyContent {
-  /** Canonical property ID (pass-through from 4.2) */
+  /** Canonical property ID (pass-through from 20.2) */
   canonicalId: string;
   /** Original canonical property (preserved) */
   property: CanonicalProperty;

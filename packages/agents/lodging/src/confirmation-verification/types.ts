@@ -1,7 +1,7 @@
 /**
  * Confirmation Verification Agent — Input/Output types
  *
- * Agent 4.7: Cross-checks CRS↔PMS confirmation data to detect discrepancies
+ * Agent 20.7: Cross-checks CRS↔PMS confirmation data to detect discrepancies
  * before guest arrival. Escalates missing PMS codes, waitlist/tentative status,
  * and rate/date mismatches.
  *

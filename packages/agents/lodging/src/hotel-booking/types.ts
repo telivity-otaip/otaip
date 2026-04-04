@@ -1,7 +1,7 @@
 /**
  * Hotel Booking Agent — Input/Output types
  *
- * Agent 4.5: Executes hotel bookings through the optimal source, manages the
+ * Agent 20.5: Executes hotel bookings through the optimal source, manages the
  * full booking flow from rate verification through confirmation.
  *
  * Domain source: OTAIP Lodging Knowledge Base §4 (Hotel Booking Lifecycle)
@@ -24,9 +24,9 @@ import type {
 export type BookingOperation = 'book' | 'verify_rate' | 'get_booking';
 
 export interface BookingRequest {
-  /** Canonical property ID (from Agent 4.2) */
+  /** Canonical property ID (from Agent 20.2) */
   canonicalPropertyId: string;
-  /** Rate ID to book (from Agent 4.4) */
+  /** Rate ID to book (from Agent 20.4) */
   rateId: string;
   /** Source to book through */
   source: HotelSource;

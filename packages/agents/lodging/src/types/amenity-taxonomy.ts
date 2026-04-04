@@ -52,7 +52,7 @@ export interface NormalizedAmenity {
 
 /**
  * Maps common raw amenity strings (lowercased) to canonical amenity definitions.
- * Used by the content normalization agent (4.3) for fuzzy matching.
+ * Used by the content normalization agent (20.3) for fuzzy matching.
  */
 export const AMENITY_SYNONYMS: Record<string, { amenityId: string; category: AmenityCategory; displayName: string; included: boolean }> = {
   // Connectivity

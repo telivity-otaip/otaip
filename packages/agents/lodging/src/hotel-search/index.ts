@@ -1,11 +1,11 @@
 /**
- * Agent 4.1 — Hotel Search Aggregator
+ * Agent 20.1 — Hotel Search Aggregator
  *
  * Multi-source hotel availability search across GDS hotel segments,
  * direct APIs (Amadeus Hotel, Hotelbeds, Duffel Stays), and channel manager feeds.
  * Returns raw, unmerged results from all connected sources.
  *
- * Downstream: Feeds Agent 4.2 (Property Deduplication) and Agent 4.4 (Rate Comparison)
+ * Downstream: Feeds Agent 20.2 (Property Deduplication) and Agent 20.4 (Rate Comparison)
  */
 
 import type {
@@ -41,7 +41,7 @@ export interface HotelSearchAggregatorOptions {
 export class HotelSearchAggregatorAgent
   implements Agent<HotelSearchInput, HotelSearchOutput>
 {
-  readonly id = '4.1';
+  readonly id = '20.1';
   readonly name = 'Hotel Search Aggregator';
   readonly version = '0.1.0';
 

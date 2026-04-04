@@ -86,7 +86,7 @@ const HYATT_AMADEUS = makeProperty({
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('Agent 4.2 — Property Deduplication', () => {
+describe('Agent 20.2 — Property Deduplication', () => {
   let agent: PropertyDeduplicationAgent;
 
   beforeAll(async () => {
@@ -253,7 +253,7 @@ describe('Agent 4.2 — Property Deduplication', () => {
 
   describe('Agent interface compliance', () => {
     it('has correct agent metadata', () => {
-      expect(agent.id).toBe('4.2');
+      expect(agent.id).toBe('20.2');
       expect(agent.name).toBe('Property Deduplication');
       expect(agent.version).toBe('0.1.0');
     });
@@ -273,7 +273,7 @@ describe('Agent 4.2 — Property Deduplication', () => {
     it('includes metadata in output', async () => {
       const result = await agent.execute({ data: { properties: [MARRIOTT_AMADEUS] } });
       expect(result.metadata).toBeDefined();
-      expect(result.metadata!['agent_id']).toBe('4.2');
+      expect(result.metadata!['agent_id']).toBe('20.2');
     });
   });
 });

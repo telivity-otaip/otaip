@@ -5,7 +5,7 @@
  * 300,000+ properties, 50 req/day eval limit.
  *
  * Returns overlapping results with slightly different naming/IDs for same properties
- * (to test deduplication downstream in Agent 4.2).
+ * (to test deduplication downstream in Agent 20.2).
  *
  * Domain source: OTAIP Lodging Knowledge Base §1 (Direct Connect APIs)
  */

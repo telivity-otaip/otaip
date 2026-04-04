@@ -1,7 +1,7 @@
 /**
  * Hotel Modification & Cancellation Agent — Input/Output types
  *
- * Agent 4.6: Handles post-booking changes including modifications (name, bed type),
+ * Agent 20.6: Handles post-booking changes including modifications (name, bed type),
  * date changes (which are cancel/rebook, NOT modifications), and cancellations
  * with penalty calculation.
  *

@@ -1,5 +1,5 @@
 agent:
-  id: "4.7"
+  id: "20.7"
   name: Confirmation Verification
   version: 0.1.0
   domain: lodging
@@ -10,7 +10,7 @@ description: >
   data against PMS (property system) data. Detects discrepancies in guest name,
   dates, room type, rates, and status. Escalates when PMS confirmation is missing,
   PMS sync exceeds 24 hours, or booking is in waitlist/tentative status.
-  Supports single and batch verification. Upstream: Agent 4.5.
+  Supports single and batch verification. Upstream: Agent 20.5.
 
 input:
   type: VerificationInput

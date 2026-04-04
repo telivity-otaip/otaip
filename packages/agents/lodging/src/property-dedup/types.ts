@@ -1,7 +1,7 @@
 /**
  * Property Deduplication Agent — Input/Output types
  *
- * Agent 4.2: Takes raw multi-source hotel results and identifies duplicate properties,
+ * Agent 20.2: Takes raw multi-source hotel results and identifies duplicate properties,
  * merging them into canonical property records with the best content from each source.
  *
  * 40-60% of multi-source city search results are duplicates of the same physical property.
@@ -24,7 +24,7 @@ export interface DedupThresholds {
 }
 
 export interface DedupInput {
-  /** Raw hotel results from Agent 4.1 (multiple sources, unmerged) */
+  /** Raw hotel results from Agent 20.1 (multiple sources, unmerged) */
   properties: RawHotelResult[];
   /** Custom merge thresholds (optional, uses defaults if omitted) */
   thresholds?: DedupThresholds;
