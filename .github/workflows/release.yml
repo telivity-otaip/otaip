@@ -41,29 +41,29 @@ jobs:
           AGENT_COUNT=$(find packages/agents packages/adapters packages/core/src/agents -name 'index.ts' -path '*/src/*' ! -name '__tests__' | wc -l | tr -d ' ')
           echo "count=${AGENT_COUNT}" >> "$GITHUB_OUTPUT"
 
-      - name: Get latest tag
-        id: tag
+      - name: Get version
+        id: version
         run: |
-          LATEST=$(git tag --sort=-v:refname | head -n1)
-          echo "latest=${LATEST:-v0.0.0}" >> "$GITHUB_OUTPUT"
+          VERSION=$(node -p "require('./package.json').version")
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Bump patch version
-        id: bump
+      - name: Check if release exists
+        id: check
         run: |
-          TAG="${{ steps.tag.outputs.latest }}"
-          VERSION="${TAG#v}"
-          MAJOR=$(echo "$VERSION" | cut -d. -f1)
-          MINOR=$(echo "$VERSION" | cut -d. -f2)
-          PATCH=$(echo "$VERSION" | cut -d. -f3)
-          NEW_PATCH=$((PATCH + 1))
-          NEW_TAG="v${MAJOR}.${MINOR}.${NEW_PATCH}"
-          echo "new_tag=${NEW_TAG}" >> "$GITHUB_OUTPUT"
+          TAG="${{ steps.version.outputs.tag }}"
+          if curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $GH_TOKEN" "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" | grep -q "200"; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build release notes
+        if: steps.check.outputs.exists == 'false'
         id: notes
         run: |
-          TAG="${{ steps.tag.outputs.latest }}"
-          NEW_TAG="${{ steps.bump.outputs.new_tag }}"
+          TAG="${{ steps.version.outputs.tag }}"
           AGENT_COUNT="${{ steps.agents.outputs.count }}"
           TEST_COUNT="${{ steps.tests.outputs.count }}"
           TEST_FILES="${{ steps.tests.outputs.files }}"
@@ -114,10 +114,11 @@ jobs:
           } > /tmp/release-notes.md
 
       - name: Create release
+        if: steps.check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ steps.bump.outputs.new_tag }}" \
-            --title "${{ steps.bump.outputs.new_tag }}" \
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "${{ steps.version.outputs.tag }}" \
             --notes-file /tmp/release-notes.md \
             --latest
