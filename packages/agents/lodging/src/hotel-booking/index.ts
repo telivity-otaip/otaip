@@ -1,10 +1,10 @@
 /**
- * Agent 4.5 — Hotel Booking Agent
+ * Agent 20.5 — Hotel Booking Agent
  *
  * Executes hotel bookings, manages the full booking flow from rate verification
  * through confirmation, and handles the three-layer confirmation code system.
  *
- * Downstream: Feeds Agent 4.7 (Confirmation Verification) and Agent 4.6 (Modification)
+ * Downstream: Feeds Agent 20.7 (Confirmation Verification) and Agent 20.6 (Modification)
  */
 
 import type {
@@ -23,7 +23,7 @@ import { executeBooking, getBooking, clearBookingStore } from './booking-flow.js
 export class HotelBookingAgent
   implements Agent<BookingInput, BookingOutput>
 {
-  readonly id = '4.5';
+  readonly id = '20.5';
   readonly name = 'Hotel Booking';
   readonly version = '0.1.0';
 

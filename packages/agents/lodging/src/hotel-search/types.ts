@@ -1,7 +1,7 @@
 /**
  * Hotel Search Aggregator — Input/Output types
  *
- * Agent 4.1: Multi-source hotel availability search across GDS hotel segments,
+ * Agent 20.1: Multi-source hotel availability search across GDS hotel segments,
  * direct APIs (Amadeus Hotel, Hotelbeds, Duffel Stays), and channel manager feeds.
  * Returns raw, unmerged results from all connected sources.
  *

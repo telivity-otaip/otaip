@@ -2,7 +2,7 @@
  * Shared types for all OTAIP Domain 4 (Lodging) agents.
  *
  * These types form the contract between agents in the hotel booking pipeline:
- * Search (4.1) → Dedup (4.2) → Normalize (4.3) → Rate Compare (4.4) → Book (4.5) → Modify (4.6) → Verify (4.7)
+ * Search (20.1) → Dedup (20.2) → Normalize (20.3) → Rate Compare (20.4) → Book (20.5) → Modify (20.6) → Verify (20.7)
  *
  * Domain rules sourced from OTAIP Lodging Knowledge Base.
  */
@@ -41,7 +41,7 @@ export interface HotelAddress {
 }
 
 // ---------------------------------------------------------------------------
-// Raw hotel result (Agent 4.1 output — NOT deduplicated)
+// Raw hotel result (Agent 20.1 output — NOT deduplicated)
 // ---------------------------------------------------------------------------
 
 export interface HotelContact {
@@ -97,7 +97,7 @@ export interface RawRate {
   taxAmount?: string;
 }
 
-/** Raw hotel result from a single source — output of Agent 4.1 */
+/** Raw hotel result from a single source — output of Agent 20.1 */
 export interface RawHotelResult {
   source: HotelSource;
   propertyName: string;
@@ -117,7 +117,7 @@ export interface RawHotelResult {
 }
 
 // ---------------------------------------------------------------------------
-// Canonical property (Agent 4.2 output — deduplicated)
+// Canonical property (Agent 20.2 output — deduplicated)
 // ---------------------------------------------------------------------------
 
 /** Canonical property record after deduplication — one per physical property. */

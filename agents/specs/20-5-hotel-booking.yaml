@@ -1,5 +1,5 @@
 agent:
-  id: "4.5"
+  id: "20.5"
   name: Hotel Booking
   version: 0.1.0
   domain: lodging
@@ -9,8 +9,8 @@ description: >
   Executes hotel bookings with rate verification, three-layer confirmation codes
   (CRS/PMS/channel), and payment routing. Supports prepaid, pay-at-property, and
   virtual card (VCN) payment models with dual folio handling. Also provides rate
-  verification and booking retrieval operations. Upstream: Agent 4.4.
-  Downstream: Agents 4.6 and 4.7.
+  verification and booking retrieval operations. Upstream: Agent 20.4.
+  Downstream: Agents 20.6 and 20.7.
 
 input:
   type: BookingInput

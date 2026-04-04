@@ -1,5 +1,5 @@
 /**
- * Agent 4.6 — Hotel Modification & Cancellation Agent
+ * Agent 20.6 — Hotel Modification & Cancellation Agent
  *
  * Handles post-booking changes: free modifications, date changes (cancel/rebook),
  * cancellations with penalty calculation, and no-show processing.
@@ -24,7 +24,7 @@ import { calculateCancellationPenalty, calculateNoShowPenalty } from './cancella
 export class HotelModificationAgent
   implements Agent<ModificationInput, ModificationOutput>
 {
-  readonly id = '4.6';
+  readonly id = '20.6';
   readonly name = 'Hotel Modification & Cancellation';
   readonly version = '0.1.0';
 

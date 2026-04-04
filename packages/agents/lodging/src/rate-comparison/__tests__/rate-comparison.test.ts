@@ -87,7 +87,7 @@ const PROPERTY_WITH_PARITY: CanonicalProperty = {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('Agent 4.4 — Rate Comparison', () => {
+describe('Agent 20.4 — Rate Comparison', () => {
   let agent: RateComparisonAgent;
 
   beforeAll(async () => {
@@ -251,7 +251,7 @@ describe('Agent 4.4 — Rate Comparison', () => {
 
   describe('Agent interface compliance', () => {
     it('has correct agent metadata', () => {
-      expect(agent.id).toBe('4.4');
+      expect(agent.id).toBe('20.4');
       expect(agent.name).toBe('Hotel Rate Comparison');
       expect(agent.version).toBe('0.1.0');
     });

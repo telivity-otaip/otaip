@@ -1,5 +1,5 @@
 /**
- * Agent 4.7 — Confirmation Verification Agent
+ * Agent 20.7 — Confirmation Verification Agent
  *
  * Cross-checks CRS↔PMS booking data to detect discrepancies before guest arrival.
  * Escalates missing PMS codes, waitlist/tentative status, rate/date mismatches.
@@ -24,7 +24,7 @@ import { verifyBooking } from './verification-workflow.js';
 export class ConfirmationVerificationAgent
   implements Agent<VerificationInput, VerificationOutput>
 {
-  readonly id = '4.7';
+  readonly id = '20.7';
   readonly name = 'Confirmation Verification';
   readonly version = '0.1.0';
 

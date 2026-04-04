@@ -50,7 +50,7 @@ const baseInput: VerificationInput = {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('Agent 4.7 — Confirmation Verification', () => {
+describe('Agent 20.7 — Confirmation Verification', () => {
   let agent: ConfirmationVerificationAgent;
 
   beforeAll(async () => {
@@ -306,7 +306,7 @@ describe('Agent 4.7 — Confirmation Verification', () => {
 
   describe('Agent interface compliance', () => {
     it('has correct agent metadata', () => {
-      expect(agent.id).toBe('4.7');
+      expect(agent.id).toBe('20.7');
       expect(agent.name).toBe('Confirmation Verification');
       expect(agent.version).toBe('0.1.0');
     });

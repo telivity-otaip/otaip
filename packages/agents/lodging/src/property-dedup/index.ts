@@ -1,14 +1,14 @@
 /**
- * Agent 4.2 — Property Deduplication Agent
+ * Agent 20.2 — Property Deduplication Agent
  *
- * Takes raw multi-source hotel results from Agent 4.1 and identifies duplicate
+ * Takes raw multi-source hotel results from Agent 20.1 and identifies duplicate
  * properties, merging them into canonical property records with the best content
  * from each source.
  *
  * 40-60% of multi-source city search results are duplicates.
  * This is THE biggest content quality problem in hotel distribution.
  *
- * Downstream: Feeds Agent 4.3 (Content Normalization) and Agent 4.4 (Rate Comparison)
+ * Downstream: Feeds Agent 20.3 (Content Normalization) and Agent 20.4 (Rate Comparison)
  */
 
 import type {
@@ -27,7 +27,7 @@ import { runDeduplicationPipeline } from './deduplication-pipeline.js';
 export class PropertyDeduplicationAgent
   implements Agent<DedupInput, DedupOutput>
 {
-  readonly id = '4.2';
+  readonly id = '20.2';
   readonly name = 'Property Deduplication';
   readonly version = '0.1.0';
 

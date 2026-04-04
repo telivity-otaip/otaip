@@ -1,5 +1,5 @@
 agent:
-  id: "4.2"
+  id: "20.2"
   name: Property Deduplication
   version: 0.1.0
   domain: lodging
@@ -10,8 +10,8 @@ description: >
   Uses multi-signal scoring: Jaro-Winkler name similarity (0.3 weight),
   Levenshtein address similarity (0.2), Haversine coordinate proximity (0.25),
   chain code match (0.15), star rating match (0.1). Groups via Union-Find with
-  configurable auto-merge/review/separate thresholds. Upstream: Agent 4.1.
-  Downstream: Agents 4.3 and 4.4.
+  configurable auto-merge/review/separate thresholds. Upstream: Agent 20.1.
+  Downstream: Agents 20.3 and 20.4.
 
 input:
   type: DedupInput
@@ -19,7 +19,7 @@ input:
     - name: properties
       type: RawHotelResult[]
       required: true
-      description: Raw hotel results from Agent 4.1
+      description: Raw hotel results from Agent 20.1
     - name: thresholds
       type: DedupThresholds
       required: false

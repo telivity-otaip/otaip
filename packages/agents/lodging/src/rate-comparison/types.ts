@@ -1,7 +1,7 @@
 /**
  * Rate Comparison Agent — Input/Output types
  *
- * Agent 4.4: Compares rates for the same canonical property across all sources,
+ * Agent 20.4: Compares rates for the same canonical property across all sources,
  * identifies best available rate per rate type, detects rate parity violations.
  *
  * Domain source: OTAIP Lodging Knowledge Base §3 (Rate Types and Pricing)

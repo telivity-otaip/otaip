@@ -1,5 +1,5 @@
 agent:
-  id: "4.1"
+  id: "20.1"
   name: Hotel Search Aggregator
   version: 0.1.0
   domain: lodging
@@ -9,7 +9,7 @@ description: >
   Parallel multi-source hotel search with per-adapter timeouts and partial
   result handling. Queries multiple hotel source adapters (Amadeus, Hotelbeds,
   Duffel Stays) concurrently, returns raw unmerged results with adapter-level
-  metadata. Downstream: feeds Agent 4.2 (Property Deduplication).
+  metadata. Downstream: feeds Agent 20.2 (Property Deduplication).
 
 input:
   type: HotelSearchInput

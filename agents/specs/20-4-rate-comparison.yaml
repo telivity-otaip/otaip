@@ -1,5 +1,5 @@
 agent:
-  id: "4.4"
+  id: "20.4"
   name: Hotel Rate Comparison
   version: 0.1.0
   domain: lodging
@@ -9,8 +9,8 @@ description: >
   Compares rates for the same canonical property across all sources. Calculates
   total cost breakdowns (room charges + mandatory fees + taxes), identifies best
   available rate per rate type, and detects rate parity violations (>2% spread).
-  All arithmetic uses string-based decimal precision. Upstream: Agent 4.2/4.3.
-  Downstream: Agent 4.5 (Hotel Booking).
+  All arithmetic uses string-based decimal precision. Upstream: Agent 20.2/20.3.
+  Downstream: Agent 20.5 (Hotel Booking).
 
 input:
   type: RateCompInput

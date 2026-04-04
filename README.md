@@ -47,7 +47,7 @@ Every agent implements one interface. Every output includes confidence scores. N
 | Stage 7 - BSP/ARC Settlement | `@otaip/agents-reconciliation` | 6 | 193 | Complete |
 | Stage 8 - TMC & Agency Ops | `@otaip/agents-tmc` | 5 | 101 | Complete |
 | Stage 9 - Platform & Integration | `@otaip/agents-platform` | 5 | 97 | Complete |
-| Domain 4 - Lodging | `@otaip/agents-lodging` | 7 | 158 | Complete |
+| Stage 20 - Lodging | `@otaip/agents-lodging` | 7 | 158 | Complete |
 
 *4 agents marked coming soon (1.8, 2.6, 2.7, 7.4) - stubs exported, pending domain input or future phase.*
 
@@ -68,7 +68,7 @@ Every agent implements one interface. Every output includes confidence scores. N
 +---+----------+----------+----------+----------+--------------+
     |          |          |          |          |
     v          v          v          v          v          v
- Stage 0    Stage 1    Stage 2    Stage 3    Stage 4    Domain 4
+ Stage 0    Stage 1    Stage 2    Stage 3    Stage 4    Stage 20
  Reference  Search &   Select &   Book &     Ticket &   Lodging
  Data       Shop       Price      Order      Fulfill    (Hotel Pipeline)
             |
@@ -117,7 +117,7 @@ interface Agent<TInput, TOutput> {
 | `@otaip/agents-reconciliation` | Stage 7: BSP reconciliation (HOT file), ARC reconciliation (IAR), discrepancy detection, ADM/ACM dispute tracking |
 | `@otaip/agents-tmc` | Stage 8: Traveler profiles, corporate accounts, mid-office automation, reporting, duty of care |
 | `@otaip/agents-platform` | Stage 9: Orchestrator, knowledge retrieval, monitoring & alerting, audit & compliance, plugin manager |
-| `@otaip/agents-lodging` | Domain 4: Hotel search, property deduplication, content normalization, rate comparison, booking, modification/cancellation, confirmation verification |
+| `@otaip/agents-lodging` | Stage 20: Hotel search, property deduplication, content normalization, rate comparison, booking, modification/cancellation, confirmation verification |
 | `@otaip/adapter-duffel` | Duffel NDC adapter - MockDuffelAdapter for testing, live DuffelAdapter for real API calls |
 | `@otaip/connect` | Universal supplier adapter framework - Sabre GDS (BFM v5 + Booking Management v1), Navitaire (New Skies/dotREZ, session-stateful), TripPro. Channel generators: ChatGPT (Custom GPT via OpenAPI 3.1), Claude (MCP Server). Full white-label support. See [usage guide](packages/connect/GUIDE.md) |
 
@@ -323,19 +323,21 @@ Orchestration, knowledge retrieval, observability, audit, and plugin management.
 
 ---
 
-## Domain 4 - Lodging
+## Stage 20 - Lodging
+
+> **Numbering scheme:** Stages 0–19 = Air, 20–29 = Lodging, 30–39 = Car Rental (future), 40–49 = Rail (future).
 
 Hotel booking lifecycle from search through post-stay verification.
 
 | Agent | Description |
 |-------|-------------|
-| Agent 4.1 - Hotel Search Aggregator | Parallel multi-source search with per-adapter timeouts, partial results on failure |
-| Agent 4.2 - Property Deduplication | Multi-algorithm scoring (Jaro-Winkler, Levenshtein, Haversine), Union-Find grouping, configurable thresholds |
-| Agent 4.3 - Content Normalization | Room type taxonomy, amenity mapping (11 categories), photo quality scoring |
-| Agent 4.4 - Rate Comparison | String-based decimal arithmetic, mandatory fee calculation, rate parity detection |
-| Agent 4.5 - Hotel Booking | Three-layer confirmation codes (CRS/PMS/channel), virtual card dual folio, payment routing |
-| Agent 4.6 - Modification & Cancellation | Free mod vs cancel/rebook classification, California 24hr rule, stepped penalty calculation |
-| Agent 4.7 - Confirmation Verification | CRS↔PMS cross-check, waitlist/tentative escalation, pre-check-in verification |
+| Agent 20.1 - Hotel Search Aggregator | Parallel multi-source search with per-adapter timeouts, partial results on failure |
+| Agent 20.2 - Property Deduplication | Multi-algorithm scoring (Jaro-Winkler, Levenshtein, Haversine), Union-Find grouping, configurable thresholds |
+| Agent 20.3 - Content Normalization | Room type taxonomy, amenity mapping (11 categories), photo quality scoring |
+| Agent 20.4 - Rate Comparison | String-based decimal arithmetic, mandatory fee calculation, rate parity detection |
+| Agent 20.5 - Hotel Booking | Three-layer confirmation codes (CRS/PMS/channel), virtual card dual folio, payment routing |
+| Agent 20.6 - Modification & Cancellation | Free mod vs cancel/rebook classification, California 24hr rule, stepped penalty calculation |
+| Agent 20.7 - Confirmation Verification | CRS↔PMS cross-check, waitlist/tentative escalation, pre-check-in verification |
 
 ```typescript
 import { PropertyDeduplicationAgent } from '@otaip/agents-lodging';
@@ -396,7 +398,7 @@ otaip/
 |   +-- agents-platform/         # @otaip/agents-platform - Stage 9
 |   +-- agents/
 |   |   +-- reference/           # Reference data agents
-|   |   +-- lodging/             # Domain 4 - Hotel booking lifecycle
+|   |   +-- lodging/             # Stage 20 - Hotel booking lifecycle
 |   +-- adapter-duffel/          # @otaip/adapter-duffel - Mock + live Duffel adapter
 |   +-- connect/                # @otaip/connect - Sabre GDS, Navitaire, TripPro adapters + ChatGPT/Claude channel generators
 +-- agents/

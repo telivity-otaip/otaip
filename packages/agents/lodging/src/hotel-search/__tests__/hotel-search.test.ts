@@ -78,7 +78,7 @@ class FastMockAdapter implements HotelSourceAdapter {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('Agent 4.1 — Hotel Search Aggregator', () => {
+describe('Agent 20.1 — Hotel Search Aggregator', () => {
   let agent: HotelSearchAggregatorAgent;
 
   beforeAll(async () => {
@@ -216,7 +216,7 @@ describe('Agent 4.1 — Hotel Search Aggregator', () => {
 
   describe('Agent interface compliance', () => {
     it('has correct agent metadata', () => {
-      expect(agent.id).toBe('4.1');
+      expect(agent.id).toBe('20.1');
       expect(agent.name).toBe('Hotel Search Aggregator');
       expect(agent.version).toBe('0.1.0');
     });
@@ -255,7 +255,7 @@ describe('Agent 4.1 — Hotel Search Aggregator', () => {
     it('includes metadata in output', async () => {
       const result = await agent.execute({ data: VALID_INPUT });
       expect(result.metadata).toBeDefined();
-      expect(result.metadata!['agent_id']).toBe('4.1');
+      expect(result.metadata!['agent_id']).toBe('20.1');
       expect(result.metadata!['agent_version']).toBe('0.1.0');
     });
   });

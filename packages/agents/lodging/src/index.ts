@@ -1,16 +1,16 @@
 /**
- * OTAIP Domain 4 — Lodging
+ * OTAIP Stage 20 — Lodging
  *
  * Hotel booking lifecycle: Search → Deduplicate → Normalize → Rate Compare → Book → Modify/Cancel → Verify
  *
  * 7 agents forming a complete hotel pipeline:
- * - 4.1 Hotel Search Aggregator
- * - 4.2 Property Deduplication
- * - 4.3 Content Normalization
- * - 4.4 Rate Comparison
- * - 4.5 Hotel Booking
- * - 4.6 Hotel Modification & Cancellation
- * - 4.7 Confirmation Verification
+ * - 20.1 Hotel Search Aggregator
+ * - 20.2 Property Deduplication
+ * - 20.3 Content Normalization
+ * - 20.4 Rate Comparison
+ * - 20.5 Hotel Booking
+ * - 20.6 Hotel Modification & Cancellation
+ * - 20.7 Confirmation Verification
  */
 
 // ---------------------------------------------------------------------------

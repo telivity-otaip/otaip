@@ -1,5 +1,5 @@
 agent:
-  id: "4.3"
+  id: "20.3"
   name: Content Normalization
   version: 0.1.0
   domain: lodging
@@ -10,7 +10,7 @@ description: >
   Maps free-text room descriptions to a room type taxonomy (bed type, category,
   view type), normalizes amenities into 11 categories, and scores photos by
   quality (resolution, aspect ratio, category coverage). Unmapped items are
-  preserved in audit trail fields. Upstream: Agent 4.2. Downstream: Agent 4.4.
+  preserved in audit trail fields. Upstream: Agent 20.2. Downstream: Agent 20.4.
 
 input:
   type: ContentNormInput
@@ -18,7 +18,7 @@ input:
     - name: properties
       type: CanonicalProperty[]
       required: true
-      description: Canonical properties from Agent 4.2
+      description: Canonical properties from Agent 20.2
 
 output:
   type: ContentNormOutput

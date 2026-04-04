@@ -27,7 +27,7 @@ const VALID_BOOKING_REQUEST: BookingRequest = {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('Agent 4.5 — Hotel Booking', () => {
+describe('Agent 20.5 — Hotel Booking', () => {
   let agent: HotelBookingAgent;
 
   beforeAll(async () => {
@@ -192,7 +192,7 @@ describe('Agent 4.5 — Hotel Booking', () => {
 
   describe('Agent interface compliance', () => {
     it('has correct agent metadata', () => {
-      expect(agent.id).toBe('4.5');
+      expect(agent.id).toBe('20.5');
       expect(agent.name).toBe('Hotel Booking');
       expect(agent.version).toBe('0.1.0');
     });
