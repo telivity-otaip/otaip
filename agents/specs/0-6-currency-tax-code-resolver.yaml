@@ -1,7 +1,7 @@
 agent:
   id: "0.6"
   name: Currency & Tax Code Resolver
-  version: 0.1.0
+  version: 0.2.0
   stage: 0
   package: packages/agents/reference/src/currency-tax-resolver/
 

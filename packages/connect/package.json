@@ -1,6 +1,6 @@
 {
   "name": "@otaip/connect",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "OTAIP Connect — universal supplier adapter framework for travel booking APIs",
   "type": "module",
   "main": "./dist/index.js",
@@ -22,15 +22,15 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "decimal.js": "^10.4.3",
-    "zod": "^3.23.0"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "decimal.js": "^10.6.0",
+    "zod": "^4.3.6"
   },
   "peerDependencies": {
     "@otaip/core": "workspace:*"
   },
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24.14.1"
   }
 }

@@ -1,7 +1,7 @@
 agent:
   id: "0.3"
   name: Fare Basis Code Decoder
-  version: 0.1.0
+  version: 0.2.0
   stage: 0
   package: packages/agents/reference/src/fare-basis-decoder/
 

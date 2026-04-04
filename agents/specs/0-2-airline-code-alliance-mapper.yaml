@@ -1,7 +1,7 @@
 agent:
   id: "0.2"
   name: Airline Code & Alliance Mapper
-  version: 0.1.0
+  version: 0.2.0
   stage: 0
   package: packages/agents/reference/src/airline-code-mapper/
 

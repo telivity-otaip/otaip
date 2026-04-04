@@ -144,7 +144,7 @@ pnpm typecheck
 pnpm lint
 ```
 
-Requirements: Node 20+, pnpm 9+.
+Requirements: Node 24+, pnpm 9+.
 
 ---
 

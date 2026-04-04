@@ -2,7 +2,7 @@
  * Live Duffel Adapter — connects to the Duffel NDC REST API.
  *
  * Implements DistributionAdapter for real Duffel API calls.
- * Uses global fetch (Node 20+). All monetary math via decimal.js.
+ * Uses global fetch (Node 24+). All monetary math via decimal.js.
  *
  * Endpoints used:
  *   POST /air/offer_requests   — search

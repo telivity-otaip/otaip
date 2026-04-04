@@ -1,3 +1,6 @@
+# reference data
+/data/*
+
 # Logs
 logs
 *.log
@@ -144,3 +147,9 @@ internal/
 # Cowork working files — session state, logs, skills
 .cowork/
 .claude/worktrees/
+
+### macOS ###
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
