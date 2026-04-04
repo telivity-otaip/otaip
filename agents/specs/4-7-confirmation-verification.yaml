@@ -1,0 +1,121 @@
+agent:
+  id: "4.7"
+  name: Confirmation Verification
+  version: 0.1.0
+  domain: lodging
+  package: packages/agents/lodging/src/confirmation-verification/
+
+description: >
+  Verifies hotel booking confirmations by cross-checking CRS (booking channel)
+  data against PMS (property system) data. Detects discrepancies in guest name,
+  dates, room type, rates, and status. Escalates when PMS confirmation is missing,
+  PMS sync exceeds 24 hours, or booking is in waitlist/tentative status.
+  Supports single and batch verification. Upstream: Agent 4.5.
+
+input:
+  type: VerificationInput
+  fields:
+    - name: operation
+      type: "'verify' | 'check_pms_sync' | 'batch_verify'"
+      required: true
+      description: Verification operation to perform
+    - name: bookingId
+      type: string
+      required: true
+      description: Booking ID to verify
+    - name: confirmation
+      type: HotelConfirmation
+      required: true
+      description: Three-layer confirmation codes
+    - name: crsData
+      type: CrsBookingData
+      required: true
+      description: Booking data from the CRS (channel) side
+    - name: pmsData
+      type: PmsBookingData
+      required: false
+      description: Booking data from the PMS (property) side — may be missing if not synced
+    - name: guest
+      type: GuestInfo
+      required: true
+      description: Guest information for name matching
+    - name: hoursUntilCheckin
+      type: number
+      required: false
+      description: Hours until check-in (for escalation urgency)
+    - name: batchBookingIds
+      type: string[]
+      required: false
+      description: Additional booking IDs for batch_verify operation
+
+output:
+  type: VerificationOutput
+  fields:
+    - name: verified
+      type: boolean
+      description: True if no critical discrepancies found
+    - name: discrepancies
+      type: Discrepancy[]
+      description: List of detected discrepancies with severity
+    - name: escalationRequired
+      type: boolean
+      description: Whether manual intervention is needed
+    - name: escalationReasons
+      type: EscalationReason[]
+      description: Reasons for escalation
+    - name: verifiedAt
+      type: string
+      description: ISO timestamp of verification
+    - name: message
+      type: string
+      description: Human-readable summary
+
+types:
+  CrsBookingData:
+    confirmationCode: string
+    guestName: string
+    checkIn: string
+    checkOut: string
+    roomType: string
+    nightlyRate: MonetaryAmount
+    totalRate: MonetaryAmount
+    status: HotelBookingStatus
+
+  PmsBookingData:
+    confirmationCode: string
+    guestName: string
+    checkIn: string
+    checkOut: string
+    roomType: string
+    nightlyRate: MonetaryAmount
+    totalRate: MonetaryAmount
+    status: HotelBookingStatus
+
+  Discrepancy:
+    field: "'guest_name' | 'check_in' | 'check_out' | 'room_type' | 'nightly_rate' | 'total_rate' | 'status' | 'pms_missing' | 'pms_sync_delay'"
+    crsValue: string
+    pmsValue: string
+    severity: "'critical' | 'warning' | 'info'"
+    message: string
+
+  EscalationReason:
+    type: "'pms_code_missing' | 'rate_mismatch' | 'date_mismatch' | 'guest_name_mismatch' | 'waitlist_status' | 'tentative_status' | 'room_type_mismatch' | 'multiple_discrepancies'"
+
+confidence_scoring:
+  no_discrepancies: 1.0
+  info_only: 0.9
+  warnings_present: 0.7
+  critical_discrepancies: 0.5
+
+test_cases:
+  - description: Matching CRS and PMS data verifies successfully
+    input: { operation: "verify", bookingId: "BK-001", crsData: "{valid}", pmsData: "{matching}" }
+    expected: { verified: true, discrepancies: "[]", escalationRequired: false }
+
+  - description: Missing PMS data triggers escalation
+    input: { operation: "verify", bookingId: "BK-001", crsData: "{valid}", pmsData: null }
+    expected: { verified: false, escalationRequired: true, "escalationReasons includes": "pms_code_missing" }
+
+  - description: Rate mismatch detected as critical
+    input: { operation: "verify", bookingId: "BK-001", crsData: "{ nightlyRate: 199 }", pmsData: "{ nightlyRate: 249 }" }
+    expected: { verified: false, "discrepancies[0].field": "nightly_rate", "discrepancies[0].severity": "critical" }

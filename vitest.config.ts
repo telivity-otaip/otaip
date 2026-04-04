@@ -13,6 +13,7 @@ export default defineConfig({
       '@otaip/agents-exchange': resolve(__dirname, 'packages/agents/exchange/src/index.ts'),
       '@otaip/agents-settlement': resolve(__dirname, 'packages/agents/settlement/src/index.ts'),
       '@otaip/agents-reconciliation': resolve(__dirname, 'packages/agents/reconciliation/src/index.ts'),
+      '@otaip/agents-lodging': resolve(__dirname, 'packages/agents/lodging/src/index.ts'),
       '@otaip/agents-tmc': resolve(__dirname, 'packages/agents-tmc/src/index.ts'),
       '@otaip/agents-platform': resolve(__dirname, 'packages/agents-platform/src/index.ts'),
       '@otaip/adapter-duffel': resolve(__dirname, 'packages/adapters/duffel/src/index.ts'),

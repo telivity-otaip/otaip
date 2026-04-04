@@ -1,0 +1,281 @@
+/**
+ * Shared types for all OTAIP Domain 4 (Lodging) agents.
+ *
+ * These types form the contract between agents in the hotel booking pipeline:
+ * Search (4.1) → Dedup (4.2) → Normalize (4.3) → Rate Compare (4.4) → Book (4.5) → Modify (4.6) → Verify (4.7)
+ *
+ * Domain rules sourced from OTAIP Lodging Knowledge Base.
+ */
+
+// ---------------------------------------------------------------------------
+// Source identification
+// ---------------------------------------------------------------------------
+
+/** Identifies which distribution source a hotel result came from. */
+export interface HotelSource {
+  /** Source system identifier */
+  sourceId: string;
+  /** Property ID in the source's own system (each source has its own ID scheme) */
+  sourcePropertyId: string;
+  /** Response latency from this source in milliseconds */
+  responseLatencyMs?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Geography
+// ---------------------------------------------------------------------------
+
+export interface GeoCoordinates {
+  latitude: number;
+  longitude: number;
+}
+
+export interface HotelAddress {
+  line1: string;
+  line2?: string;
+  city: string;
+  stateProvince?: string;
+  postalCode?: string;
+  /** ISO 3166-1 alpha-2 country code */
+  countryCode: string;
+}
+
+// ---------------------------------------------------------------------------
+// Raw hotel result (Agent 4.1 output — NOT deduplicated)
+// ---------------------------------------------------------------------------
+
+export interface HotelContact {
+  phone?: string;
+  email?: string;
+  website?: string;
+}
+
+export interface HotelPhoto {
+  url: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+  /** Raw category from source (unnormalized) */
+  category?: string;
+}
+
+export interface RawRoomType {
+  /** Source-specific room type ID */
+  roomTypeId: string;
+  /** Raw room type code from source (e.g., "SGL", "DBL", "KDLX") */
+  code?: string;
+  /** Free-text description from source */
+  description: string;
+  /** Maximum occupancy if known */
+  maxOccupancy?: number;
+  /** Bed type description from source (unnormalized) */
+  bedTypeRaw?: string;
+}
+
+export interface RawRate {
+  /** Source-specific rate ID */
+  rateId: string;
+  /** Room type this rate applies to */
+  roomTypeId: string;
+  /** Nightly base rate (string for decimal precision) */
+  nightlyRate: string;
+  /** Total rate for entire stay (string for decimal precision) */
+  totalRate: string;
+  /** ISO 4217 currency code */
+  currency: string;
+  /** Rate type classification */
+  rateType: RateType;
+  /** Payment model for this rate */
+  paymentModel: PaymentModel;
+  /** Cancellation policy attached to this rate */
+  cancellationPolicy: CancellationPolicy;
+  /** Meal plan included (if any) */
+  mealPlan?: string;
+  /** Mandatory fees not included in base rate */
+  mandatoryFees?: MandatoryFee[];
+  /** Tax amount (string for decimal precision) */
+  taxAmount?: string;
+}
+
+/** Raw hotel result from a single source — output of Agent 4.1 */
+export interface RawHotelResult {
+  source: HotelSource;
+  propertyName: string;
+  address: HotelAddress;
+  coordinates: GeoCoordinates;
+  /** GDS/industry chain code (e.g., "MC" for Marriott, "HH" for Hilton) */
+  chainCode?: string;
+  chainName?: string;
+  starRating?: number;
+  /** Raw amenity strings from source (unnormalized) */
+  amenities: string[];
+  roomTypes: RawRoomType[];
+  rates: RawRate[];
+  photos: HotelPhoto[];
+  description?: string;
+  contactInfo?: HotelContact;
+}
+
+// ---------------------------------------------------------------------------
+// Canonical property (Agent 4.2 output — deduplicated)
+// ---------------------------------------------------------------------------
+
+/** Canonical property record after deduplication — one per physical property. */
+export interface CanonicalProperty {
+  /** OTAIP-generated unique ID for this physical property */
+  canonicalId: string;
+  /** Best property name selected from merge */
+  propertyName: string;
+  /** Best address selected from merge */
+  address: HotelAddress;
+  /** Most precise coordinates from merge */
+  coordinates: GeoCoordinates;
+  chainCode?: string;
+  chainName?: string;
+  starRating?: number;
+  /** All sources this property was found in */
+  sources: HotelSource[];
+  /** Raw results from each source (preserved for downstream agents) */
+  sourceResults: RawHotelResult[];
+  /** Merge confidence score 0-1 */
+  mergeConfidence: number;
+  /** Human-readable explanation of the merge decision */
+  mergeReasoning: string;
+  /** Whether this merge needs human review */
+  reviewRequired: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Confirmation codes (3-layer system)
+// ---------------------------------------------------------------------------
+
+/**
+ * Hotel bookings have three separate confirmation code layers:
+ * - CRS: generated by booking channel (GDS/OTA), guest receives immediately
+ * - PMS: generated when reservation syncs to property system (may arrive async)
+ * - Channel: some OTAs generate their own additional code
+ */
+export interface HotelConfirmation {
+  crsConfirmation: string;
+  pmsConfirmation?: string;
+  channelConfirmation?: string;
+  source: HotelSource;
+}
+
+// ---------------------------------------------------------------------------
+// Payment and rate types
+// ---------------------------------------------------------------------------
+
+/**
+ * Payment models in hotel distribution:
+ * - prepaid: payment at booking time, funds to platform immediately
+ * - pay_at_property: booked without payment, charged at checkout
+ * - virtual_card: single-use digital card (VCN), restricted to room + tax + resort fees
+ */
+export type PaymentModel = 'prepaid' | 'pay_at_property' | 'virtual_card';
+
+/**
+ * Rate type classification from knowledge base:
+ * - bar: Best Available Rate — lowest public rate, no promo/negotiation
+ * - corporate: volume-dependent negotiated contracts, 20-30% off rack rate
+ * - consortium: 10-20% via Virtuoso, Signature Travel Network, etc.
+ * - opaque: deeply discounted, property hidden until after booking
+ * - package: room + meals/activities bundled
+ * - government: for government employees, set at/above per diem
+ * - aaa: up to 10% at partner brands
+ * - member: loyalty program or membership rates
+ */
+export type RateType =
+  | 'bar'
+  | 'corporate'
+  | 'consortium'
+  | 'opaque'
+  | 'package'
+  | 'government'
+  | 'aaa'
+  | 'member';
+
+// ---------------------------------------------------------------------------
+// Mandatory fees
+// ---------------------------------------------------------------------------
+
+export type FeeUnit = 'per_night' | 'per_stay' | 'per_person' | 'per_person_per_night';
+
+export interface MandatoryFee {
+  /** Fee type (resort fees, destination fees often excluded from advertised rate) */
+  type: string;
+  /** Fee amount (string for decimal precision) */
+  amount: string;
+  /** ISO 4217 currency code */
+  currency: string;
+  /** How the fee is charged */
+  perUnit: FeeUnit;
+}
+
+// ---------------------------------------------------------------------------
+// Cancellation policy
+// ---------------------------------------------------------------------------
+
+/**
+ * Cancellation policies from knowledge base:
+ * - Deadline-based: 24hr, 48hr, 72hr before arrival
+ * - Penalty: percentage of booking OR per-night room cost
+ * - Multiple conditions possible (more restrictive closer to arrival)
+ * - Non-refundable: no changes, no refund
+ * - California law (July 2024+): free cancellation for 24 hours after booking
+ */
+export interface CancellationPolicy {
+  refundable: boolean;
+  deadlines: CancellationDeadline[];
+  /** California law: free cancellation within 24 hours of booking regardless of policy */
+  freeCancel24hrBooking: boolean;
+}
+
+export interface CancellationDeadline {
+  /** Hours before check-in when this deadline applies */
+  hoursBeforeCheckin: number;
+  /** Type of penalty */
+  penaltyType: 'percentage' | 'nights' | 'fixed';
+  /** Penalty value — percentage (0-100), night count, or fixed amount */
+  penaltyValue: number;
+  /** Currency for fixed-amount penalties */
+  penaltyCurrency?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Monetary amount (decimal-safe)
+// ---------------------------------------------------------------------------
+
+/** Monetary amount using string representation for decimal precision. */
+export interface MonetaryAmount {
+  /** Amount as string to avoid floating-point errors */
+  amount: string;
+  /** ISO 4217 currency code */
+  currency: string;
+}
+
+// ---------------------------------------------------------------------------
+// Booking status
+// ---------------------------------------------------------------------------
+
+export type HotelBookingStatus =
+  | 'confirmed'
+  | 'pending'
+  | 'cancelled'
+  | 'modified'
+  | 'no_show'
+  | 'waitlist'
+  | 'tentative';
+
+// ---------------------------------------------------------------------------
+// Guest info
+// ---------------------------------------------------------------------------
+
+export interface GuestInfo {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  loyaltyNumber?: string;
+  loyaltyProgram?: string;
+}

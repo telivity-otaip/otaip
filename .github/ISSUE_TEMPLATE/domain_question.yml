@@ -1,0 +1,57 @@
+name: Domain Question
+description: Flag incorrect or missing travel industry logic in an agent
+labels: ["domain-question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        OTAIP agents encode real travel industry rules. If you spot something wrong —
+        a fare rule that doesn't match ATPCO, a hotel booking flow that doesn't match
+        industry practice, a settlement calculation that's off — tell us here.
+
+        **You need domain knowledge to file this.** If you're not sure whether the
+        behavior is correct, open a bug report instead.
+
+  - type: input
+    id: agent
+    attributes:
+      label: Agent ID and name
+      placeholder: "4.6 — Hotel Modification & Cancellation Agent"
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: What the agent currently does
+      description: Describe the current behavior and where in the code it happens.
+    validations:
+      required: true
+
+  - type: textarea
+    id: correct
+    attributes:
+      label: What it should do (and why)
+      description: |
+        Describe the correct industry behavior. Cite your source: IATA resolution,
+        ATPCO category, GDS documentation, airline policy, regulatory requirement,
+        or your own operational experience (state how many years and in what role).
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What goes wrong if this isn't fixed? ADMs? Incorrect refunds? Wrong rebooking?
+    validations:
+      required: false
+
+  - type: input
+    id: experience
+    attributes:
+      label: Your background
+      description: "Brief context so we can assess the input (e.g., '12 years TMC ops', 'airline revenue management')"
+      placeholder: "15 years GDS development at Amadeus"
+    validations:
+      required: false
