@@ -37,6 +37,19 @@ export type { RetryConfig, IsRetryable } from './retry/index.js';
 export { DEFAULT_RETRY_CONFIG, withRetry, computeDelay } from './retry/index.js';
 
 export type {
+  LoopPhase,
+  ToolCall,
+  ToolResult,
+  LoopMessage,
+  LoopState,
+  LoopEvent,
+  StopCondition,
+  ModelCallFn,
+  LoopConfig,
+} from './agent-loop/index.js';
+export { AgentLoop } from './agent-loop/index.js';
+
+export type {
   ContextEntry,
   ContextBudgetConfig,
   CompactionStrategy,
