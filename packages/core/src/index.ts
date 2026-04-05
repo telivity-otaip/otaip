@@ -26,6 +26,14 @@ export type {
 } from './agents/shopping/index.js';
 
 export type {
+  ToolDefinition,
+  ValidationIssue,
+  ValidationResult,
+} from './tool-interface/index.js';
+export { validateToolInput, validateToolOutput } from './tool-interface/index.js';
+export { ToolRegistry } from './tool-interface/index.js';
+
+export type {
   PassengerType,
   PassengerCount,
   SearchSegment,

@@ -9,7 +9,7 @@
 
 | Session | Module | Dependencies | Status |
 |---------|--------|-------------|--------|
-| 2 | Module 1 — Schema-Aware Tool Interface | None | Pending |
+| 2 | Module 1 — Schema-Aware Tool Interface | None | **Complete** |
 | 3 | Module 5 — Retry with Jitter | None | Pending |
 | 4 | Module 4 — Context Budget Manager | None | Pending |
 | 5 | Module 2 — Agent Loop | Module 1 | Pending |
