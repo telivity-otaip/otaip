@@ -1,6 +1,6 @@
 {
   "name": "@otaip/agents-search",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "OTAIP Stage 1 agents — search, schedule, connection, and fare shopping",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
