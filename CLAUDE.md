@@ -179,3 +179,13 @@ When building agents, Claude Code will attempt to rationalize inventing domain l
 | "Free modification means the change is processed with no charges" | STOP. Free modification and cancel/rebook are different flows. Modification = same confirmation code, same rate. Cancel/rebook = new reservation, potentially different rate, original cancellation policy may still apply. Check lodging KB for the CRS/PMS handling. |
 | "Stepped penalty calculation follows a simple time-before-arrival schedule" | STOP. Penalty steps vary by chain, rate type, booking channel, room type, length of stay, and season. Some properties have different policies for first night vs remaining nights. Groups have entirely different structures. Surface as DOMAIN_QUESTION. |
 | "Resort fees and mandatory charges are included in the penalty calculation" | STOP. Whether mandatory fees are included in penalty base varies by property and jurisdiction. Some jurisdictions require mandatory fees to be refundable regardless of cancellation policy. Surface as DOMAIN_QUESTION. |
+
+## Effort Guidelines
+
+When working on this repo, use these effort levels:
+
+- **high effort**: Agent specs, new agent implementations, core module changes, anything touching types.ts or mapper.ts files, PRs that modify BaseAdapter or ConnectAdapter interface
+- **medium effort**: Tests, documentation updates, demo scripts, config changes
+- **low effort**: Version bumps, export additions, barrel file updates, .gitignore changes
+
+Do not invent domain logic. If a task requires travel industry knowledge not present in the knowledge-base/ directory or agent specs, stop and surface a DOMAIN_QUESTION.
