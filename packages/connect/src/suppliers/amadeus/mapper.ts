@@ -285,6 +285,7 @@ export function mapSearchResponse(
 export function mapPriceResponse(
   pricedOffers: AmadeusFlightOffer[],
   originalOfferId: string,
+  originalSearchPrice?: string,
 ): PricedItinerary {
   const offer = pricedOffers[0];
 
@@ -302,6 +303,11 @@ export function mapPriceResponse(
 
   const fares = mapTravelerPricingsToFares(offer.travelerPricings);
   const newOfferId = `amadeus-${offer.id}`;
+  const pricedTotal = new Decimal(offer.price.grandTotal);
+
+  const priceChanged = originalSearchPrice
+    ? !pricedTotal.equals(new Decimal(originalSearchPrice))
+    : false;
 
   const fareRules: FareRules = {
     refundable: isRefundable(offer),
@@ -314,7 +320,7 @@ export function mapPriceResponse(
     totalPrice: toMoney(offer.price.grandTotal, offer.price.currency),
     fares,
     fareRules,
-    priceChanged: newOfferId !== originalOfferId,
+    priceChanged,
     available: true,
     raw: offer,
   };
@@ -418,6 +424,7 @@ function mapAmadeusTravelersToPassengers(
   });
 }
 
+// TODO: resolve traveler type from booking response travelerPricings when Amadeus includes it
 function findTravelerType(_travelerId: string): 'adult' | 'child' | 'infant' {
   return 'adult';
 }
