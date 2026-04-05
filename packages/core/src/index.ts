@@ -57,6 +57,9 @@ export type {
 } from './lifecycle/index.js';
 export { HookRegistry } from './lifecycle/index.js';
 
+export type { SpawnOptions, SubAgentResult } from './sub-agent/index.js';
+export { SubAgentSpawner } from './sub-agent/index.js';
+
 export type {
   ContextEntry,
   ContextBudgetConfig,

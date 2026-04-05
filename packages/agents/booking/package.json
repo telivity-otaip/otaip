@@ -1,6 +1,6 @@
 {
   "name": "@otaip/agents-booking",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "OTAIP Stage 3 agents — GDS/NDC routing, PNR building, validation, queue management",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

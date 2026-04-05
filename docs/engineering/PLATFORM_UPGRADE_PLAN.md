@@ -1,7 +1,7 @@
 # Stage 9 — Platform Upgrade Plan
 
 **Created:** 2026-04-05
-**Status:** Session 1 complete (plan document)
+**Status:** Stage 9 complete — all 6 modules landed, version 0.3.0
 
 ---
 
@@ -14,7 +14,7 @@
 | 4 | Module 4 — Context Budget Manager | None | **Complete** |
 | 5 | Module 2 — Agent Loop | Module 1 | **Complete** |
 | 6 | Module 3 — Lifecycle Hooks | Module 2 | **Complete** |
-| 7 | Module 6 — Sub-Agent Spawning + v0.3.0 release | Modules 2, 3 | Pending |
+| 7 | Module 6 — Sub-Agent Spawning + v0.3.0 release | Modules 2, 3 | **Complete** |
 
 ---
 
