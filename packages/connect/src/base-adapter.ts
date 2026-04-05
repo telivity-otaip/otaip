@@ -3,6 +3,9 @@
  * for all ConnectAdapter implementations.
  */
 
+import { withRetry as coreRetry } from '@otaip/core';
+import type { RetryConfig as CoreRetryConfig } from '@otaip/core';
+
 export class ConnectError extends Error {
   constructor(
     message: string,
@@ -40,37 +43,27 @@ export abstract class BaseAdapter {
     operation: string,
     fn: () => Promise<T>,
   ): Promise<T> {
-    let lastError: unknown;
+    const coreConfig: Partial<CoreRetryConfig> = {
+      maxRetries: this.retryConfig.maxRetries,
+      baseDelayMs: this.retryConfig.baseDelayMs,
+      maxDelayMs: this.retryConfig.maxDelayMs,
+    };
 
-    for (let attempt = 0; attempt <= this.retryConfig.maxRetries; attempt++) {
-      try {
-        return await fn();
-      } catch (error) {
-        lastError = error;
-
-        if (attempt === this.retryConfig.maxRetries) break;
-
-        if (!this.isRetryable(error)) break;
-
-        const delay = Math.min(
-          this.retryConfig.baseDelayMs * Math.pow(2, attempt),
-          this.retryConfig.maxDelayMs,
-        );
-        await this.sleep(delay);
+    try {
+      return await coreRetry(fn, coreConfig, (error) => this.isRetryable(error));
+    } catch (lastError) {
+      if (lastError instanceof ConnectError) {
+        throw lastError;
       }
-    }
 
-    if (lastError instanceof ConnectError) {
-      throw lastError;
+      throw new ConnectError(
+        `${operation} failed after ${this.retryConfig.maxRetries + 1} attempts`,
+        this.supplierId,
+        operation,
+        false,
+        lastError,
+      );
     }
-
-    throw new ConnectError(
-      `${operation} failed after ${this.retryConfig.maxRetries + 1} attempts`,
-      this.supplierId,
-      operation,
-      false,
-      lastError,
-    );
   }
 
   protected wrapError(
@@ -124,9 +117,5 @@ export abstract class BaseAdapter {
     }
 
     return false;
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

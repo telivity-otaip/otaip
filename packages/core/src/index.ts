@@ -33,6 +33,9 @@ export type {
 export { validateToolInput, validateToolOutput } from './tool-interface/index.js';
 export { ToolRegistry } from './tool-interface/index.js';
 
+export type { RetryConfig, IsRetryable } from './retry/index.js';
+export { DEFAULT_RETRY_CONFIG, withRetry, computeDelay } from './retry/index.js';
+
 export type {
   PassengerType,
   PassengerCount,
