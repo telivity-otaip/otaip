@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "amadeus": "^11.0.0",
     "decimal.js": "^10.6.0",
     "zod": "^4.3.6"
   },

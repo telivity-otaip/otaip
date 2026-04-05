@@ -52,6 +52,10 @@ export type { SabreConfig } from './suppliers/sabre/config.js';
 export { NavitaireAdapter } from './suppliers/navitaire/index.js';
 export type { NavitaireConfig } from './suppliers/navitaire/config.js';
 
+// Amadeus adapter
+export { AmadeusAdapter } from './suppliers/amadeus/index.js';
+export type { AmadeusConfig } from './suppliers/amadeus/config.js';
+
 // Channel generators
 export { generateOpenAPISpec } from './channels/chatgpt/openapi-generator.js';
 export type { OpenAPIGeneratorConfig } from './channels/chatgpt/openapi-generator.js';
