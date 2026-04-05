@@ -28,7 +28,7 @@ Every agent implements one interface. Every output includes confidence scores. N
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
-[![Tests](https://img.shields.io/badge/tests-2247%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
+[![Tests](https://img.shields.io/badge/tests-2465%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
 [![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg)](https://pnpm.io/)
 
 ---
@@ -51,7 +51,7 @@ Every agent implements one interface. Every output includes confidence scores. N
 
 *4 agents marked coming soon (1.8, 2.6, 2.7, 7.4) - stubs exported, pending domain input or future phase.*
 
-**70 agents. 2,247 tests. All green.**
+**70 agents. 6 core runtime modules. 2,465 tests. All green.**
 
 ---
 
@@ -64,7 +64,7 @@ Every agent implements one interface. Every output includes confidence scores. N
                              |
 +----------------------------v---------------------------------+
 |                        @otaip/core                           |
-|          Agent interface - Types - Error standards            |
+|  Agent interface - Tool registry - Agent loop - Lifecycle hooks - Context budget - Retry - Sub-agent - Types |
 +---+----------+----------+----------+----------+--------------+
     |          |          |          |          |
     v          v          v          v          v          v
@@ -106,7 +106,7 @@ interface Agent<TInput, TOutput> {
 
 | Package | Description |
 |---------|-------------|
-| `@otaip/core` | Agent interface, distribution adapter interface, shared types and errors |
+| `@otaip/core` | Agent interface, tool registry, agent execution loop, lifecycle hooks, context budget manager, retry engine, sub-agent spawning, shared types and errors |
 | `@otaip/agents-reference` | Stage 0: Airport/city codes, airline codes, fare basis, booking class, currency |
 | `@otaip/agents-search` | Stage 1: Availability search, schedule lookup, connection builder, fare shopping |
 | `@otaip/agents-pricing` | Stage 2: Fare rules (ATPCO Cat 1-20), fare construction (NUC/ROE/HIP/BHC), tax calculation |
@@ -367,12 +367,12 @@ OTAIP is source-agnostic. Agents work with any distribution source via the `Dist
 | `@otaip/adapter-duffel` | NDC-participating airlines | REST | Live |
 | `@otaip/connect` (Sabre) | Full-service carriers via GDS | REST (Sabre APIs v5/v1) | Live |
 | `@otaip/connect` (Navitaire) | LCCs via Navitaire (New Skies/dotREZ) | REST (session-stateful) | Live |
+| `@otaip/connect` (Amadeus) | Amadeus Self-Service airlines | REST (Self-Service v2) | Live |
 
 **Roadmap:**
 
 | Package | Coverage | API type |
 |---------|----------|----------|
-| `@otaip/adapter-amadeus` | Full-service carriers via GDS | REST |
 | `@otaip/adapter-verteil` | AF, Finnair, SAS, Oman Air + others | REST (pure NDC) |
 | `@otaip/adapter-accelya` | LH Group, American NDC | REST (Farelogix-based) |
 
@@ -385,7 +385,7 @@ OTAIP is source-agnostic. Agents work with any distribution source via the `Dist
 ```
 otaip/
 +-- packages/
-|   +-- core/                    # @otaip/core - Agent interface, types, errors
+|   +-- core/                    # @otaip/core - Agent interface, tool registry, agent loop, lifecycle, context, retry, sub-agent
 |   +-- agents-reference/        # @otaip/agents-reference - Stage 0
 |   +-- agents-search/           # @otaip/agents-search - Stage 1
 |   +-- agents-pricing/          # @otaip/agents-pricing - Stage 2
