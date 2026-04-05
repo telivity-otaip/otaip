@@ -2,6 +2,8 @@
  * Agent loop types — deterministic message→tool→response cycle.
  */
 
+import type { HookRegistry } from '../lifecycle/hook-registry.js';
+
 /** Possible states of the agent loop state machine. */
 export type LoopPhase =
   | 'idle'
@@ -82,4 +84,6 @@ export interface LoopConfig {
   stopConditions: StopCondition[];
   /** Optional event listener for structured loop events. */
   onEvent?: (event: LoopEvent) => void;
+  /** Optional HookRegistry for lifecycle hooks (Module 3). */
+  hooks?: HookRegistry;
 }

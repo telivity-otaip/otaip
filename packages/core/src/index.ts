@@ -50,6 +50,14 @@ export type {
 export { AgentLoop } from './agent-loop/index.js';
 
 export type {
+  LifecycleEvent,
+  HookContext,
+  BeforeToolCallResult,
+  HookHandler,
+} from './lifecycle/index.js';
+export { HookRegistry } from './lifecycle/index.js';
+
+export type {
   ContextEntry,
   ContextBudgetConfig,
   CompactionStrategy,

@@ -13,7 +13,7 @@
 | 3 | Module 5 — Retry with Jitter | None | **Complete** |
 | 4 | Module 4 — Context Budget Manager | None | **Complete** |
 | 5 | Module 2 — Agent Loop | Module 1 | **Complete** |
-| 6 | Module 3 — Lifecycle Hooks | Module 2 | Pending |
+| 6 | Module 3 — Lifecycle Hooks | Module 2 | **Complete** |
 | 7 | Module 6 — Sub-Agent Spawning + v0.3.0 release | Modules 2, 3 | Pending |
 
 ---
