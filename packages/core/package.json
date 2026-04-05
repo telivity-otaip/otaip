@@ -16,6 +16,9 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
   "license": "Apache-2.0",
   "engines": {
     "node": ">=24.14.1"
