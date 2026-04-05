@@ -37,6 +37,15 @@ export type { RetryConfig, IsRetryable } from './retry/index.js';
 export { DEFAULT_RETRY_CONFIG, withRetry, computeDelay } from './retry/index.js';
 
 export type {
+  ContextEntry,
+  ContextBudgetConfig,
+  CompactionStrategy,
+  TokenCounter,
+} from './context/index.js';
+export { ContextBudgetManager, CharTokenCounter } from './context/index.js';
+export { TruncateOldestStrategy, DropLargeToolOutputsStrategy } from './context/index.js';
+
+export type {
   PassengerType,
   PassengerCount,
   SearchSegment,
