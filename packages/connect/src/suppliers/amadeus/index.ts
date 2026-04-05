@@ -39,6 +39,13 @@ import type {
   AmadeusFlightSearchResponse,
 } from './types.js';
 
+interface CacheEntry<T> {
+  data: T;
+  cachedAt: number;
+}
+
+const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
 export class AmadeusAdapter extends BaseAdapter implements ConnectAdapter {
   readonly supplierId = 'amadeus';
   readonly supplierName = 'Amadeus Self-Service';
@@ -47,15 +54,25 @@ export class AmadeusAdapter extends BaseAdapter implements ConnectAdapter {
 
   /**
    * Cached search offers keyed by Amadeus offer ID, used to pass
-   * the raw offer to the pricing endpoint.
+   * the raw offer to the pricing endpoint. Entries expire after 15 minutes.
    */
-  private readonly searchOfferCache = new Map<string, AmadeusFlightOffer>();
+  private readonly searchOfferCache = new Map<string, CacheEntry<AmadeusFlightOffer>>();
 
   /**
    * Cached priced offers keyed by offerId, used to pass the full
    * flight offer object to the booking request (required by Amadeus).
+   * Entries expire after 15 minutes.
    */
-  private readonly pricedOfferCache = new Map<string, AmadeusFlightOffer>();
+  private readonly pricedOfferCache = new Map<string, CacheEntry<AmadeusFlightOffer>>();
+
+  private evictExpired<T>(cache: Map<string, CacheEntry<T>>): void {
+    const now = Date.now();
+    for (const [key, entry] of cache) {
+      if (now - entry.cachedAt > CACHE_TTL_MS) {
+        cache.delete(key);
+      }
+    }
+  }
 
   constructor(config: unknown) {
     super();
@@ -75,8 +92,10 @@ export class AmadeusAdapter extends BaseAdapter implements ConnectAdapter {
 
       const raw = response.result as unknown as AmadeusFlightSearchResponse;
 
+      this.evictExpired(this.searchOfferCache);
+      const now = Date.now();
       for (const offer of raw.data) {
-        this.searchOfferCache.set(offer.id, offer);
+        this.searchOfferCache.set(offer.id, { data: offer, cachedAt: now });
       }
 
       return mapSearchResponse(raw.data, raw.dictionaries);
@@ -93,7 +112,8 @@ export class AmadeusAdapter extends BaseAdapter implements ConnectAdapter {
       // Retrieve the raw offer from the search cache or return unavailable.
       // In a real integration, the caller would pass the raw offer through.
       // For now, we require the offer to have been previously returned by searchFlights.
-      const rawOffer = this.findCachedRawOffer(amadeusId);
+      const cachedEntry = this.findCachedRawOffer(amadeusId);
+      const rawOffer = cachedEntry?.data;
 
       if (!rawOffer) {
         return {
@@ -119,17 +139,20 @@ export class AmadeusAdapter extends BaseAdapter implements ConnectAdapter {
       const priceResult = priceResponse.result as unknown as AmadeusFlightPriceResponse;
       const pricedOffers = priceResult.data.flightOffers;
 
+      this.evictExpired(this.pricedOfferCache);
+      const priceNow = Date.now();
       for (const po of pricedOffers) {
-        this.pricedOfferCache.set(`amadeus-${po.id}`, po);
+        this.pricedOfferCache.set(`amadeus-${po.id}`, { data: po, cachedAt: priceNow });
       }
 
-      return mapPriceResponse(pricedOffers, offerId);
+      const originalSearchPrice = cachedEntry?.data.price.grandTotal;
+      return mapPriceResponse(pricedOffers, offerId, originalSearchPrice);
     });
   }
 
   async createBooking(input: CreateBookingInput): Promise<BookingResult> {
     return this.withRetry('createBooking', async () => {
-      const pricedOffer = this.pricedOfferCache.get(input.offerId);
+      const pricedOffer = this.pricedOfferCache.get(input.offerId)?.data;
 
       if (!pricedOffer) {
         throw new ConnectError(
@@ -177,8 +200,14 @@ export class AmadeusAdapter extends BaseAdapter implements ConnectAdapter {
     });
   }
 
-  private findCachedRawOffer(amadeusId: string): AmadeusFlightOffer | undefined {
-    return this.searchOfferCache.get(amadeusId);
+  private findCachedRawOffer(amadeusId: string): CacheEntry<AmadeusFlightOffer> | undefined {
+    const entry = this.searchOfferCache.get(amadeusId);
+    if (!entry) return undefined;
+    if (Date.now() - entry.cachedAt > CACHE_TTL_MS) {
+      this.searchOfferCache.delete(amadeusId);
+      return undefined;
+    }
+    return entry;
   }
 
   async healthCheck(): Promise<{ healthy: boolean; latencyMs: number }> {

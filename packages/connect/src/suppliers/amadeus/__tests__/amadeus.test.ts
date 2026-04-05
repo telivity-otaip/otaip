@@ -508,9 +508,14 @@ describe('mapPriceResponse', () => {
     expect(result.supplier).toBe('amadeus');
   });
 
-  it('detects price change', () => {
-    const result = mapPriceResponse([makeAmadeusFlightOffer()], 'old-offer-id');
+  it('detects price change when original search price differs', () => {
+    const result = mapPriceResponse([makeAmadeusFlightOffer()], 'amadeus-1', '550.00');
     expect(result.priceChanged).toBe(true);
+  });
+
+  it('detects no price change when prices match', () => {
+    const result = mapPriceResponse([makeAmadeusFlightOffer()], 'amadeus-1', '610.50');
+    expect(result.priceChanged).toBe(false);
   });
 
   it('handles empty response as unavailable', () => {
