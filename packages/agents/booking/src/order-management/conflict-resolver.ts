@@ -12,7 +12,7 @@
  * Air domain ONLY.
  */
 
-import type { ConflictResolution, ConflictResolutionAction, MonitoringPort } from './state-machine.js';
+import type { ConflictResolution, MonitoringPort } from './state-machine.js';
 
 // ---------------------------------------------------------------------------
 // Port interfaces — injected, not hard-wired to specific agents

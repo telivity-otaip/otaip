@@ -189,7 +189,7 @@ export class PaymentConfirmationStateMachine {
     return this.cloneState(order.state);
   }
 
-  handleConfirmationSuccess(orderId: string, ticketRef: string): OrderState {
+  handleConfirmationSuccess(orderId: string, _ticketRef: string): OrderState {
     const order = this.getOrder(orderId);
 
     // Valid from AWAITING or RETRY
