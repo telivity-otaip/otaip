@@ -28,7 +28,7 @@ Every agent implements one interface. Every output includes confidence scores. N
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
-[![Tests](https://img.shields.io/badge/tests-2465%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
+[![Tests](https://img.shields.io/badge/tests-2499%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
 [![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg)](https://pnpm.io/)
 
 ---
@@ -40,7 +40,7 @@ Every agent implements one interface. Every output includes confidence scores. N
 | Stage 0 - Reference Data | `@otaip/agents-reference` | 7 | 204 | Complete |
 | Stage 1 - Search & Shop | `@otaip/agents-search` | 8 | 213 | Complete |
 | Stage 2 - Select & Price | `@otaip/agents-pricing` | 5 | 160 | Complete |
-| Stage 3 - Book & Order | `@otaip/agents-booking` | 7 | 269 | Complete |
+| Stage 3 - Book & Order | `@otaip/agents-booking` | 7 | 380 | Complete |
 | Stage 4 - Ticket & Fulfill | `@otaip/agents-ticketing` | 5 | 160 | Complete |
 | Stage 5 - Change & Exchange | `@otaip/agents-exchange` | 6 | 197 | Complete |
 | Stage 6 - Refund & ADM | `@otaip/agents-settlement` | 6 | 289 | Complete |
@@ -51,7 +51,7 @@ Every agent implements one interface. Every output includes confidence scores. N
 
 *4 agents marked coming soon (1.8, 2.6, 2.7, 7.4) - stubs exported, pending domain input or future phase.*
 
-**70 agents. 6 core runtime modules. 2,465 tests. All green.**
+**70 agents. 6 core runtime modules. 2,499 tests. All green.**
 
 ---
 
@@ -229,7 +229,7 @@ PNR construction and booking management across GDS and NDC sources.
 | Agent 3.2 - PNR Builder | GDS command generation for Amadeus/Sabre/Travelport, SSR/OSI codes, DOCS, infant PNR, group bookings |
 | Agent 3.3 - PNR Validation | 13 pre-ticketing checks: segment status, TTL expiry, APIS completeness, duplicate detection, married segment integrity |
 | Agent 3.4 - Queue Management | Priority scoring, action code routing, GDS queue command stubs (Amadeus/Sabre/Travelport) |
-| Agent 3.6 - Order Management | NDC Order lifecycle (create/modify/cancel/fulfil), GDS PNR bridge, full status history, `decimal.js` |
+| Agent 3.6 - Order Management | NDC Order lifecycle (create/modify/cancel/fulfil), GDS PNR bridge, full status history, payment-to-ticketing state machine with BSP-based conflict resolution, `decimal.js` |
 | Agent 3.7 - Payment Processing | FOP validation and instruction generation, PCI raw card detection, GDS FOP string format, payment record store |
 
 ---
@@ -397,8 +397,15 @@ otaip/
 |   +-- agents-tmc/              # @otaip/agents-tmc - Stage 8
 |   +-- agents-platform/         # @otaip/agents-platform - Stage 9
 |   +-- agents/
-|   |   +-- reference/           # Reference data agents
+|   |   +-- booking/             # Stage 3 - Booking agents
+|   |   +-- exchange/            # Stage 5 - Change & exchange agents
 |   |   +-- lodging/             # Stage 20 - Hotel booking lifecycle
+|   |   +-- pricing/             # Stage 2 - Pricing agents
+|   |   +-- reconciliation/      # Stage 7 - BSP/ARC reconciliation agents
+|   |   +-- reference/           # Stage 0 - Reference data agents
+|   |   +-- search/              # Stage 1 - Search agents
+|   |   +-- settlement/          # Stage 6 - Refund & ADM agents
+|   |   +-- ticketing/           # Stage 4 - Ticketing agents
 |   +-- adapter-duffel/          # @otaip/adapter-duffel - Mock + live Duffel adapter
 |   +-- connect/                # @otaip/connect - Sabre GDS, Navitaire, TripPro adapters + ChatGPT/Claude channel generators
 +-- agents/
