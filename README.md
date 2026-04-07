@@ -368,6 +368,7 @@ OTAIP is source-agnostic. Agents work with any distribution source via the `Dist
 | `@otaip/connect` (Sabre) | Full-service carriers via GDS | REST (Sabre APIs v5/v1) | Live |
 | `@otaip/connect` (Navitaire) | LCCs via Navitaire (New Skies/dotREZ) | REST (session-stateful) | Live |
 | `@otaip/connect` (Amadeus) | Amadeus Self-Service airlines | REST (Self-Service v2) | Live |
+| `@otaip/connect` (HAIP) | Hotel PMS via HAIP Connect API | REST | Live |
 
 **Roadmap:**
 

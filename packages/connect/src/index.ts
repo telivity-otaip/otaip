@@ -69,6 +69,20 @@ export type { McpToolDefinition } from './channels/claude/tool-generator.js';
 // White-label config
 export type { WhiteLabelConfig } from './types.js';
 
+// HAIP PMS adapter
+export { HaipAdapter } from './suppliers/haip/index.js';
+export type { HaipConfig } from './suppliers/haip/config.js';
+export type {
+  HaipSearchParams,
+  HaipBookingParams,
+  HaipModifyParams,
+  HaipHotelResult,
+  HaipBookingResult,
+  HaipVerificationResult,
+  HaipModificationResult,
+  HaipCancellationResult,
+} from './suppliers/haip/index.js';
+
 // Pipeline stubs (types only — implementations are stubs)
 export type { BookingPipelineConfig, BookingPipelineStep } from './pipeline/booking-flow.js';
 export type { PaymentHandoffConfig, PaymentHandoffResult } from './pipeline/payment-handoff.js';
