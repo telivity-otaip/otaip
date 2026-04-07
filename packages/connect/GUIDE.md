@@ -351,6 +351,64 @@ pnpm --filter @otaip/connect test
 | `TRIPPRO_SEARCH_ACCESS_TOKEN` | TripPro | Search-specific access token |
 | `TRIPPRO_WHITELISTED_IP` | TripPro | Whitelisted IP for API access |
 | `ANTHROPIC_API_KEY` | Demo scripts | Anthropic API key for Claude agent loop |
+| `HAIP_BASE_URL` | HAIP | Base URL of the HAIP PMS instance (e.g., `http://localhost:3000`) |
+| `HAIP_API_KEY` | HAIP (optional) | API key — empty for HAIP v1.0.0, will be OAuth token later |
+
+---
+
+## Using the HAIP adapter (Hotel PMS)
+
+The HAIP adapter connects to a HAIP PMS instance via its Connect API. Unlike the flight adapters above, HAIP is a **hotel** adapter supporting the full booking lifecycle: search, book, modify, cancel, and verify.
+
+```typescript
+import { HaipAdapter } from '@otaip/connect';
+
+const adapter = new HaipAdapter({
+  baseUrl: process.env.HAIP_BASE_URL ?? 'http://localhost:3000',
+  apiKey: process.env.HAIP_API_KEY ?? '',  // No auth in HAIP v1.0.0
+  timeoutMs: 10_000,
+  maxRetries: 2,
+  baseDelayMs: 1_000,
+});
+
+// Search
+const results = await adapter.searchHotels({
+  destination: 'New York',
+  checkIn: '2026-04-07',
+  checkOut: '2026-04-09',
+  rooms: 1,
+  adults: 2,
+});
+
+// Book (HAIP auto-confirms — no polling needed)
+const booking = await adapter.createBooking({
+  propertyId: results[0].source.sourcePropertyId,
+  roomTypeId: results[0].rates[0].roomTypeId,
+  rateId: results[0].rates[0].rateId,
+  checkIn: '2026-04-07',
+  checkOut: '2026-04-09',
+  rooms: 1,
+  guest: { firstName: 'John', lastName: 'Doe', email: 'john@example.com' },
+  externalConfirmationCode: 'OTAIP-REF-001',
+});
+// booking.status === 'confirmed' (auto-confirm)
+// booking.confirmation.crsConfirmation === HAIP PMS confirmation number
+// booking.confirmation.channelConfirmation === 'OTAIP-REF-001'
+
+// Verify CRS ↔ PMS sync
+const status = await adapter.getBookingStatus(booking.confirmation.crsConfirmation);
+// status.syncStatus === 'IN_SYNC' | 'MISMATCH'
+
+// Modify
+const modified = await adapter.modifyBooking(booking.confirmation.crsConfirmation, {
+  checkOut: '2026-04-10',
+});
+
+// Cancel
+const cancelled = await adapter.cancelBooking(booking.confirmation.crsConfirmation);
+```
+
+The HAIP adapter is **not** registered in the flight supplier registry (`createAdapter`). Instantiate it directly. It can be passed to Agent 20.1 (Hotel Search Aggregator) as a `HotelSourceAdapter` since it implements `searchHotels()` and `isAvailable()`.
 
 ---
 

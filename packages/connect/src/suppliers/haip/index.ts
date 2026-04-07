@@ -1,0 +1,362 @@
+/**
+ * HAIP PMS Connect adapter for @otaip/connect.
+ *
+ * A thin HTTP client that calls the HAIP Connect API at /api/v1/connect/*
+ * and maps responses to OTAIP-compatible hotel types.
+ *
+ * - Stateless: each call is independent
+ * - Auto-confirm: HAIP confirms bookings immediately (no polling)
+ * - Three confirmation codes: PMS confirmation + external reference
+ * - No auth in HAIP v1.0.0 — Bearer header included but empty
+ *
+ * Extends BaseAdapter for retry, timeout, and error wrapping utilities.
+ */
+
+import { BaseAdapter, ConnectError } from '../../base-adapter.js';
+import type { HaipConfig } from './config.js';
+import { validateHaipConfig } from './config.js';
+import {
+  mapBookingResponse,
+  mapCancelResponse,
+  mapModifyResponse,
+  mapPropertyDetail,
+  mapSearchResults,
+  mapVerifyResponse,
+} from './mapper.js';
+import type {
+  HaipHotelResult,
+  HaipBookingResult,
+  HaipVerificationResult,
+  HaipModificationResult,
+  HaipCancellationResult,
+  HaipRawRate,
+} from './mapper.js';
+import type {
+  HaipBookRequest,
+  HaipBookResponse,
+  HaipBookingStatusResponse,
+  HaipCancelResponse,
+  HaipHealthResponse,
+  HaipModifyRequest,
+  HaipModifyResponse,
+  HaipPropertyResponse,
+  HaipSearchRequest,
+  HaipSearchResponse,
+} from './types.js';
+
+// ---------------------------------------------------------------------------
+// Input types for adapter methods
+// ---------------------------------------------------------------------------
+
+export interface HaipSearchParams {
+  destination: string;
+  checkIn: string;
+  checkOut: string;
+  rooms: number;
+  adults: number;
+  children?: number;
+  currency?: string;
+}
+
+export interface HaipBookingParams {
+  propertyId: string;
+  roomTypeId: string;
+  rateId: string;
+  checkIn: string;
+  checkOut: string;
+  rooms: number;
+  guest: {
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    loyaltyNumber?: string;
+    loyaltyProgram?: string;
+  };
+  externalConfirmationCode?: string;
+  specialRequests?: string;
+}
+
+export interface HaipModifyParams {
+  checkIn?: string;
+  checkOut?: string;
+  rooms?: number;
+  roomTypeId?: string;
+  rateId?: string;
+  guest?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+  };
+  specialRequests?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Re-export mapper output types for consumers
+// ---------------------------------------------------------------------------
+
+export type {
+  HaipHotelResult,
+  HaipBookingResult,
+  HaipVerificationResult,
+  HaipModificationResult,
+  HaipCancellationResult,
+  HaipRawRate,
+} from './mapper.js';
+
+// ---------------------------------------------------------------------------
+// Adapter implementation
+// ---------------------------------------------------------------------------
+
+export class HaipAdapter extends BaseAdapter {
+  protected readonly supplierId = 'haip';
+  readonly adapterId = 'haip';
+  readonly adapterName = 'HAIP PMS';
+
+  private readonly config: HaipConfig;
+
+  constructor(config: unknown) {
+    const validated = validateHaipConfig(config);
+    super({
+      maxRetries: validated.maxRetries,
+      baseDelayMs: validated.baseDelayMs,
+    });
+    this.config = validated;
+  }
+
+  // -----------------------------------------------------------------------
+  // Search (compatible with HotelSourceAdapter pattern)
+  // -----------------------------------------------------------------------
+
+  async searchHotels(params: HaipSearchParams): Promise<HaipHotelResult[]> {
+    return this.withRetry('searchHotels', async () => {
+      const body: HaipSearchRequest = {
+        destination: params.destination,
+        checkIn: params.checkIn,
+        checkOut: params.checkOut,
+        rooms: params.rooms,
+        adults: params.adults,
+        children: params.children,
+        currency: params.currency,
+      };
+
+      const response = await this.request<HaipSearchResponse>(
+        'POST',
+        '/api/v1/connect/search',
+        body,
+      );
+
+      return mapSearchResults(response);
+    });
+  }
+
+  async getPropertyDetails(propertyId: string): Promise<HaipHotelResult | null> {
+    return this.withRetry('getPropertyDetails', async () => {
+      try {
+        const response = await this.request<HaipPropertyResponse>(
+          'GET',
+          `/api/v1/connect/properties/${encodeURIComponent(propertyId)}`,
+        );
+        return mapPropertyDetail(response);
+      } catch (error) {
+        if (error instanceof ConnectError && error.message.includes('404')) {
+          return null;
+        }
+        throw error;
+      }
+    });
+  }
+
+  async checkRate(
+    propertyId: string,
+    roomTypeId: string,
+  ): Promise<HaipRawRate | null> {
+    return this.withRetry('checkRate', async () => {
+      const body: HaipSearchRequest = {
+        destination: propertyId,
+        checkIn: new Date().toISOString().split('T')[0] as string,
+        checkOut: new Date(Date.now() + 86_400_000).toISOString().split('T')[0] as string,
+        rooms: 1,
+        adults: 1,
+      };
+
+      const response = await this.request<HaipSearchResponse>(
+        'POST',
+        '/api/v1/connect/search',
+        body,
+      );
+
+      const results = mapSearchResults(response);
+      for (const result of results) {
+        const rate = result.rates.find((r) => r.roomTypeId === roomTypeId);
+        if (rate) return rate;
+      }
+
+      return null;
+    });
+  }
+
+  async isAvailable(): Promise<boolean> {
+    try {
+      const health = await this.healthCheck();
+      return health.healthy;
+    } catch {
+      return false;
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Booking lifecycle
+  // -----------------------------------------------------------------------
+
+  async createBooking(params: HaipBookingParams): Promise<HaipBookingResult> {
+    return this.withRetry('createBooking', async () => {
+      const body: HaipBookRequest = {
+        propertyId: params.propertyId,
+        roomTypeId: params.roomTypeId,
+        rateId: params.rateId,
+        checkIn: params.checkIn,
+        checkOut: params.checkOut,
+        rooms: params.rooms,
+        guest: params.guest,
+        externalConfirmationCode: params.externalConfirmationCode,
+        specialRequests: params.specialRequests,
+      };
+
+      const response = await this.request<HaipBookResponse>(
+        'POST',
+        '/api/v1/connect/book',
+        body,
+      );
+
+      // HAIP auto-confirms agent bookings — status should be 'confirmed'
+      return mapBookingResponse(response, params.externalConfirmationCode);
+    });
+  }
+
+  async getBookingStatus(
+    confirmationNumber: string,
+  ): Promise<HaipVerificationResult> {
+    return this.withRetry('getBookingStatus', async () => {
+      const response = await this.request<HaipBookingStatusResponse>(
+        'GET',
+        `/api/v1/connect/bookings/${encodeURIComponent(confirmationNumber)}/verify`,
+      );
+
+      return mapVerifyResponse(response);
+    });
+  }
+
+  async modifyBooking(
+    confirmationNumber: string,
+    changes: HaipModifyParams,
+  ): Promise<HaipModificationResult> {
+    return this.withRetry('modifyBooking', async () => {
+      const body: HaipModifyRequest = {
+        checkIn: changes.checkIn,
+        checkOut: changes.checkOut,
+        rooms: changes.rooms,
+        roomTypeId: changes.roomTypeId,
+        rateId: changes.rateId,
+        guest: changes.guest,
+        specialRequests: changes.specialRequests,
+      };
+
+      const response = await this.request<HaipModifyResponse>(
+        'PATCH',
+        `/api/v1/connect/bookings/${encodeURIComponent(confirmationNumber)}`,
+        body,
+      );
+
+      return mapModifyResponse(response);
+    });
+  }
+
+  async cancelBooking(
+    confirmationNumber: string,
+  ): Promise<HaipCancellationResult> {
+    return this.withRetry('cancelBooking', async () => {
+      const response = await this.request<HaipCancelResponse>(
+        'DELETE',
+        `/api/v1/connect/bookings/${encodeURIComponent(confirmationNumber)}`,
+      );
+
+      return mapCancelResponse(response);
+    });
+  }
+
+  // -----------------------------------------------------------------------
+  // Health
+  // -----------------------------------------------------------------------
+
+  async healthCheck(): Promise<{ healthy: boolean; latencyMs: number }> {
+    const start = Date.now();
+    try {
+      const response = await this.request<HaipHealthResponse>(
+        'GET',
+        '/health',
+      );
+      return {
+        healthy: response.status === 'ok' || response.status === 'healthy',
+        latencyMs: Date.now() - start,
+      };
+    } catch {
+      return {
+        healthy: false,
+        latencyMs: Date.now() - start,
+      };
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // HTTP helper
+  // -----------------------------------------------------------------------
+
+  private async request<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
+    const url = `${this.config.baseUrl}${path}`;
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    // Auth header — empty for HAIP v1.0.0, ready for OAuth token later
+    if (this.config.apiKey) {
+      headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+    }
+
+    const init: RequestInit = {
+      method,
+      headers,
+    };
+
+    if (body !== undefined && method !== 'GET' && method !== 'DELETE') {
+      init.body = JSON.stringify(body);
+    }
+
+    const response = await this.fetchWithTimeout(url, init, this.config.timeoutMs);
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      const retryable = response.status === 429 || response.status >= 500;
+      throw new ConnectError(
+        `HAIP ${method} ${path} returned ${response.status}: ${text}`,
+        this.supplierId,
+        `${method} ${path}`,
+        retryable,
+      );
+    }
+
+    // DELETE may return 204 with no body
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    return (await response.json()) as T;
+  }
+}
