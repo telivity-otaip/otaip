@@ -48,6 +48,7 @@ export type {
 
 export { OfferBuilderAgent } from './offer-builder/index.js';
 export type {
+  OfferBuilderConfig,
   OfferBuilderInput,
   OfferBuilderOutput,
   Offer,

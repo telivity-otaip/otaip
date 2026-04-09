@@ -420,6 +420,12 @@ otaip/
 
 ---
 
+## Development Model
+
+Domain knowledge and architecture by [Telivity](https://telivity.app). Implementation built with [Claude Code](https://claude.com/claude-code) (Anthropic). All domain logic reviewed against IATA, ATPCO, and ICAO source standards.
+
+---
+
 ## Contributing
 
 Travel domain knowledge is what makes these agents valuable. If you work in airline distribution, GDS/NDC, or TMC operations and you find something wrong - open an issue.

@@ -45,3 +45,22 @@ export type StepExecutor = (
   agentId: string,
   input: Record<string, unknown>,
 ) => Promise<Record<string, unknown>>;
+
+/* ── Pipeline builder types ───────────────────────────────────────── */
+
+export interface PipelineStep {
+  agent_id: string;
+  condition?: (input: Record<string, unknown>) => boolean;
+  onError?: 'stop' | 'skip' | 'continue';
+}
+
+export interface ParallelStep {
+  parallel: PipelineStep[];
+}
+
+export type PipelineEntry = PipelineStep | ParallelStep;
+
+export interface PipelineDefinition {
+  name: string;
+  steps: PipelineEntry[];
+}

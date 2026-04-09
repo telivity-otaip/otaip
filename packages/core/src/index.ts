@@ -65,16 +65,25 @@ export type {
   TokenCounter,
 } from './context/index.js';
 export { ContextBudgetManager, CharTokenCounter } from './context/index.js';
+export { TiktokenCounter } from './context/index.js';
+export type { TiktokenEncoding } from './context/index.js';
 export { TruncateOldestStrategy, DropLargeToolOutputsStrategy } from './context/index.js';
 
 export type { TelemetryProvider, TelemetrySpan } from './telemetry/index.js';
-export { NoopTelemetryProvider, traceAgentExecution } from './telemetry/index.js';
+export { NoopTelemetryProvider, traceAgentExecution, OTelTelemetryProvider } from './telemetry/index.js';
 
 export type { PersistenceAdapter } from './persistence/index.js';
 export { InMemoryPersistenceAdapter } from './persistence/index.js';
 
 export type { RateLimiterConfig } from './rate-limiter/index.js';
 export { RateLimiter } from './rate-limiter/index.js';
+
+export type { AuthContext, AuthMiddleware } from './auth/index.js';
+
+export type { Idempotent, Cancellable, Checkpointable } from './mixins/index.js';
+
+export type { CacheAdapter, CacheConfig } from './cache/index.js';
+export { LRUCacheAdapter } from './cache/index.js';
 
 export type {
   PassengerType,

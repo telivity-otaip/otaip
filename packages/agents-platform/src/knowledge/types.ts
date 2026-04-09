@@ -12,7 +12,8 @@ export type KnowledgeTopic =
   | 'tmc'
   | 'fares'
   | 'regulations'
-  | 'reference';
+  | 'reference'
+  | 'lodging';
 
 export type KnowledgeOperation = 'query' | 'index_document' | 'list_topics' | 'get_document';
 
@@ -53,4 +54,15 @@ export interface KnowledgeOutput {
   topics?: KnowledgeTopic[];
   query_time_ms?: number;
   message?: string;
+}
+
+/** Injectable embedding provider for hybrid BM25 + vector scoring. */
+export interface EmbeddingProvider {
+  embed(text: string): Promise<number[]>;
+  readonly dimensions: number;
+}
+
+/** Configuration options for the KnowledgeAgent. */
+export interface KnowledgeAgentConfig {
+  embeddingProvider?: EmbeddingProvider;
 }

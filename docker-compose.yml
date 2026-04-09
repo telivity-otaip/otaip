@@ -14,3 +14,55 @@ services:
       - SABRE_ENVIRONMENT=${SABRE_ENVIRONMENT:-cert}
     volumes:
       - ./data:/app/data
+
+  otaip-full:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - DUFFEL_API_KEY=${DUFFEL_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - SABRE_CLIENT_ID=${SABRE_CLIENT_ID:-}
+      - SABRE_CLIENT_SECRET=${SABRE_CLIENT_SECRET:-}
+      - SABRE_ENVIRONMENT=${SABRE_ENVIRONMENT:-cert}
+      - DATABASE_URL=postgresql://otaip:otaip@postgres:5432/otaip
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - full
+
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: otaip
+      POSTGRES_PASSWORD: otaip
+      POSTGRES_DB: otaip
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'otaip']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    profiles:
+      - full
+
+  jaeger:
+    image: jaegertracing/jaeger:2
+    ports:
+      - '16686:16686'
+      - '4318:4318'
+    environment:
+      COLLECTOR_OTLP_ENABLED: 'true'
+    profiles:
+      - full
+
+volumes:
+  pgdata:
