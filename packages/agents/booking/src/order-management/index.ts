@@ -7,7 +7,13 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import type {
+  Agent,
+  AgentInput,
+  AgentOutput,
+  AgentHealthStatus,
+  PersistenceAdapter,
+} from '@otaip/core';
 import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import Decimal from 'decimal.js';
 import type {
@@ -39,6 +45,13 @@ const CANCELLABLE_STATUSES: ReadonlySet<OrderStatus> = new Set([
   'MODIFIED',
 ]);
 
+const ORDER_KEY_PREFIX = 'order:';
+
+export interface OrderManagementConfig {
+  /** Optional persistence adapter. When omitted the agent uses an in-memory Map. */
+  persistence?: PersistenceAdapter;
+}
+
 export class OrderManagement implements Agent<OrderManagementInput, OrderManagementOutput> {
   readonly id = '3.6';
   readonly name = 'Order Management';
@@ -47,6 +60,11 @@ export class OrderManagement implements Agent<OrderManagementInput, OrderManagem
   private initialized = false;
   private orders: Map<string, Order> = new Map();
   private orderCounter = 0;
+  private readonly persistence: PersistenceAdapter | undefined;
+
+  constructor(config?: OrderManagementConfig) {
+    this.persistence = config?.persistence;
+  }
 
   async initialize(): Promise<void> {
     this.orders.clear();
@@ -68,19 +86,19 @@ export class OrderManagement implements Agent<OrderManagementInput, OrderManagem
 
     switch (operation) {
       case 'createOrder':
-        result = this.handleCreate(input.data.createOrder!);
+        result = await this.handleCreate(input.data.createOrder!);
         break;
       case 'modifyOrder':
-        result = this.handleModify(input.data.modifyOrder!);
+        result = await this.handleModify(input.data.modifyOrder!);
         break;
       case 'cancelOrder':
-        result = this.handleCancel(input.data.cancelOrder!);
+        result = await this.handleCancel(input.data.cancelOrder!);
         break;
       case 'getOrder':
-        result = this.handleGet(input.data.getOrder!);
+        result = await this.handleGet(input.data.getOrder!);
         break;
       case 'listOrders':
-        result = this.handleList(input.data.listOrders ?? {});
+        result = await this.handleList(input.data.listOrders ?? {});
         break;
       default:
         throw new AgentInputValidationError(this.id, 'operation', 'Unknown operation.');
@@ -91,6 +109,10 @@ export class OrderManagement implements Agent<OrderManagementInput, OrderManagem
       warnings.push(result.errorMessage);
     }
 
+    const orderCount = this.persistence
+      ? (await this.persistence.list(ORDER_KEY_PREFIX)).length
+      : this.orders.size;
+
     return {
       data: result,
       confidence: 1.0,
@@ -100,7 +122,7 @@ export class OrderManagement implements Agent<OrderManagementInput, OrderManagem
         agent_version: this.version,
         operation,
         success: result.success,
-        order_count: this.orders.size,
+        order_count: orderCount,
       },
     };
   }
@@ -119,10 +141,42 @@ export class OrderManagement implements Agent<OrderManagementInput, OrderManagem
   }
 
   // ---------------------------------------------------------------------------
+  // Storage helpers — delegate to PersistenceAdapter when provided
+  // ---------------------------------------------------------------------------
+
+  private async storeGet(orderId: string): Promise<Order | null> {
+    if (this.persistence) {
+      return this.persistence.get<Order>(`${ORDER_KEY_PREFIX}${orderId}`);
+    }
+    return this.orders.get(orderId) ?? null;
+  }
+
+  private async storeSet(order: Order): Promise<void> {
+    if (this.persistence) {
+      await this.persistence.set<Order>(`${ORDER_KEY_PREFIX}${order.orderId}`, order);
+    } else {
+      this.orders.set(order.orderId, order);
+    }
+  }
+
+  private async storeListAll(): Promise<Order[]> {
+    if (this.persistence) {
+      const keys = await this.persistence.list(ORDER_KEY_PREFIX);
+      const orders: Order[] = [];
+      for (const key of keys) {
+        const order = await this.persistence.get<Order>(key);
+        if (order) orders.push(order);
+      }
+      return orders;
+    }
+    return Array.from(this.orders.values());
+  }
+
+  // ---------------------------------------------------------------------------
   // Operation handlers
   // ---------------------------------------------------------------------------
 
-  private handleCreate(data: CreateOrderData): OrderManagementOutput {
+  private async handleCreate(data: CreateOrderData): Promise<OrderManagementOutput> {
     this.orderCounter++;
     const orderId = `ORD${String(this.orderCounter).padStart(6, '0')}`;
     const now = new Date().toISOString();
@@ -156,13 +210,13 @@ export class OrderManagement implements Agent<OrderManagementInput, OrderManagem
       updatedAt: now,
     };
 
-    this.orders.set(orderId, order);
+    await this.storeSet(order);
 
     return { order: this.cloneOrder(order), operation: 'createOrder', success: true };
   }
 
-  private handleModify(data: ModifyOrderData): OrderManagementOutput {
-    const order = this.orders.get(data.orderId);
+  private async handleModify(data: ModifyOrderData): Promise<OrderManagementOutput> {
+    const order = await this.storeGet(data.orderId);
     if (!order) {
       return {
         operation: 'modifyOrder',
@@ -227,11 +281,13 @@ export class OrderManagement implements Agent<OrderManagementInput, OrderManagem
       reason: data.reason,
     });
 
+    await this.storeSet(order);
+
     return { order: this.cloneOrder(order), operation: 'modifyOrder', success: true };
   }
 
-  private handleCancel(data: CancelOrderData): OrderManagementOutput {
-    const order = this.orders.get(data.orderId);
+  private async handleCancel(data: CancelOrderData): Promise<OrderManagementOutput> {
+    const order = await this.storeGet(data.orderId);
     if (!order) {
       return {
         operation: 'cancelOrder',
@@ -280,11 +336,13 @@ export class OrderManagement implements Agent<OrderManagementInput, OrderManagem
       reason: data.reason,
     });
 
+    await this.storeSet(order);
+
     return { order: this.cloneOrder(order), operation: 'cancelOrder', success: true };
   }
 
-  private handleGet(data: GetOrderData): OrderManagementOutput {
-    const order = this.orders.get(data.orderId);
+  private async handleGet(data: GetOrderData): Promise<OrderManagementOutput> {
+    const order = await this.storeGet(data.orderId);
     if (!order) {
       return {
         operation: 'getOrder',
@@ -296,8 +354,8 @@ export class OrderManagement implements Agent<OrderManagementInput, OrderManagem
     return { order: this.cloneOrder(order), operation: 'getOrder', success: true };
   }
 
-  private handleList(data: ListOrdersData): OrderManagementOutput {
-    let orders = Array.from(this.orders.values());
+  private async handleList(data: ListOrdersData): Promise<OrderManagementOutput> {
+    let orders = await this.storeListAll();
 
     if (data.filter) {
       if (data.filter.status) {

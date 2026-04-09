@@ -64,11 +64,29 @@ Follow the pattern in `packages/agents/reference/src/airport-code-resolver/`:
 ## Repository Structure
 ```
 packages/
-  core/             — base types, errors, shared utilities
-  agents/
-    reference/      — airport-code-resolver (reference implementation)
-    lodging/        — Stage 20: hotel booking lifecycle (7 agents)
+  core/                — base types, errors, shared utilities
+  connect/             — distribution adapter framework (Sabre, Amadeus, Navitaire, TripPro, HAIP)
+  adapters/
+    duffel/            — standalone Duffel NDC adapter
+  agents/              — nested by stage (preferred convention for stage agents)
+    reference/         — Stage 0: airport codes, airline codes, etc.
+    search/            — Stage 1: availability, fare shopping, connections
+    pricing/           — Stage 2: fare rules, tax calc, offer builder
+    booking/           — Stage 3: PNR, payment, order management
+    ticketing/         — Stage 4: issuance, EMD, void
+    exchange/          — Stage 5: changes, reissue, involuntary rebook
+    settlement/        — Stage 6: refunds, ADM, loyalty
+    reconciliation/    — Stage 7: BSP, ARC, commission, reporting
+    lodging/           — Stage 20: hotel booking lifecycle
+  agents-platform/     — Stage 9: orchestrator, knowledge, monitoring (flat — legacy convention)
+  agents-tmc/          — Stage 8: TMC operations (flat — legacy convention)
 ```
+
+### Path conventions
+- **Stage agents** (0-7, 20): nested under `packages/agents/{stage-name}/`
+- **Platform/TMC agents** (8-9): flat at `packages/agents-platform/` and `packages/agents-tmc/`
+- Both conventions coexist. New agents should use the nested `packages/agents/` pattern.
+- Agent source goes under `src/{agent-name}/` regardless of package layout.
 
 ## Anti-Rationalization Guards
 

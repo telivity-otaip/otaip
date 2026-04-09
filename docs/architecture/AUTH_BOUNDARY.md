@@ -39,6 +39,58 @@ const adapter = new DuffelAdapter({
 });
 ```
 
+## AuthMiddleware interface
+
+OTAIP provides a minimal `AuthMiddleware` interface so consuming apps have a consistent contract for injecting auth into agent workflows:
+
+```typescript
+import type { AuthContext, AuthMiddleware } from '@otaip/core';
+
+// AuthContext carries the authenticated user's identity
+interface AuthContext {
+  userId: string;
+  tenantId?: string;
+  roles: string[];
+  permissions: string[];
+  metadata?: Record<string, unknown>;
+}
+
+// AuthMiddleware — implement this in your app
+interface AuthMiddleware {
+  authenticate(request: unknown): Promise<AuthContext>;
+}
+```
+
+### Express example
+
+```typescript
+import type { AuthMiddleware, AuthContext } from '@otaip/core';
+
+class JwtAuthMiddleware implements AuthMiddleware {
+  async authenticate(request: unknown): Promise<AuthContext> {
+    const req = request as { headers: { authorization?: string } };
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    // Your JWT verification logic here
+    return { userId: '...', roles: ['agent'], permissions: ['search', 'book'] };
+  }
+}
+```
+
+### Fastify example
+
+```typescript
+import type { AuthMiddleware, AuthContext } from '@otaip/core';
+
+class FastifyAuthMiddleware implements AuthMiddleware {
+  async authenticate(request: unknown): Promise<AuthContext> {
+    const req = request as { headers: Record<string, string | undefined> };
+    const apiKey = req.headers['x-api-key'];
+    // Your API key verification logic here
+    return { userId: '...', tenantId: '...', roles: ['agent'], permissions: ['search'] };
+  }
+}
+```
+
 ## Environment variables
 
 See `.env.example` for the list of credentials OTAIP adapters accept. These are injected by the consuming application.

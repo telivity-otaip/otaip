@@ -5,6 +5,7 @@
  */
 
 export { OrchestratorAgent } from './orchestrator/index.js';
+export { PipelineBuilder } from './orchestrator/index.js';
 export type {
   OrchestratorInput,
   OrchestratorOutput,
@@ -13,6 +14,10 @@ export type {
   WorkflowName,
   WorkflowOptions,
   StepStatus,
+  PipelineStep,
+  ParallelStep,
+  PipelineEntry,
+  PipelineDefinition,
 } from './orchestrator/index.js';
 
 export { KnowledgeAgent } from './knowledge/index.js';
@@ -23,6 +28,8 @@ export type {
   KnowledgeResult,
   KnowledgeTopic,
   KnowledgeOperation,
+  EmbeddingProvider,
+  KnowledgeAgentConfig,
 } from './knowledge/index.js';
 
 export { MonitoringAgent } from './monitoring/index.js';

@@ -29,5 +29,16 @@
     "type": "git",
     "url": "https://github.com/telivity-otaip/otaip.git",
     "directory": "packages/core"
+  },
+  "peerDependencies": {
+    "@opentelemetry/api": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    }
+  },
+  "optionalDependencies": {
+    "js-tiktoken": "^1.0.21"
   }
 }

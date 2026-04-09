@@ -82,6 +82,7 @@ export type {
 
 export { OrderManagement } from './order-management/index.js';
 export type {
+  OrderManagementConfig,
   OrderManagementInput,
   OrderManagementOutput,
   Order,
