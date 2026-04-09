@@ -28,7 +28,7 @@ Every agent implements one interface. Every output includes confidence scores. N
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
-[![Tests](https://img.shields.io/badge/tests-2616%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
+[![Tests](https://img.shields.io/badge/tests-2737%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
 [![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg)](https://pnpm.io/)
 
 ---
@@ -51,7 +51,7 @@ Every agent implements one interface. Every output includes confidence scores. N
 
 *7 agents marked coming soon (1.8, 2.6, 2.7, 5.4, 5.5, 5.6, 7.4) — stubs exported, pending domain input or future phase.*
 
-**70 agents. 6 core runtime modules. 2,616 tests. All green.**
+**70 agents. 10 core runtime modules. 2,737 tests. All green.**
 
 ---
 
@@ -110,7 +110,7 @@ interface Agent<TInput, TOutput> {
 
 | Package | Description |
 |---------|-------------|
-| `@otaip/core` | Agent interface, tool registry, agent execution loop, lifecycle hooks, context budget manager, retry engine, sub-agent spawning, shared types and errors |
+| `@otaip/core` | Agent interface, tool registry, agent execution loop, lifecycle hooks, context budget manager (with tiktoken), retry engine, sub-agent spawning, telemetry (OpenTelemetry bridge), persistence adapter, rate limiter, cache adapter, auth middleware interface, agent mixins (idempotent/cancellable/checkpointable) |
 | `@otaip/agents-reference` | Stage 0: Airport/city codes, airline codes, fare basis, booking class, currency |
 | `@otaip/agents-search` | Stage 1: Availability search, schedule lookup, connection builder, fare shopping |
 | `@otaip/agents-pricing` | Stage 2: Fare rules (ATPCO Cat 1-20), fare construction (NUC/ROE/HIP/BHC), tax calculation |
@@ -411,12 +411,30 @@ otaip/
 |   +-- TAXONOMY.md              # Full agent taxonomy
 |   +-- specs/                   # YAML specs for all agents
 +-- docs/
-|   +-- architecture/            # ADRs, adapter target list
+|   +-- agents/                  # Per-agent API reference (all 70 agents)
+|   +-- architecture/            # ADRs, adapter status, auth boundary
+|   +-- deployment/              # Docker, OTel, deployment guide
+|   +-- operations/              # Scaling, failure modes
 |   +-- engineering/             # Build queue, briefs
 +-- knowledge-base/              # Travel domain knowledge (maintained by Telivity)
 +-- pnpm-workspace.yaml
 +-- package.json
 ```
+
+---
+
+## Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [Getting Started](docs/GETTING_STARTED.md) | Clone, install, run your first agent |
+| [Agent API Reference](docs/agents/README.md) | Input/output types and examples for all 70 agents |
+| [Adapter Status](docs/architecture/ADAPTER_STATUS.md) | What each distribution adapter supports |
+| [Deployment Guide](docs/deployment/DEPLOYMENT.md) | Docker, environment variables, OpenTelemetry setup |
+| [Auth Boundary](docs/architecture/AUTH_BOUNDARY.md) | Authentication is your app's job — here's how to wire it |
+| [Scaling Guide](docs/operations/SCALING.md) | Stateless agents, horizontal scaling, bottlenecks |
+| [Failure Modes](docs/operations/FAILURE_MODES.md) | What happens when things go wrong, per stage |
+| [Architecture Decisions](docs/architecture/adr/) | 5 ADRs explaining key design choices |
 
 ---
 
