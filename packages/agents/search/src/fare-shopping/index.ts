@@ -15,10 +15,7 @@ import type {
   DistributionAdapter,
   SearchRequest,
 } from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type {
   FareShoppingInput,
   FareShoppingOutput,
@@ -36,9 +33,7 @@ import {
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const VALID_CABIN_CLASSES = new Set(['economy', 'premium_economy', 'business', 'first']);
 
-export class FareShopping
-  implements Agent<FareShoppingInput, FareShoppingOutput>
-{
+export class FareShopping implements Agent<FareShoppingInput, FareShoppingOutput> {
   readonly id = '1.4';
   readonly name = 'Fare Shopping';
   readonly version = '0.1.0';
@@ -59,9 +54,7 @@ export class FareShopping
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<FareShoppingInput>,
-  ): Promise<AgentOutput<FareShoppingOutput>> {
+  async execute(input: AgentInput<FareShoppingInput>): Promise<AgentOutput<FareShoppingOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -74,11 +67,13 @@ export class FareShopping
 
     // Build search request
     const searchRequest: SearchRequest = {
-      segments: [{
-        origin: data.origin,
-        destination: data.destination,
-        departure_date: data.departure_date,
-      }],
+      segments: [
+        {
+          origin: data.origin,
+          destination: data.destination,
+          departure_date: data.departure_date,
+        },
+      ],
       passengers: data.passengers,
       cabin_class: data.cabin_class,
       currency: data.currency,
@@ -109,9 +104,8 @@ export class FareShopping
     // Build fare offers
     const fares: FareOffer[] = allOffers.map((offer) => {
       // Decode fare basis codes
-      const fareBasisDecoded = decodeFares && offer.fare_basis
-        ? offer.fare_basis.map((fb) => decodeFareBasis(fb))
-        : null;
+      const fareBasisDecoded =
+        decodeFares && offer.fare_basis ? offer.fare_basis.map((fb) => decodeFareBasis(fb)) : null;
 
       // Map class of service
       const classOfService = offer.booking_classes
@@ -196,20 +190,36 @@ export class FareShopping
       throw new AgentInputValidationError(this.id, 'origin', 'Required non-empty string.');
     }
 
-    if (!data.destination || typeof data.destination !== 'string' || data.destination.trim().length === 0) {
+    if (
+      !data.destination ||
+      typeof data.destination !== 'string' ||
+      data.destination.trim().length === 0
+    ) {
       throw new AgentInputValidationError(this.id, 'destination', 'Required non-empty string.');
     }
 
     if (!data.departure_date || !ISO_DATE_RE.test(data.departure_date)) {
-      throw new AgentInputValidationError(this.id, 'departure_date', 'Required ISO 8601 date (YYYY-MM-DD).');
+      throw new AgentInputValidationError(
+        this.id,
+        'departure_date',
+        'Required ISO 8601 date (YYYY-MM-DD).',
+      );
     }
 
     if (!data.passengers || !Array.isArray(data.passengers) || data.passengers.length === 0) {
-      throw new AgentInputValidationError(this.id, 'passengers', 'At least one passenger required.');
+      throw new AgentInputValidationError(
+        this.id,
+        'passengers',
+        'At least one passenger required.',
+      );
     }
 
     if (data.cabin_class !== undefined && !VALID_CABIN_CLASSES.has(data.cabin_class)) {
-      throw new AgentInputValidationError(this.id, 'cabin_class', `Must be one of: ${[...VALID_CABIN_CLASSES].join(', ')}`);
+      throw new AgentInputValidationError(
+        this.id,
+        'cabin_class',
+        `Must be one of: ${[...VALID_CABIN_CLASSES].join(', ')}`,
+      );
     }
   }
 }

@@ -229,28 +229,48 @@ describe('Loyalty Mileage Agent', () => {
   describe('calculateAccrual — alliance detection', () => {
     it('detects ONEWORLD for BA', async () => {
       const result = await agent.execute({
-        data: { operation: 'calculateAccrual', operatingCarrier: 'BA', bookingClass: 'Y', distanceMiles: 1000 },
+        data: {
+          operation: 'calculateAccrual',
+          operatingCarrier: 'BA',
+          bookingClass: 'Y',
+          distanceMiles: 1000,
+        },
       });
       expect(result.data.accrual!.alliance).toBe('ONEWORLD');
     });
 
     it('detects SKYTEAM for AF', async () => {
       const result = await agent.execute({
-        data: { operation: 'calculateAccrual', operatingCarrier: 'AF', bookingClass: 'Y', distanceMiles: 1000 },
+        data: {
+          operation: 'calculateAccrual',
+          operatingCarrier: 'AF',
+          bookingClass: 'Y',
+          distanceMiles: 1000,
+        },
       });
       expect(result.data.accrual!.alliance).toBe('SKYTEAM');
     });
 
     it('detects STAR_ALLIANCE for LH', async () => {
       const result = await agent.execute({
-        data: { operation: 'calculateAccrual', operatingCarrier: 'LH', bookingClass: 'Y', distanceMiles: 1000 },
+        data: {
+          operation: 'calculateAccrual',
+          operatingCarrier: 'LH',
+          bookingClass: 'Y',
+          distanceMiles: 1000,
+        },
       });
       expect(result.data.accrual!.alliance).toBe('STAR_ALLIANCE');
     });
 
     it('detects NONE for unknown carrier', async () => {
       const result = await agent.execute({
-        data: { operation: 'calculateAccrual', operatingCarrier: 'ZZ', bookingClass: 'Y', distanceMiles: 1000 },
+        data: {
+          operation: 'calculateAccrual',
+          operatingCarrier: 'ZZ',
+          bookingClass: 'Y',
+          distanceMiles: 1000,
+        },
       });
       expect(result.data.accrual!.alliance).toBe('NONE');
     });
@@ -259,21 +279,39 @@ describe('Loyalty Mileage Agent', () => {
   describe('calculateAccrual — partner earning', () => {
     it('marks partner earning for BA crediting to QF (same oneworld)', async () => {
       const result = await agent.execute({
-        data: { operation: 'calculateAccrual', operatingCarrier: 'BA', creditingCarrier: 'QF', bookingClass: 'Y', distanceMiles: 1000 },
+        data: {
+          operation: 'calculateAccrual',
+          operatingCarrier: 'BA',
+          creditingCarrier: 'QF',
+          bookingClass: 'Y',
+          distanceMiles: 1000,
+        },
       });
       expect(result.data.accrual!.isPartnerEarning).toBe(true);
     });
 
     it('does not mark partner earning when crediting to same carrier', async () => {
       const result = await agent.execute({
-        data: { operation: 'calculateAccrual', operatingCarrier: 'BA', creditingCarrier: 'BA', bookingClass: 'Y', distanceMiles: 1000 },
+        data: {
+          operation: 'calculateAccrual',
+          operatingCarrier: 'BA',
+          creditingCarrier: 'BA',
+          bookingClass: 'Y',
+          distanceMiles: 1000,
+        },
       });
       expect(result.data.accrual!.isPartnerEarning).toBe(false);
     });
 
     it('does not mark partner earning across different alliances', async () => {
       const result = await agent.execute({
-        data: { operation: 'calculateAccrual', operatingCarrier: 'BA', creditingCarrier: 'LH', bookingClass: 'Y', distanceMiles: 1000 },
+        data: {
+          operation: 'calculateAccrual',
+          operatingCarrier: 'BA',
+          creditingCarrier: 'LH',
+          bookingClass: 'Y',
+          distanceMiles: 1000,
+        },
       });
       expect(result.data.accrual!.isPartnerEarning).toBe(false);
     });
@@ -282,7 +320,12 @@ describe('Loyalty Mileage Agent', () => {
   describe('checkRedemptionEligibility — Y cabin', () => {
     it('requires 7500 miles for <1000km', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 800, redemptionCabin: 'Y', currentBalance: 10000 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 800,
+          redemptionCabin: 'Y',
+          currentBalance: 10000,
+        },
       });
       expect(result.data.redemption!.milesRequired).toBe(7500);
       expect(result.data.redemption!.eligible).toBe(true);
@@ -291,14 +334,24 @@ describe('Loyalty Mileage Agent', () => {
 
     it('requires 12500 miles for 1000-3000km', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 2000, redemptionCabin: 'Y', currentBalance: 15000 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 2000,
+          redemptionCabin: 'Y',
+          currentBalance: 15000,
+        },
       });
       expect(result.data.redemption!.milesRequired).toBe(12500);
     });
 
     it('requires 25000 miles for >3000km', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 5000, redemptionCabin: 'Y', currentBalance: 20000 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 5000,
+          redemptionCabin: 'Y',
+          currentBalance: 20000,
+        },
       });
       expect(result.data.redemption!.milesRequired).toBe(25000);
       expect(result.data.redemption!.eligible).toBe(false);
@@ -309,21 +362,36 @@ describe('Loyalty Mileage Agent', () => {
   describe('checkRedemptionEligibility — C cabin', () => {
     it('requires 15000 miles for <1000km', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 500, redemptionCabin: 'C', currentBalance: 20000 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 500,
+          redemptionCabin: 'C',
+          currentBalance: 20000,
+        },
       });
       expect(result.data.redemption!.milesRequired).toBe(15000);
     });
 
     it('requires 30000 miles for 1000-3000km', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 2000, redemptionCabin: 'C', currentBalance: 30000 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 2000,
+          redemptionCabin: 'C',
+          currentBalance: 30000,
+        },
       });
       expect(result.data.redemption!.milesRequired).toBe(30000);
     });
 
     it('requires 55000 miles for >3000km', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 5000, redemptionCabin: 'C', currentBalance: 55000 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 5000,
+          redemptionCabin: 'C',
+          currentBalance: 55000,
+        },
       });
       expect(result.data.redemption!.milesRequired).toBe(55000);
     });
@@ -332,21 +400,36 @@ describe('Loyalty Mileage Agent', () => {
   describe('checkRedemptionEligibility — F cabin', () => {
     it('requires 30000 miles for <1000km', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 500, redemptionCabin: 'F', currentBalance: 30000 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 500,
+          redemptionCabin: 'F',
+          currentBalance: 30000,
+        },
       });
       expect(result.data.redemption!.milesRequired).toBe(30000);
     });
 
     it('requires 55000 miles for 1000-3000km', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 2000, redemptionCabin: 'F', currentBalance: 55000 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 2000,
+          redemptionCabin: 'F',
+          currentBalance: 55000,
+        },
       });
       expect(result.data.redemption!.milesRequired).toBe(55000);
     });
 
     it('requires 80000 miles for >3000km', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 5000, redemptionCabin: 'F', currentBalance: 80000 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 5000,
+          redemptionCabin: 'F',
+          currentBalance: 80000,
+        },
       });
       expect(result.data.redemption!.milesRequired).toBe(80000);
     });
@@ -355,7 +438,13 @@ describe('Loyalty Mileage Agent', () => {
   describe('checkRedemptionEligibility — partner surcharge', () => {
     it('applies 1.25x for partner redemption', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 800, redemptionCabin: 'Y', isPartnerRedemption: true, currentBalance: 10000 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 800,
+          redemptionCabin: 'Y',
+          isPartnerRedemption: true,
+          currentBalance: 10000,
+        },
       });
       expect(result.data.redemption!.milesRequired).toBe(9375);
       expect(result.data.redemption!.isPartnerRedemption).toBe(true);
@@ -365,7 +454,12 @@ describe('Loyalty Mileage Agent', () => {
   describe('checkRedemptionEligibility — balance checks', () => {
     it('returns eligible=true when balance equals required', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 800, redemptionCabin: 'Y', currentBalance: 7500 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 800,
+          redemptionCabin: 'Y',
+          currentBalance: 7500,
+        },
       });
       expect(result.data.redemption!.eligible).toBe(true);
       expect(result.data.redemption!.remainingBalance).toBe(0);
@@ -373,7 +467,12 @@ describe('Loyalty Mileage Agent', () => {
 
     it('returns eligible=false with negative remainingBalance', async () => {
       const result = await agent.execute({
-        data: { operation: 'checkRedemptionEligibility', distanceKm: 800, redemptionCabin: 'Y', currentBalance: 5000 },
+        data: {
+          operation: 'checkRedemptionEligibility',
+          distanceKm: 800,
+          redemptionCabin: 'Y',
+          currentBalance: 5000,
+        },
       });
       expect(result.data.redemption!.eligible).toBe(false);
       expect(result.data.redemption!.remainingBalance).toBe(-2500);
@@ -382,40 +481,62 @@ describe('Loyalty Mileage Agent', () => {
 
   describe('getStatusBenefits', () => {
     it('returns benefits for BA GOLD', async () => {
-      const result = await agent.execute({ data: { operation: 'getStatusBenefits', airline: 'BA', status: 'GOLD' } });
+      const result = await agent.execute({
+        data: { operation: 'getStatusBenefits', airline: 'BA', status: 'GOLD' },
+      });
       expect(result.data.statusBenefits).toBeDefined();
       expect(result.data.statusBenefits!.airline).toBe('BA');
-      const lounge = result.data.statusBenefits!.benefits.find((b) => b.benefit === 'Lounge access');
+      const lounge = result.data.statusBenefits!.benefits.find(
+        (b) => b.benefit === 'Lounge access',
+      );
       expect(lounge?.included).toBe(true);
     });
 
     it('returns benefits for LH SILVER (no lounge)', async () => {
-      const result = await agent.execute({ data: { operation: 'getStatusBenefits', airline: 'LH', status: 'SILVER' } });
-      const lounge = result.data.statusBenefits!.benefits.find((b) => b.benefit === 'Lounge access');
-      const prio = result.data.statusBenefits!.benefits.find((b) => b.benefit === 'Priority boarding');
+      const result = await agent.execute({
+        data: { operation: 'getStatusBenefits', airline: 'LH', status: 'SILVER' },
+      });
+      const lounge = result.data.statusBenefits!.benefits.find(
+        (b) => b.benefit === 'Lounge access',
+      );
+      const prio = result.data.statusBenefits!.benefits.find(
+        (b) => b.benefit === 'Priority boarding',
+      );
       expect(lounge?.included).toBe(false);
       expect(prio?.included).toBe(true);
     });
 
     it('returns benefits for AF PLATINUM', async () => {
-      const result = await agent.execute({ data: { operation: 'getStatusBenefits', airline: 'AF', status: 'PLATINUM' } });
-      const lounge = result.data.statusBenefits!.benefits.find((b) => b.benefit === 'Lounge access');
+      const result = await agent.execute({
+        data: { operation: 'getStatusBenefits', airline: 'AF', status: 'PLATINUM' },
+      });
+      const lounge = result.data.statusBenefits!.benefits.find(
+        (b) => b.benefit === 'Lounge access',
+      );
       expect(lounge?.included).toBe(true);
     });
 
     it('returns benefits for QR GOLD', async () => {
-      const result = await agent.execute({ data: { operation: 'getStatusBenefits', airline: 'QR', status: 'GOLD' } });
-      const lounge = result.data.statusBenefits!.benefits.find((b) => b.benefit === 'Lounge access');
+      const result = await agent.execute({
+        data: { operation: 'getStatusBenefits', airline: 'QR', status: 'GOLD' },
+      });
+      const lounge = result.data.statusBenefits!.benefits.find(
+        (b) => b.benefit === 'Lounge access',
+      );
       expect(lounge?.included).toBe(true);
     });
 
     it('returns error for unsupported airline', async () => {
-      const result = await agent.execute({ data: { operation: 'getStatusBenefits', airline: 'ZZ', status: 'GOLD' } });
+      const result = await agent.execute({
+        data: { operation: 'getStatusBenefits', airline: 'ZZ', status: 'GOLD' },
+      });
       expect(result.data.errorMessage).toContain('No benefits data');
     });
 
     it('MEMBER tier gets no premium benefits', async () => {
-      const result = await agent.execute({ data: { operation: 'getStatusBenefits', airline: 'BA', status: 'MEMBER' } });
+      const result = await agent.execute({
+        data: { operation: 'getStatusBenefits', airline: 'BA', status: 'MEMBER' },
+      });
       const included = result.data.statusBenefits!.benefits.filter((b) => b.included);
       expect(included.length).toBe(0);
     });
@@ -424,7 +545,12 @@ describe('Loyalty Mileage Agent', () => {
   describe('matchStatus', () => {
     it('matches GOLD to GOLD', async () => {
       const result = await agent.execute({
-        data: { operation: 'matchStatus', sourceAirline: 'BA', sourceStatus: 'GOLD', targetAirline: 'QF' },
+        data: {
+          operation: 'matchStatus',
+          sourceAirline: 'BA',
+          sourceStatus: 'GOLD',
+          targetAirline: 'QF',
+        },
       });
       expect(result.data.statusMatch!.matchGranted).toBe(true);
       expect(result.data.statusMatch!.matchedStatus).toBe('GOLD');
@@ -432,7 +558,12 @@ describe('Loyalty Mileage Agent', () => {
 
     it('matches PLATINUM to GOLD (one level down)', async () => {
       const result = await agent.execute({
-        data: { operation: 'matchStatus', sourceAirline: 'BA', sourceStatus: 'PLATINUM', targetAirline: 'QF' },
+        data: {
+          operation: 'matchStatus',
+          sourceAirline: 'BA',
+          sourceStatus: 'PLATINUM',
+          targetAirline: 'QF',
+        },
       });
       expect(result.data.statusMatch!.matchGranted).toBe(true);
       expect(result.data.statusMatch!.matchedStatus).toBe('GOLD');
@@ -440,7 +571,12 @@ describe('Loyalty Mileage Agent', () => {
 
     it('matches SILVER to SILVER', async () => {
       const result = await agent.execute({
-        data: { operation: 'matchStatus', sourceAirline: 'LH', sourceStatus: 'SILVER', targetAirline: 'UA' },
+        data: {
+          operation: 'matchStatus',
+          sourceAirline: 'LH',
+          sourceStatus: 'SILVER',
+          targetAirline: 'UA',
+        },
       });
       expect(result.data.statusMatch!.matchGranted).toBe(true);
       expect(result.data.statusMatch!.matchedStatus).toBe('SILVER');
@@ -448,7 +584,12 @@ describe('Loyalty Mileage Agent', () => {
 
     it('does not match MEMBER', async () => {
       const result = await agent.execute({
-        data: { operation: 'matchStatus', sourceAirline: 'BA', sourceStatus: 'MEMBER', targetAirline: 'QF' },
+        data: {
+          operation: 'matchStatus',
+          sourceAirline: 'BA',
+          sourceStatus: 'MEMBER',
+          targetAirline: 'QF',
+        },
       });
       expect(result.data.statusMatch!.matchGranted).toBe(false);
       expect(result.data.statusMatch!.matchedStatus).toBe('MEMBER');
@@ -456,7 +597,12 @@ describe('Loyalty Mileage Agent', () => {
 
     it('matches LIFETIME_GOLD to GOLD', async () => {
       const result = await agent.execute({
-        data: { operation: 'matchStatus', sourceAirline: 'BA', sourceStatus: 'LIFETIME_GOLD', targetAirline: 'AA' },
+        data: {
+          operation: 'matchStatus',
+          sourceAirline: 'BA',
+          sourceStatus: 'LIFETIME_GOLD',
+          targetAirline: 'AA',
+        },
       });
       expect(result.data.statusMatch!.matchGranted).toBe(true);
       expect(result.data.statusMatch!.matchedStatus).toBe('GOLD');
@@ -464,7 +610,12 @@ describe('Loyalty Mileage Agent', () => {
 
     it('includes source and target airline in result', async () => {
       const result = await agent.execute({
-        data: { operation: 'matchStatus', sourceAirline: 'AF', sourceStatus: 'GOLD', targetAirline: 'KL' },
+        data: {
+          operation: 'matchStatus',
+          sourceAirline: 'AF',
+          sourceStatus: 'GOLD',
+          targetAirline: 'KL',
+        },
       });
       expect(result.data.statusMatch!.sourceAirline).toBe('AF');
       expect(result.data.statusMatch!.targetAirline).toBe('KL');
@@ -480,25 +631,47 @@ describe('Loyalty Mileage Agent', () => {
 
     it('rejects calculateAccrual without operatingCarrier', async () => {
       await expect(
-        agent.execute({ data: { operation: 'calculateAccrual', bookingClass: 'Y', distanceMiles: 1000 } }),
+        agent.execute({
+          data: { operation: 'calculateAccrual', bookingClass: 'Y', distanceMiles: 1000 },
+        }),
       ).rejects.toThrow('Invalid input');
     });
 
     it('rejects calculateAccrual with invalid bookingClass', async () => {
       await expect(
-        agent.execute({ data: { operation: 'calculateAccrual', operatingCarrier: 'BA', bookingClass: '123', distanceMiles: 1000 } }),
+        agent.execute({
+          data: {
+            operation: 'calculateAccrual',
+            operatingCarrier: 'BA',
+            bookingClass: '123',
+            distanceMiles: 1000,
+          },
+        }),
       ).rejects.toThrow('Invalid input');
     });
 
     it('rejects checkRedemptionEligibility without distanceKm', async () => {
       await expect(
-        agent.execute({ data: { operation: 'checkRedemptionEligibility', redemptionCabin: 'Y', currentBalance: 10000 } }),
+        agent.execute({
+          data: {
+            operation: 'checkRedemptionEligibility',
+            redemptionCabin: 'Y',
+            currentBalance: 10000,
+          },
+        }),
       ).rejects.toThrow('Invalid input');
     });
 
     it('rejects checkRedemptionEligibility with invalid cabin', async () => {
       await expect(
-        agent.execute({ data: { operation: 'checkRedemptionEligibility', distanceKm: 1000, redemptionCabin: 'W' as 'Y', currentBalance: 10000 } }),
+        agent.execute({
+          data: {
+            operation: 'checkRedemptionEligibility',
+            distanceKm: 1000,
+            redemptionCabin: 'W' as 'Y',
+            currentBalance: 10000,
+          },
+        }),
       ).rejects.toThrow('Invalid input');
     });
 
@@ -510,7 +683,9 @@ describe('Loyalty Mileage Agent', () => {
 
     it('rejects matchStatus without sourceAirline', async () => {
       await expect(
-        agent.execute({ data: { operation: 'matchStatus', sourceStatus: 'GOLD', targetAirline: 'QF' } }),
+        agent.execute({
+          data: { operation: 'matchStatus', sourceStatus: 'GOLD', targetAirline: 'QF' },
+        }),
       ).rejects.toThrow('Invalid input');
     });
   });

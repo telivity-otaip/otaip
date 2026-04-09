@@ -153,10 +153,7 @@ export function resolve(
  * Returns the tax record if it matches the country, or if no filter is set.
  * Returns null if the tax doesn't apply to the specified country.
  */
-function applyCountryFilter(
-  tax: TaxCodeRecord,
-  country: string | undefined,
-): TaxCodeRecord | null {
+function applyCountryFilter(tax: TaxCodeRecord, country: string | undefined): TaxCodeRecord | null {
   if (!country) {
     return tax;
   }

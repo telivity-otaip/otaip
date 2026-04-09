@@ -102,10 +102,7 @@ export class AmadeusAdapter extends BaseAdapter implements ConnectAdapter {
     });
   }
 
-  async priceItinerary(
-    offerId: string,
-    _passengers: PassengerCount,
-  ): Promise<PricedItinerary> {
+  async priceItinerary(offerId: string, _passengers: PassengerCount): Promise<PricedItinerary> {
     return this.withRetry('priceItinerary', async () => {
       const amadeusId = offerId.replace(/^amadeus-/, '');
 
@@ -165,9 +162,7 @@ export class AmadeusAdapter extends BaseAdapter implements ConnectAdapter {
 
       const body = mapCreateBookingRequest(input, pricedOffer);
 
-      const response = await this.client.booking.flightOrders.post(
-        JSON.stringify(body),
-      );
+      const response = await this.client.booking.flightOrders.post(JSON.stringify(body));
 
       this.pricedOfferCache.delete(input.offerId);
 
@@ -185,16 +180,13 @@ export class AmadeusAdapter extends BaseAdapter implements ConnectAdapter {
     });
   }
 
-  async cancelBooking(
-    bookingId: string,
-  ): Promise<{ success: boolean; message: string }> {
+  async cancelBooking(bookingId: string): Promise<{ success: boolean; message: string }> {
     return this.withRetry('cancelBooking', async () => {
       try {
         await this.client.booking.flightOrders(bookingId).delete();
         return { success: true, message: `Booking ${bookingId} cancelled` };
       } catch (error: unknown) {
-        const message =
-          error instanceof Error ? error.message : String(error);
+        const message = error instanceof Error ? error.message : String(error);
         return { success: false, message };
       }
     });

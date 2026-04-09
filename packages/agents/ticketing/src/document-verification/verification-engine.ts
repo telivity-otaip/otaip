@@ -38,13 +38,48 @@ class StubRegulatoryResolver implements CountryRegulatoryResolver {
   async getVisaRequirements(passport: string, destination: string): Promise<VisaRequirement> {
     // Common visa-free combinations (simplified)
     const visaFree = new Set([
-      'US-GB', 'US-DE', 'US-FR', 'US-JP', 'US-AU', 'US-CA',
-      'GB-US', 'GB-DE', 'GB-FR', 'GB-JP', 'GB-AU', 'GB-CA',
-      'DE-US', 'DE-GB', 'DE-FR', 'DE-JP', 'DE-AU', 'DE-CA',
-      'FR-US', 'FR-GB', 'FR-DE', 'FR-JP', 'FR-AU', 'FR-CA',
-      'CA-US', 'CA-GB', 'CA-DE', 'CA-FR', 'CA-JP', 'CA-AU',
-      'AU-US', 'AU-GB', 'AU-DE', 'AU-FR', 'AU-JP', 'AU-CA',
-      'JP-US', 'JP-GB', 'JP-DE', 'JP-FR', 'JP-AU', 'JP-CA',
+      'US-GB',
+      'US-DE',
+      'US-FR',
+      'US-JP',
+      'US-AU',
+      'US-CA',
+      'GB-US',
+      'GB-DE',
+      'GB-FR',
+      'GB-JP',
+      'GB-AU',
+      'GB-CA',
+      'DE-US',
+      'DE-GB',
+      'DE-FR',
+      'DE-JP',
+      'DE-AU',
+      'DE-CA',
+      'FR-US',
+      'FR-GB',
+      'FR-DE',
+      'FR-JP',
+      'FR-AU',
+      'FR-CA',
+      'CA-US',
+      'CA-GB',
+      'CA-DE',
+      'CA-FR',
+      'CA-JP',
+      'CA-AU',
+      'AU-US',
+      'AU-GB',
+      'AU-DE',
+      'AU-FR',
+      'AU-JP',
+      'AU-CA',
+      'JP-US',
+      'JP-GB',
+      'JP-DE',
+      'JP-FR',
+      'JP-AU',
+      'JP-CA',
     ]);
 
     const key = `${passport}-${destination}`;
@@ -72,35 +107,73 @@ function checkNameMatch(pax: PassengerDocument): DocumentCheck {
   const passportNorm = pax.passport_name.toUpperCase().trim();
 
   if (ticketNorm === passportNorm) {
-    return { name: 'Name Match', passed: true, severity: 'blocking', message: 'Ticket name matches passport.' };
+    return {
+      name: 'Name Match',
+      passed: true,
+      severity: 'blocking',
+      message: 'Ticket name matches passport.',
+    };
   }
 
   // Check for minor differences (middle name, spacing)
   const ticketParts = ticketNorm.split('/');
   const passportParts = passportNorm.split('/');
-  if (ticketParts[0] === passportParts[0] && ticketParts[1]?.startsWith(passportParts[1]?.split(' ')[0] ?? '')) {
-    return { name: 'Name Match', passed: true, severity: 'advisory', message: 'Ticket name approximately matches passport (minor differences).' };
+  if (
+    ticketParts[0] === passportParts[0] &&
+    ticketParts[1]?.startsWith(passportParts[1]?.split(' ')[0] ?? '')
+  ) {
+    return {
+      name: 'Name Match',
+      passed: true,
+      severity: 'advisory',
+      message: 'Ticket name approximately matches passport (minor differences).',
+    };
   }
 
-  return { name: 'Name Match', passed: false, severity: 'blocking', message: `Name mismatch: ticket "${pax.ticket_name}" vs passport "${pax.passport_name}".` };
+  return {
+    name: 'Name Match',
+    passed: false,
+    severity: 'blocking',
+    message: `Name mismatch: ticket "${pax.ticket_name}" vs passport "${pax.passport_name}".`,
+  };
 }
 
 function checkDob(pax: PassengerDocument): DocumentCheck {
   if (!pax.date_of_birth) {
-    return { name: 'DOB Present', passed: false, severity: 'blocking', message: 'Date of birth is missing — required for APIS.' };
+    return {
+      name: 'DOB Present',
+      passed: false,
+      severity: 'blocking',
+      message: 'Date of birth is missing — required for APIS.',
+    };
   }
   // Basic format check
   const dobDate = new Date(pax.date_of_birth);
   if (isNaN(dobDate.getTime())) {
-    return { name: 'DOB Present', passed: false, severity: 'blocking', message: `Invalid date of birth format: ${pax.date_of_birth}` };
+    return {
+      name: 'DOB Present',
+      passed: false,
+      severity: 'blocking',
+      message: `Invalid date of birth format: ${pax.date_of_birth}`,
+    };
   }
-  return { name: 'DOB Present', passed: true, severity: 'blocking', message: 'Date of birth present and valid.' };
+  return {
+    name: 'DOB Present',
+    passed: true,
+    severity: 'blocking',
+    message: 'Date of birth present and valid.',
+  };
 }
 
 function checkPassportFormat(pax: PassengerDocument): DocumentCheck {
   const pattern = PASSPORT_PATTERNS[pax.nationality] ?? DEFAULT_PASSPORT_RE;
   if (pattern.test(pax.passport_number.toUpperCase())) {
-    return { name: 'Passport Format', passed: true, severity: 'advisory', message: 'Passport number format is valid.' };
+    return {
+      name: 'Passport Format',
+      passed: true,
+      severity: 'advisory',
+      message: 'Passport number format is valid.',
+    };
   }
   return {
     name: 'Passport Format',
@@ -117,7 +190,12 @@ function checkPassportValidity(
 ): DocumentCheck {
   const expiry = new Date(pax.passport_expiry);
   if (isNaN(expiry.getTime())) {
-    return { name: 'Passport Validity', passed: false, severity: 'blocking', message: `Invalid passport expiry date: ${pax.passport_expiry}` };
+    return {
+      name: 'Passport Validity',
+      passed: false,
+      severity: 'blocking',
+      message: `Invalid passport expiry date: ${pax.passport_expiry}`,
+    };
   }
 
   // Find latest travel date
@@ -132,7 +210,12 @@ function checkPassportValidity(
   requiredValidity.setMonth(requiredValidity.getMonth() + validityMonths);
 
   if (expiry >= requiredValidity) {
-    return { name: 'Passport Validity', passed: true, severity: 'blocking', message: `Passport valid until ${pax.passport_expiry} — meets ${validityMonths}-month requirement.` };
+    return {
+      name: 'Passport Validity',
+      passed: true,
+      severity: 'blocking',
+      message: `Passport valid until ${pax.passport_expiry} — meets ${validityMonths}-month requirement.`,
+    };
   }
 
   return {
@@ -145,7 +228,12 @@ function checkPassportValidity(
 
 function checkGender(pax: PassengerDocument): DocumentCheck {
   if (!pax.gender) {
-    return { name: 'Gender Present', passed: false, severity: 'advisory', message: 'Gender not specified — may be required for APIS.' };
+    return {
+      name: 'Gender Present',
+      passed: false,
+      severity: 'advisory',
+      message: 'Gender not specified — may be required for APIS.',
+    };
   }
   return { name: 'Gender Present', passed: true, severity: 'advisory', message: 'Gender present.' };
 }

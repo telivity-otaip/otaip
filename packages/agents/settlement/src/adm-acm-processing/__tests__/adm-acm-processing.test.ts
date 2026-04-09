@@ -93,7 +93,9 @@ describe('ADM/ACM Processing Agent', () => {
 
     it('generates a UUID admId', async () => {
       const result = await receiveTestADM();
-      expect(result.data.adm!.admId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      expect(result.data.adm!.admId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      );
     });
 
     it('calculates dispute deadline as issuedDate + 15 days', async () => {
@@ -294,9 +296,20 @@ describe('ADM/ACM Processing Agent', () => {
     });
 
     it('supports all dispute grounds', async () => {
-      const grounds: Array<'FARE_ALREADY_CORRECT' | 'WITHIN_WAIVER_WINDOW' | 'DUPLICATE_ADM' | 'AMOUNT_INCORRECT' | 'OUTSIDE_AIRLINE_POLICY' | 'TICKET_REISSUED'> = [
-        'FARE_ALREADY_CORRECT', 'WITHIN_WAIVER_WINDOW', 'DUPLICATE_ADM',
-        'AMOUNT_INCORRECT', 'OUTSIDE_AIRLINE_POLICY', 'TICKET_REISSUED',
+      const grounds: Array<
+        | 'FARE_ALREADY_CORRECT'
+        | 'WITHIN_WAIVER_WINDOW'
+        | 'DUPLICATE_ADM'
+        | 'AMOUNT_INCORRECT'
+        | 'OUTSIDE_AIRLINE_POLICY'
+        | 'TICKET_REISSUED'
+      > = [
+        'FARE_ALREADY_CORRECT',
+        'WITHIN_WAIVER_WINDOW',
+        'DUPLICATE_ADM',
+        'AMOUNT_INCORRECT',
+        'OUTSIDE_AIRLINE_POLICY',
+        'TICKET_REISSUED',
       ];
 
       for (const ground of grounds) {
@@ -506,9 +519,9 @@ describe('ADM/ACM Processing Agent', () => {
 
   describe('Input validation', () => {
     it('rejects invalid operation', async () => {
-      await expect(
-        agent.execute({ data: { operation: 'invalidOp' as 'getADM' } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: { operation: 'invalidOp' as 'getADM' } })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects receiveADM without ticketNumber', async () => {
@@ -568,9 +581,9 @@ describe('ADM/ACM Processing Agent', () => {
     });
 
     it('rejects applyACM without acmId', async () => {
-      await expect(
-        agent.execute({ data: { operation: 'applyACM' } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: { operation: 'applyACM' } })).rejects.toThrow(
+        'Invalid input',
+      );
     });
   });
 

@@ -4,12 +4,7 @@
  * Agent 3.7: PCI-safe payment instruction builder and recorder.
  */
 
-export type FOPType =
-  | 'CC_TOKEN'
-  | 'BSP_CASH'
-  | 'AIRLINE_CREDIT'
-  | 'VOUCHER'
-  | 'UATP';
+export type FOPType = 'CC_TOKEN' | 'BSP_CASH' | 'AIRLINE_CREDIT' | 'VOUCHER' | 'UATP';
 
 export type CardBrand = 'VI' | 'CA' | 'AX' | 'DC' | 'TP' | 'UP';
 
@@ -20,12 +15,7 @@ export type PaymentOperationType =
   | 'getPaymentRecord'
   | 'buildGDSFOPString';
 
-export type PaymentRecordStatus =
-  | 'AUTHORISED'
-  | 'DECLINED'
-  | 'ERROR'
-  | 'SETTLED'
-  | 'REFUNDED';
+export type PaymentRecordStatus = 'AUTHORISED' | 'DECLINED' | 'ERROR' | 'SETTLED' | 'REFUNDED';
 
 export type PaymentErrorCode =
   | 'INVALID_FOP_TYPE'

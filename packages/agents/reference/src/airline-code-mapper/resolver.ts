@@ -182,9 +182,8 @@ export function resolve(
       }
 
       const iataCode = icaoMatch.iata_code?.toUpperCase();
-      const codesharePartners = includeCodeshares && iataCode
-        ? buildCodesharePartnersForAirline(iataCode, indexes)
-        : null;
+      const codesharePartners =
+        includeCodeshares && iataCode ? buildCodesharePartnersForAirline(iataCode, indexes) : null;
 
       return {
         airline: toResolvedAirline(icaoMatch),
@@ -195,21 +194,24 @@ export function resolve(
   }
 
   // Step 3: Fuzzy name search
-  if (detectedType === 'name' || (detectedType === 'iata' && !indexes.byIata.has(upper)) || (detectedType === 'icao' && !indexes.byIcao.has(upper))) {
+  if (
+    detectedType === 'name' ||
+    (detectedType === 'iata' && !indexes.byIata.has(upper)) ||
+    (detectedType === 'icao' && !indexes.byIcao.has(upper))
+  ) {
     const fuzzyResults = fuzzyAirlineSearch(code, 5);
 
     // Filter out defunct if not requested
-    const filtered = fuzzyResults.filter(
-      (r) => !isExcludedDefunct(r.airline, includeDefunct),
-    );
+    const filtered = fuzzyResults.filter((r) => !isExcludedDefunct(r.airline, includeDefunct));
 
     if (filtered.length > 0) {
       const best = filtered[0]!;
       if (best.confidence >= 0.5) {
         const iataCode = best.airline.iata_code?.toUpperCase();
-        const codesharePartners = includeCodeshares && iataCode
-          ? buildCodesharePartnersForAirline(iataCode, indexes)
-          : null;
+        const codesharePartners =
+          includeCodeshares && iataCode
+            ? buildCodesharePartnersForAirline(iataCode, indexes)
+            : null;
 
         return {
           airline: toResolvedAirline(best.airline),

@@ -5,11 +5,24 @@
  */
 
 export const VALID_MEAL_CODES = [
-  'VGML', 'KSML', 'HNML', 'DBML', 'AVML', 'MOML', 'SFML',
-  'GFML', 'NLML', 'FPML', 'LCML', 'LSML', 'BLML', 'PRML', 'VJML',
+  'VGML',
+  'KSML',
+  'HNML',
+  'DBML',
+  'AVML',
+  'MOML',
+  'SFML',
+  'GFML',
+  'NLML',
+  'FPML',
+  'LCML',
+  'LSML',
+  'BLML',
+  'PRML',
+  'VJML',
 ] as const;
 
-export type MealCode = typeof VALID_MEAL_CODES[number];
+export type MealCode = (typeof VALID_MEAL_CODES)[number];
 
 export type SeatPreference = 'WINDOW' | 'AISLE' | 'MIDDLE' | 'NONE';
 

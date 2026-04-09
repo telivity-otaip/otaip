@@ -29,7 +29,11 @@ function severity(type: string, amount: Decimal): ARCDiscrepancySeverity {
   return 'low';
 }
 
-function findContract(contracts: AirlineContract[], airlineCode: string, issueDate: string): AirlineContract | undefined {
+function findContract(
+  contracts: AirlineContract[],
+  airlineCode: string,
+  issueDate: string,
+): AirlineContract | undefined {
   return contracts.find((c) => {
     if (c.airline_code !== airlineCode) return false;
     if (issueDate < c.effective_from) return false;
@@ -72,7 +76,9 @@ function matchRecords(input: ARCReconciliationInput): ARCReconciliationOutput {
       totalAdm++;
       if (iar.adm_issue_date) {
         const issueDate = new Date(iar.adm_issue_date);
-        const daysSinceIssue = Math.floor((now.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24));
+        const daysSinceIssue = Math.floor(
+          (now.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
         const daysRemaining = disputeWindowDays - daysSinceIssue;
         if (daysRemaining > 0 && daysRemaining <= 5) {
           admDisputeExpiring++;
@@ -283,15 +289,12 @@ function matchRecords(input: ARCReconciliationInput): ARCReconciliationOutput {
   // Pattern detection
   const patterns = detectPatterns(discrepancies, input);
 
-  const totalDiscrepancyAmount = discrepancies.reduce(
-    (sum, d) => {
-      const raw = d.difference ?? d.agency_amount ?? d.iar_amount ?? '0';
-      // Skip non-numeric values (e.g., "7%" from commission rate checks)
-      if (isNaN(Number(raw))) return sum;
-      return sum.plus(new Decimal(raw));
-    },
-    new Decimal(0),
-  );
+  const totalDiscrepancyAmount = discrepancies.reduce((sum, d) => {
+    const raw = d.difference ?? d.agency_amount ?? d.iar_amount ?? '0';
+    // Skip non-numeric values (e.g., "7%" from commission rate checks)
+    if (isNaN(Number(raw))) return sum;
+    return sum.plus(new Decimal(raw));
+  }, new Decimal(0));
 
   const summary: ARCReconciliationSummary = {
     total_agency_records: input.agency_records.length,
@@ -313,7 +316,10 @@ function matchRecords(input: ARCReconciliationInput): ARCReconciliationOutput {
   return { discrepancies, summary, passed };
 }
 
-function detectPatterns(discrepancies: ARCDiscrepancy[], input: ARCReconciliationInput): ARCPatternDetection[] {
+function detectPatterns(
+  discrepancies: ARCDiscrepancy[],
+  input: ARCReconciliationInput,
+): ARCPatternDetection[] {
   const patterns: ARCPatternDetection[] = [];
   if (discrepancies.length < 10) return patterns;
 

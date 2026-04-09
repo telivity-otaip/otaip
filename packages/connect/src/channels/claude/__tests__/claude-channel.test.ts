@@ -25,85 +25,105 @@ function createMockAdapter(opts?: {
     supplierId: 'mock',
     supplierName: 'Mock Supplier',
 
-    searchFlights: vi.fn(async (_input: SearchFlightsInput): Promise<FlightOffer[]> => [{
-      offerId: 'offer-1',
-      supplier: 'mock',
-      validatingCarrier: 'AA',
-      segments: [[{
-        origin: 'JFK',
-        destination: 'LHR',
-        marketingCarrier: 'AA',
-        flightNumber: 'AA100',
-        departure: '2026-06-15T08:00:00',
-        arrival: '2026-06-15T20:00:00',
-        cabinClass: 'economy',
-        bookingClass: 'Y',
-        stops: 0,
-      }]],
-      fares: [{
-        passengerType: 'adult',
-        baseFare: { amount: '500.00', currency: 'USD' },
-        taxes: { amount: '100.00', currency: 'USD' },
-        total: { amount: '600.00', currency: 'USD' },
-        count: 1,
-      }],
-      totalPrice: { amount: '600.00', currency: 'USD' },
-      fareType: 'published',
-      cabinClass: 'economy',
-      refundable: false,
-      changeable: true,
-    }]),
+    searchFlights: vi.fn(
+      async (_input: SearchFlightsInput): Promise<FlightOffer[]> => [
+        {
+          offerId: 'offer-1',
+          supplier: 'mock',
+          validatingCarrier: 'AA',
+          segments: [
+            [
+              {
+                origin: 'JFK',
+                destination: 'LHR',
+                marketingCarrier: 'AA',
+                flightNumber: 'AA100',
+                departure: '2026-06-15T08:00:00',
+                arrival: '2026-06-15T20:00:00',
+                cabinClass: 'economy',
+                bookingClass: 'Y',
+                stops: 0,
+              },
+            ],
+          ],
+          fares: [
+            {
+              passengerType: 'adult',
+              baseFare: { amount: '500.00', currency: 'USD' },
+              taxes: { amount: '100.00', currency: 'USD' },
+              total: { amount: '600.00', currency: 'USD' },
+              count: 1,
+            },
+          ],
+          totalPrice: { amount: '600.00', currency: 'USD' },
+          fareType: 'published',
+          cabinClass: 'economy',
+          refundable: false,
+          changeable: true,
+        },
+      ],
+    ),
 
-    priceItinerary: vi.fn(async (_offerId: string, _passengers: PassengerCount): Promise<PricedItinerary> => ({
-      offerId: 'offer-1',
-      supplier: 'mock',
-      totalPrice: { amount: '600.00', currency: 'USD' },
-      fares: [{
-        passengerType: 'adult',
-        baseFare: { amount: '500.00', currency: 'USD' },
-        taxes: { amount: '100.00', currency: 'USD' },
-        total: { amount: '600.00', currency: 'USD' },
-        count: 1,
-      }],
-      fareRules: { refundable: false, changeable: true },
-      priceChanged: false,
-      available: true,
-    })),
+    priceItinerary: vi.fn(
+      async (_offerId: string, _passengers: PassengerCount): Promise<PricedItinerary> => ({
+        offerId: 'offer-1',
+        supplier: 'mock',
+        totalPrice: { amount: '600.00', currency: 'USD' },
+        fares: [
+          {
+            passengerType: 'adult',
+            baseFare: { amount: '500.00', currency: 'USD' },
+            taxes: { amount: '100.00', currency: 'USD' },
+            total: { amount: '600.00', currency: 'USD' },
+            count: 1,
+          },
+        ],
+        fareRules: { refundable: false, changeable: true },
+        priceChanged: false,
+        available: true,
+      }),
+    ),
 
-    createBooking: vi.fn(async (_input: CreateBookingInput): Promise<BookingResult> => ({
-      bookingId: 'BK-001',
-      supplier: 'mock',
-      status: 'held',
-      pnr: 'ABC123',
-      segments: [[]],
-      passengers: [],
-      totalPrice: { amount: '600.00', currency: 'USD' },
-    })),
+    createBooking: vi.fn(
+      async (_input: CreateBookingInput): Promise<BookingResult> => ({
+        bookingId: 'BK-001',
+        supplier: 'mock',
+        status: 'held',
+        pnr: 'ABC123',
+        segments: [[]],
+        passengers: [],
+        totalPrice: { amount: '600.00', currency: 'USD' },
+      }),
+    ),
 
-    getBookingStatus: vi.fn(async (_bookingId: string): Promise<BookingStatusResult> => ({
-      bookingId: 'BK-001',
-      supplier: 'mock',
-      status: 'held',
-      pnr: 'ABC123',
-      segments: [[]],
-      passengers: [],
-      totalPrice: { amount: '600.00', currency: 'USD' },
-    })),
+    getBookingStatus: vi.fn(
+      async (_bookingId: string): Promise<BookingStatusResult> => ({
+        bookingId: 'BK-001',
+        supplier: 'mock',
+        status: 'held',
+        pnr: 'ABC123',
+        segments: [[]],
+        passengers: [],
+        totalPrice: { amount: '600.00', currency: 'USD' },
+      }),
+    ),
 
     healthCheck: vi.fn(async () => ({ healthy: true, latencyMs: 42 })),
   };
 
   if (withTicketing) {
-    adapter.requestTicketing = vi.fn(async (_bookingId: string): Promise<BookingStatusResult> => ({
-      bookingId: 'BK-001',
-      supplier: 'mock',
-      status: 'ticketed',
-      pnr: 'ABC123',
-      ticketNumbers: ['123-4567890'],
-      segments: [[]],
-      passengers: [],
-      totalPrice: { amount: '600.00', currency: 'USD' },
-    }));
+    adapter.requestTicketing = vi.fn(
+      async (_bookingId: string): Promise<BookingStatusResult> => ({
+        bookingId: 'BK-001',
+        supplier: 'mock',
+        status: 'ticketed',
+        pnr: 'ABC123',
+        ticketNumbers: ['123-4567890'],
+        segments: [[]],
+        passengers: [],
+        totalPrice: { amount: '600.00', currency: 'USD' },
+      }),
+    );
   }
 
   if (withCancellation) {
@@ -149,7 +169,7 @@ describe('generateMcpTools', () => {
   it('search_flights has correct input schema', () => {
     const tools = generateMcpTools(createMockAdapter());
     const search = tools.find((t) => t.name === 'search_flights')!;
-    const props = (search.inputSchema.properties as Record<string, unknown>);
+    const props = search.inputSchema.properties as Record<string, unknown>;
 
     expect(props).toHaveProperty('origin');
     expect(props).toHaveProperty('destination');
@@ -171,7 +191,9 @@ describe('generateMcpTools', () => {
   });
 
   it('omits optional tools when adapter lacks methods', () => {
-    const tools = generateMcpTools(createMockAdapter({ withTicketing: false, withCancellation: false }));
+    const tools = generateMcpTools(
+      createMockAdapter({ withTicketing: false, withCancellation: false }),
+    );
 
     expect(tools).toHaveLength(5);
     const names = tools.map((t) => t.name);
@@ -251,7 +273,9 @@ describe('generateMcpTools', () => {
   });
 
   it('includes only ticketing when only ticketing present', () => {
-    const tools = generateMcpTools(createMockAdapter({ withTicketing: true, withCancellation: false }));
+    const tools = generateMcpTools(
+      createMockAdapter({ withTicketing: true, withCancellation: false }),
+    );
 
     expect(tools).toHaveLength(6);
     const names = tools.map((t) => t.name);
@@ -260,7 +284,9 @@ describe('generateMcpTools', () => {
   });
 
   it('includes only cancellation when only cancellation present', () => {
-    const tools = generateMcpTools(createMockAdapter({ withTicketing: false, withCancellation: true }));
+    const tools = generateMcpTools(
+      createMockAdapter({ withTicketing: false, withCancellation: true }),
+    );
 
     expect(tools).toHaveLength(6);
     const names = tools.map((t) => t.name);
@@ -453,13 +479,15 @@ describe('generateMcpServer', () => {
         name: 'create_booking',
         arguments: {
           offerId: 'offer-1',
-          passengers: [{
-            type: 'adult',
-            gender: 'M',
-            firstName: 'John',
-            lastName: 'Doe',
-            dateOfBirth: '1990-01-01',
-          }],
+          passengers: [
+            {
+              type: 'adult',
+              gender: 'M',
+              firstName: 'John',
+              lastName: 'Doe',
+              dateOfBirth: '1990-01-01',
+            },
+          ],
           contact: { email: 'john@test.com', phone: '1234567890' },
         },
       });
@@ -722,8 +750,20 @@ describe('generateMcpServer', () => {
     const bookingArgs = {
       offerId: 'offer-99',
       passengers: [
-        { type: 'adult', gender: 'F', firstName: 'Jane', lastName: 'Smith', dateOfBirth: '1985-03-15' },
-        { type: 'child', gender: 'M', firstName: 'Tom', lastName: 'Smith', dateOfBirth: '2018-07-20' },
+        {
+          type: 'adult',
+          gender: 'F',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          dateOfBirth: '1985-03-15',
+        },
+        {
+          type: 'child',
+          gender: 'M',
+          firstName: 'Tom',
+          lastName: 'Smith',
+          dateOfBirth: '2018-07-20',
+        },
       ],
       contact: { email: 'jane@example.com', phone: '+1234567890' },
     };
@@ -763,7 +803,12 @@ describe('generateMcpServer', () => {
       const tools = ['health_check', 'search_flights', 'get_booking'];
       const argSets: Record<string, Record<string, unknown>> = {
         health_check: {},
-        search_flights: { origin: 'JFK', destination: 'LHR', departureDate: '2026-06-15', passengers: { adults: 1 } },
+        search_flights: {
+          origin: 'JFK',
+          destination: 'LHR',
+          departureDate: '2026-06-15',
+          passengers: { adults: 1 },
+        },
         get_booking: { bookingId: 'BK-001' },
       };
 

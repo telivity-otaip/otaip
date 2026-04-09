@@ -98,7 +98,9 @@ describe('Fare Basis Code Decoder', () => {
     it('detects AP as advance purchase required', async () => {
       const result = await decoder.execute({ data: { fare_basis: 'MAP' } });
       expect(result.data.decoded!.advance_purchase).not.toBeNull();
-      expect(result.data.decoded!.advance_purchase!.description.toLowerCase()).toContain('advance purchase');
+      expect(result.data.decoded!.advance_purchase!.description.toLowerCase()).toContain(
+        'advance purchase',
+      );
     });
 
     it('default is refundable when no NR detected', async () => {
@@ -145,15 +147,13 @@ describe('Fare Basis Code Decoder', () => {
 
   describe('Input validation', () => {
     it('rejects empty fare_basis', async () => {
-      await expect(
-        decoder.execute({ data: { fare_basis: '' } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(decoder.execute({ data: { fare_basis: '' } })).rejects.toThrow('Invalid input');
     });
 
     it('rejects fare_basis longer than 15 characters', async () => {
-      await expect(
-        decoder.execute({ data: { fare_basis: 'A'.repeat(16) } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(decoder.execute({ data: { fare_basis: 'A'.repeat(16) } })).rejects.toThrow(
+        'Invalid input',
+      );
     });
   });
 
@@ -177,9 +177,9 @@ describe('Fare Basis Code Decoder', () => {
 
     it('throws when not initialized', async () => {
       const uninitDecoder = new FareBasisDecoder();
-      await expect(
-        uninitDecoder.execute({ data: { fare_basis: 'Y' } }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninitDecoder.execute({ data: { fare_basis: 'Y' } })).rejects.toThrow(
+        'not been initialized',
+      );
     });
   });
 

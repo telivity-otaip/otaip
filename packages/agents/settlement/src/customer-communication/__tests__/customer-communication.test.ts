@@ -17,8 +17,14 @@ beforeEach(async () => {
 });
 
 const ALL_TYPES: NotificationType[] = [
-  'FLIGHT_CANCELLED', 'FLIGHT_DELAYED', 'GATE_CHANGE', 'REBOOKING_CONFIRMED',
-  'REFUND_PROCESSED', 'SCHEDULE_CHANGE', 'WAITLIST_CLEARED', 'ADM_RECEIVED',
+  'FLIGHT_CANCELLED',
+  'FLIGHT_DELAYED',
+  'GATE_CHANGE',
+  'REBOOKING_CONFIRMED',
+  'REFUND_PROCESSED',
+  'SCHEDULE_CHANGE',
+  'WAITLIST_CLEARED',
+  'ADM_RECEIVED',
 ];
 
 const ALL_CHANNELS: Channel[] = ['EMAIL_HTML', 'EMAIL_TEXT', 'SMS', 'WHATSAPP'];
@@ -68,14 +74,24 @@ describe('Customer Communication Agent', () => {
       const uninit = new CustomerCommunicationAgent();
       await expect(
         uninit.execute({
-          data: { operation: 'generateNotification', notificationType: 'FLIGHT_CANCELLED', channel: 'SMS', variables: fullVariables },
+          data: {
+            operation: 'generateNotification',
+            notificationType: 'FLIGHT_CANCELLED',
+            channel: 'SMS',
+            variables: fullVariables,
+          },
         }),
       ).rejects.toThrow('not been initialized');
     });
 
     it('returns metadata in output', async () => {
       const result = await agent.execute({
-        data: { operation: 'generateNotification', notificationType: 'FLIGHT_CANCELLED', channel: 'SMS', variables: fullVariables },
+        data: {
+          operation: 'generateNotification',
+          notificationType: 'FLIGHT_CANCELLED',
+          channel: 'SMS',
+          variables: fullVariables,
+        },
       });
       expect(result.metadata!['agent_id']).toBe('6.4');
       expect(result.metadata!['operation']).toBe('generateNotification');
@@ -306,7 +322,11 @@ describe('Customer Communication Agent', () => {
           batchRequests: [
             { notificationType: 'FLIGHT_CANCELLED', channel: 'SMS', variables: fullVariables },
             { notificationType: 'GATE_CHANGE', channel: 'WHATSAPP', variables: fullVariables },
-            { notificationType: 'REFUND_PROCESSED', channel: 'EMAIL_HTML', variables: fullVariables },
+            {
+              notificationType: 'REFUND_PROCESSED',
+              channel: 'EMAIL_HTML',
+              variables: fullVariables,
+            },
           ],
         },
       });
@@ -358,7 +378,11 @@ describe('Customer Communication Agent', () => {
     it('rejects invalid notificationType', async () => {
       await expect(
         agent.execute({
-          data: { operation: 'generateNotification', notificationType: 'INVALID' as NotificationType, channel: 'SMS' },
+          data: {
+            operation: 'generateNotification',
+            notificationType: 'INVALID' as NotificationType,
+            channel: 'SMS',
+          },
         }),
       ).rejects.toThrow('Invalid input');
     });
@@ -366,7 +390,11 @@ describe('Customer Communication Agent', () => {
     it('rejects invalid channel', async () => {
       await expect(
         agent.execute({
-          data: { operation: 'generateNotification', notificationType: 'FLIGHT_CANCELLED', channel: 'PIGEON' as Channel },
+          data: {
+            operation: 'generateNotification',
+            notificationType: 'FLIGHT_CANCELLED',
+            channel: 'PIGEON' as Channel,
+          },
         }),
       ).rejects.toThrow('Invalid input');
     });

@@ -22,20 +22,30 @@ afterAll(() => {
 function makeInput(overrides: Partial<ItineraryDeliveryInput> = {}): ItineraryDeliveryInput {
   return {
     record_locator: 'ABC123',
-    passengers: [
-      { name: 'SMITH/JOHN', ticket_number: '1251234567890', frequent_flyer: 'BA12345' },
-    ],
+    passengers: [{ name: 'SMITH/JOHN', ticket_number: '1251234567890', frequent_flyer: 'BA12345' }],
     flights: [
       {
-        flight: 'BA115', origin: 'LHR', destination: 'JFK',
-        departure_date: '2026-06-15', departure_time: '09:00', arrival_time: '12:30',
-        terminal: 'T5', cabin_class: 'Economy', booking_class: 'Y',
-        baggage_allowance: '2PC', seat: '24A',
+        flight: 'BA115',
+        origin: 'LHR',
+        destination: 'JFK',
+        departure_date: '2026-06-15',
+        departure_time: '09:00',
+        arrival_time: '12:30',
+        terminal: 'T5',
+        cabin_class: 'Economy',
+        booking_class: 'Y',
+        baggage_allowance: '2PC',
+        seat: '24A',
       },
       {
-        flight: 'BA116', origin: 'JFK', destination: 'LHR',
-        departure_date: '2026-06-22', departure_time: '19:00', arrival_time: '07:30',
-        booking_class: 'Y', baggage_allowance: '2PC',
+        flight: 'BA116',
+        origin: 'JFK',
+        destination: 'LHR',
+        departure_date: '2026-06-22',
+        departure_time: '19:00',
+        arrival_time: '07:30',
+        booking_class: 'Y',
+        baggage_allowance: '2PC',
       },
     ],
     total_fare: '705.00',
@@ -206,31 +216,45 @@ describe('Itinerary Delivery', () => {
 
   describe('Input validation', () => {
     it('rejects invalid record locator', async () => {
-      await expect(agent.execute({ data: makeInput({ record_locator: 'bad' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ record_locator: 'bad' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects empty passengers', async () => {
-      await expect(agent.execute({ data: makeInput({ passengers: [] }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ passengers: [] }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects empty flights', async () => {
-      await expect(agent.execute({ data: makeInput({ flights: [] }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ flights: [] }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects empty channels', async () => {
-      await expect(agent.execute({ data: makeInput({ channels: [] }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ channels: [] }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid channel', async () => {
-      await expect(agent.execute({ data: makeInput({ channels: ['FAX' as 'EMAIL'] }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeInput({ channels: ['FAX' as 'EMAIL'] }) }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects EMAIL without email contact', async () => {
-      await expect(agent.execute({ data: makeInput({ contact: { phone: '+1234' } }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeInput({ contact: { phone: '+1234' } }) }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects SMS without phone contact', async () => {
-      await expect(agent.execute({ data: makeInput({ channels: ['SMS'], contact: { email: 'a@b.com' } }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeInput({ channels: ['SMS'], contact: { email: 'a@b.com' } }) }),
+      ).rejects.toThrow('Invalid input');
     });
   });
 

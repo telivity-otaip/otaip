@@ -128,10 +128,7 @@ function buildSegmentDepartureIso(
   return `${dateStr}T${scheduleDesc.departure.time}`;
 }
 
-function buildSegmentArrivalIso(
-  scheduleDesc: BfmScheduleDesc,
-  departureDateStr: string,
-): string {
+function buildSegmentArrivalIso(scheduleDesc: BfmScheduleDesc, departureDateStr: string): string {
   const dateAdjustment = scheduleDesc.arrival.dateAdjustment ?? 0;
   const parts = departureDateStr.slice(0, 10).split('-').map(Number);
   const year = parts[0] ?? 2026;
@@ -152,10 +149,7 @@ function minutesToIsoDuration(minutes: number): string {
 // SEARCH REQUEST MAPPER
 // ============================================================
 
-export function mapSearchRequest(
-  input: SearchFlightsInput,
-  config: SabreConfig,
-): BfmRequest {
+export function mapSearchRequest(input: SearchFlightsInput, config: SabreConfig): BfmRequest {
   const originDestinations: BfmOriginDestination[] = [
     {
       DepartureDateTime: formatDepartureDateTime(input.departureDate),
@@ -244,10 +238,7 @@ function resolveScheduleDesc(
   return scheduleDescs.find((s) => s.id === ref);
 }
 
-function resolveLeg(
-  legDescs: BfmLeg[],
-  ref: number,
-): BfmLeg | undefined {
+function resolveLeg(legDescs: BfmLeg[], ref: number): BfmLeg | undefined {
   return legDescs.find((l) => l.id === ref);
 }
 
@@ -280,9 +271,16 @@ function mapScheduleToSegment(
 
 function extractFareComponentInfo(
   pricingInfo: BfmPricingInfo,
-  fareComponentDescs?: Array<{ id: number; fareBasisCode?: string; segments?: Array<{ segment?: { bookingCode?: string; cabinCode?: string } }> }>,
+  fareComponentDescs?: Array<{
+    id: number;
+    fareBasisCode?: string;
+    segments?: Array<{ segment?: { bookingCode?: string; cabinCode?: string } }>;
+  }>,
 ): Map<number, { bookingCode?: string; cabinCode?: string; fareBasisCode?: string }> {
-  const infoMap = new Map<number, { bookingCode?: string; cabinCode?: string; fareBasisCode?: string }>();
+  const infoMap = new Map<
+    number,
+    { bookingCode?: string; cabinCode?: string; fareBasisCode?: string }
+  >();
   if (!fareComponentDescs) return infoMap;
 
   for (const paxEl of pricingInfo.fare.passengerInfoList) {
@@ -305,10 +303,7 @@ function extractFareComponentInfo(
   return infoMap;
 }
 
-function mapPassengerFares(
-  pricingInfo: BfmPricingInfo,
-  currency: string,
-): FareBreakdown[] {
+function mapPassengerFares(pricingInfo: BfmPricingInfo, currency: string): FareBreakdown[] {
   const fares: FareBreakdown[] = [];
 
   for (const paxEl of pricingInfo.fare.passengerInfoList) {
@@ -344,7 +339,13 @@ function isNonRefundable(pricingInfo: BfmPricingInfo): boolean {
   return false;
 }
 
-function extractCabinClass(pricingInfo: BfmPricingInfo, fareComponentDescs?: Array<{ id: number; segments?: Array<{ segment?: { cabinCode?: string } }> }>): CabinClass {
+function extractCabinClass(
+  pricingInfo: BfmPricingInfo,
+  fareComponentDescs?: Array<{
+    id: number;
+    segments?: Array<{ segment?: { cabinCode?: string } }>;
+  }>,
+): CabinClass {
   if (!fareComponentDescs) return 'economy';
 
   for (const paxEl of pricingInfo.fare.passengerInfoList) {
@@ -407,9 +408,8 @@ export function mapSearchResponse(response: BfmResponse): FlightOffer[] {
         const currency = fare.totalFare?.currency ?? 'USD';
 
         const fareCompInfo = extractFareComponentInfo(pricingInfo, fareComponentDescs);
-        const firstCompInfo = fareCompInfo.size > 0
-          ? fareCompInfo.values().next().value
-          : undefined;
+        const firstCompInfo =
+          fareCompInfo.size > 0 ? fareCompInfo.values().next().value : undefined;
 
         const segments: FlightSegment[][] = [];
         const legDepartureDate = group.groupDescription.legDescriptions[0]?.departureDate ?? '';
@@ -469,10 +469,7 @@ export function mapSearchResponse(response: BfmResponse): FlightOffer[] {
 // PRICE ITINERARY RESPONSE MAPPER
 // ============================================================
 
-export function mapPriceResponse(
-  response: BfmResponse,
-  originalOfferId: string,
-): PricedItinerary {
+export function mapPriceResponse(response: BfmResponse, originalOfferId: string): PricedItinerary {
   const offers = mapSearchResponse(response);
   const offer = offers[0];
 
@@ -507,9 +504,7 @@ export function mapPriceResponse(
 // BOOKING REQUEST MAPPER
 // ============================================================
 
-export function mapCreateBookingRequest(
-  input: CreateBookingInput,
-): SabreCreateBookingRequest {
+export function mapCreateBookingRequest(input: CreateBookingInput): SabreCreateBookingRequest {
   const travelers: SabreBookTraveler[] = input.passengers.map((pax) => {
     const traveler: SabreBookTraveler = {
       givenName: pax.firstName,
@@ -582,9 +577,7 @@ function mapSabreTravelerToPassenger(traveler: SabreTraveler): PassengerDetail {
 
   return {
     type: mapPaxType(traveler.passengerCode ?? 'ADT'),
-    gender: (traveler.gender === 'M' || traveler.gender === 'F')
-      ? traveler.gender
-      : 'M',
+    gender: traveler.gender === 'M' || traveler.gender === 'F' ? traveler.gender : 'M',
     firstName: traveler.givenName ?? '',
     middleName: traveler.middleName,
     lastName: traveler.surname ?? '',
@@ -620,9 +613,7 @@ function extractTotalPrice(booking?: SabreBooking): MoneyAmount {
   return { amount: '0', currency: 'USD' };
 }
 
-export function mapCreateBookingResponse(
-  response: SabreCreateBookingResponse,
-): BookingResult {
+export function mapCreateBookingResponse(response: SabreCreateBookingResponse): BookingResult {
   const booking = response.booking;
 
   return {
@@ -654,9 +645,7 @@ export function mapGetBookingResponse(
   if (response.errors?.length) status = 'failed';
   else if (isTicketed) status = 'ticketed';
 
-  const ticketNumbers = tickets
-    ?.map((t) => t.number)
-    .filter((n): n is string => !!n);
+  const ticketNumbers = tickets?.map((t) => t.number).filter((n): n is string => !!n);
 
   return {
     bookingId,
@@ -689,9 +678,7 @@ export function mapFulfillResponse(
   response: SabreFulfillTicketsResponse,
   bookingId: string,
 ): BookingStatusResult {
-  const ticketNumbers = response.tickets
-    ?.map((t) => t.number)
-    .filter((n): n is string => !!n);
+  const ticketNumbers = response.tickets?.map((t) => t.number).filter((n): n is string => !!n);
 
   return {
     bookingId,

@@ -170,7 +170,12 @@ const TEST_AIRPORTS: ProcessedAirport[] = [
 ];
 
 const TEST_METRO_AREAS: MetroArea[] = [
-  { city_code: 'LON', city_name: 'London', country_code: 'GB', airports: ['LHR', 'LGW', 'STN', 'LTN', 'SEN', 'LCY'] },
+  {
+    city_code: 'LON',
+    city_name: 'London',
+    country_code: 'GB',
+    airports: ['LHR', 'LGW', 'STN', 'LTN', 'SEN', 'LCY'],
+  },
   { city_code: 'NYC', city_name: 'New York', country_code: 'US', airports: ['JFK', 'LGA', 'EWR'] },
 ];
 
@@ -386,15 +391,13 @@ describe('Airport Code Resolver', () => {
 
   describe('Input validation', () => {
     it('rejects empty code', async () => {
-      await expect(
-        resolver.execute({ data: { code: '' } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(resolver.execute({ data: { code: '' } })).rejects.toThrow('Invalid input');
     });
 
     it('rejects code longer than 50 characters', async () => {
-      await expect(
-        resolver.execute({ data: { code: 'a'.repeat(51) } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(resolver.execute({ data: { code: 'a'.repeat(51) } })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid code_type', async () => {
@@ -430,9 +433,9 @@ describe('Airport Code Resolver', () => {
 
     it('throws when not initialized', async () => {
       const uninitResolver = new AirportCodeResolver({ dataDir: testDataDir });
-      await expect(
-        uninitResolver.execute({ data: { code: 'JFK' } }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninitResolver.execute({ data: { code: 'JFK' } })).rejects.toThrow(
+        'not been initialized',
+      );
     });
   });
 
@@ -454,4 +457,3 @@ describe('Airport Code Resolver', () => {
     });
   });
 });
-

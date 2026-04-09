@@ -203,7 +203,7 @@ function parseModifiers(remainder: string): ParsedModifiers {
   //    We check the original remainder to determine position-2 season
   if (remainder.length > 0) {
     const firstModChar = remainder[0]!.toUpperCase();
-    if (SEASON_MAP[firstModChar] && !parsedParts.some(p => p.includes(firstModChar))) {
+    if (SEASON_MAP[firstModChar] && !parsedParts.some((p) => p.includes(firstModChar))) {
       season = SEASON_MAP[firstModChar]!;
       // Only mark as parsed if it's still in working string at start
       if (working.length > 0 && working[0]!.toUpperCase() === firstModChar) {
@@ -343,7 +343,7 @@ function calculateConfidence(
   // Partial parse: scale between 0.7 and 0.9 based on how much was unparsed
   const unparsedLength = unparsed.reduce((sum, s) => sum + s.length, 0);
   const totalModLength = remainder.length;
-  const parsedRatio = 1 - (unparsedLength / totalModLength);
+  const parsedRatio = 1 - unparsedLength / totalModLength;
 
   // Map parsedRatio [0, 1) → confidence [0.7, 0.9]
   return Math.round((0.7 + parsedRatio * 0.2) * 100) / 100;

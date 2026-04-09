@@ -5,11 +5,7 @@
  * filters, and sorts flight offers.
  */
 
-import type {
-  DistributionAdapter,
-  SearchRequest,
-  SearchOffer,
-} from '@otaip/core';
+import type { DistributionAdapter, SearchRequest, SearchOffer } from '@otaip/core';
 import type {
   AvailabilitySearchInput,
   AvailabilitySearchOutput,
@@ -87,10 +83,7 @@ function deduplicateOffers(offers: SearchOffer[]): SearchOffer[] {
 // Filtering
 // ---------------------------------------------------------------------------
 
-function filterOffers(
-  offers: SearchOffer[],
-  input: AvailabilitySearchInput,
-): SearchOffer[] {
+function filterOffers(offers: SearchOffer[], input: AvailabilitySearchInput): SearchOffer[] {
   let filtered = offers;
 
   if (input.direct_only) {
@@ -98,9 +91,7 @@ function filterOffers(
   }
 
   if (input.max_connections !== undefined) {
-    filtered = filtered.filter(
-      (o) => o.itinerary.connection_count <= input.max_connections!,
-    );
+    filtered = filtered.filter((o) => o.itinerary.connection_count <= input.max_connections!);
   }
 
   if (input.cabin_class) {

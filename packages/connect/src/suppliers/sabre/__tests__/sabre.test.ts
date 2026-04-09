@@ -114,7 +114,9 @@ function makeLegDesc(id: number, scheduleRefs: number[] = [1]) {
   };
 }
 
-function makeBfmResponse(overrides: Partial<BfmResponse['groupedItineraryResponse']> = {}): BfmResponse {
+function makeBfmResponse(
+  overrides: Partial<BfmResponse['groupedItineraryResponse']> = {},
+): BfmResponse {
   return {
     groupedItineraryResponse: {
       version: 'V5',
@@ -154,22 +156,20 @@ function makeBfmResponse(overrides: Partial<BfmResponse['groupedItineraryRespons
                           total: 1,
                           nonRefundable: false,
                           passengerTotalFare: {
-                            totalFare: 610.50,
-                            totalTaxAmount: 110.50,
+                            totalFare: 610.5,
+                            totalTaxAmount: 110.5,
                             currency: 'USD',
                             baseFareAmount: 500,
                             baseFareCurrency: 'USD',
                           },
                           fareComponents: [{ ref: 1 }],
-                          baggageInformation: [
-                            { allowance: { ref: 1 }, provisionType: 'A' },
-                          ],
+                          baggageInformation: [{ allowance: { ref: 1 }, provisionType: 'A' }],
                         },
                       },
                     ],
                     totalFare: {
-                      totalPrice: 610.50,
-                      totalTaxAmount: 110.50,
+                      totalPrice: 610.5,
+                      totalTaxAmount: 110.5,
                       currency: 'USD',
                       baseFareAmount: 500,
                       baseFareCurrency: 'USD',
@@ -226,8 +226,8 @@ function makeCreateBookingResponse(
       fares: [
         {
           baseFare: { amount: 500, currency: 'USD' },
-          totalFare: { amount: 610.50, currency: 'USD' },
-          totalTax: { amount: 110.50, currency: 'USD' },
+          totalFare: { amount: 610.5, currency: 'USD' },
+          totalTax: { amount: 110.5, currency: 'USD' },
           passengerCode: 'ADT',
         },
       ],
@@ -282,9 +282,7 @@ function makeFulfillResponse(
 ): SabreFulfillTicketsResponse {
   return {
     timestamp: '2026-06-15T10:00:00Z',
-    tickets: [
-      { number: '0167489825830', date: '2026-06-15', isCommitted: true },
-    ],
+    tickets: [{ number: '0167489825830', date: '2026-06-15', isCommitted: true }],
     ...overrides,
   };
 }
@@ -422,9 +420,7 @@ describe('SabreAuth', () => {
 
   it('calls correct token URL for prod', async () => {
     mockFetch.mockResolvedValue(makeAuthResponse());
-    const auth = new SabreAuth(
-      validateSabreConfig(makeSabreConfig({ environment: 'prod' })),
-    );
+    const auth = new SabreAuth(validateSabreConfig(makeSabreConfig({ environment: 'prod' })));
     await auth.getToken();
     const [url] = mockFetch.mock.calls[0] as [string];
     expect(url).toBe('https://api.platform.sabre.com/v2/auth/token');
@@ -494,7 +490,7 @@ describe('mapCabinClass', () => {
 
 describe('toMoney', () => {
   it('converts number to string amount', () => {
-    const result = toMoney(610.50, 'USD');
+    const result = toMoney(610.5, 'USD');
     expect(result.amount).toBe('610.5');
     expect(result.currency).toBe('USD');
   });
@@ -532,10 +528,7 @@ describe('mapSearchRequest', () => {
   });
 
   it('builds round-trip request', () => {
-    const req = mapSearchRequest(
-      makeSearchInput({ returnDate: '2026-06-22' }),
-      config,
-    );
+    const req = mapSearchRequest(makeSearchInput({ returnDate: '2026-06-22' }), config);
     expect(req.OTA_AirLowFareSearchRQ.OriginDestinationInformation).toHaveLength(2);
     const ret = req.OTA_AirLowFareSearchRQ.OriginDestinationInformation[1];
     expect(ret.OriginLocation.LocationCode).toBe('LHR');
@@ -547,7 +540,8 @@ describe('mapSearchRequest', () => {
       makeSearchInput({ passengers: { adults: 2, children: 1, infants: 1 } }),
       config,
     );
-    const pax = req.OTA_AirLowFareSearchRQ.TravelerInfoSummary.AirTravelerAvail[0].PassengerTypeQuantity;
+    const pax =
+      req.OTA_AirLowFareSearchRQ.TravelerInfoSummary.AirTravelerAvail[0].PassengerTypeQuantity;
     expect(pax).toHaveLength(3);
     expect(pax[0]).toEqual({ Code: 'ADT', Quantity: 2 });
     expect(pax[1]).toEqual({ Code: 'CNN', Quantity: 1 });
@@ -555,28 +549,19 @@ describe('mapSearchRequest', () => {
   });
 
   it('sets cabin class preference', () => {
-    const req = mapSearchRequest(
-      makeSearchInput({ cabinClass: 'business' }),
-      config,
-    );
+    const req = mapSearchRequest(makeSearchInput({ cabinClass: 'business' }), config);
     expect(req.OTA_AirLowFareSearchRQ.TravelPreferences?.CabinPref).toEqual([
       { Cabin: 'Business' },
     ]);
   });
 
   it('sets direct only', () => {
-    const req = mapSearchRequest(
-      makeSearchInput({ directOnly: true }),
-      config,
-    );
+    const req = mapSearchRequest(makeSearchInput({ directOnly: true }), config);
     expect(req.OTA_AirLowFareSearchRQ.TravelPreferences?.MaxStopsQuantity).toBe(0);
   });
 
   it('sets preferred airlines', () => {
-    const req = mapSearchRequest(
-      makeSearchInput({ preferredAirlines: ['BA', 'AA'] }),
-      config,
-    );
+    const req = mapSearchRequest(makeSearchInput({ preferredAirlines: ['BA', 'AA'] }), config);
     expect(req.OTA_AirLowFareSearchRQ.TravelPreferences?.VendorPref).toEqual([
       { Code: 'BA', PreferLevel: 'Preferred' },
       { Code: 'AA', PreferLevel: 'Preferred' },
@@ -584,10 +569,7 @@ describe('mapSearchRequest', () => {
   });
 
   it('sets currency from input', () => {
-    const req = mapSearchRequest(
-      makeSearchInput({ currency: 'GBP' }),
-      config,
-    );
+    const req = mapSearchRequest(makeSearchInput({ currency: 'GBP' }), config);
     expect(
       req.OTA_AirLowFareSearchRQ.TravelerInfoSummary.PriceRequestInformation?.CurrencyCode,
     ).toBe('GBP');
@@ -660,8 +642,9 @@ describe('mapSearchResponse', () => {
 
   it('maps non-refundable', () => {
     const response = makeBfmResponse();
-    const paxInfo = response.groupedItineraryResponse.itineraryGroups![0]
-      .itineraries![0].pricingInformation![0].fare.passengerInfoList[0].passengerInfo!;
+    const paxInfo =
+      response.groupedItineraryResponse.itineraryGroups![0].itineraries![0].pricingInformation![0]
+        .fare.passengerInfoList[0].passengerInfo!;
     paxInfo.nonRefundable = true;
     const offers = mapSearchResponse(response);
     expect(offers[0].refundable).toBe(false);
@@ -730,10 +713,7 @@ describe('mapPriceResponse', () => {
   });
 
   it('handles empty response as unavailable', () => {
-    const result = mapPriceResponse(
-      makeBfmResponse({ itineraryGroups: [] }),
-      'sabre-1-0',
-    );
+    const result = mapPriceResponse(makeBfmResponse({ itineraryGroups: [] }), 'sabre-1-0');
     expect(result.available).toBe(false);
     expect(result.totalPrice.amount).toBe('0');
   });
@@ -889,9 +869,7 @@ describe('mapGetBookingResponse', () => {
   it('maps ticketed booking', () => {
     const resp = makeGetBookingResponse();
     resp.booking!.isTicketed = true;
-    resp.booking!.flightTickets = [
-      { number: '0167489825830', date: '2026-06-15' },
-    ];
+    resp.booking!.flightTickets = [{ number: '0167489825830', date: '2026-06-15' }];
     const result = mapGetBookingResponse(resp, 'ABCDEF');
     expect(result.status).toBe('ticketed');
     expect(result.ticketNumbers).toEqual(['0167489825830']);
@@ -943,10 +921,7 @@ describe('mapCancelResponse', () => {
   it('joins multiple error messages', () => {
     const result = mapCancelResponse(
       {
-        errors: [
-          { description: 'Error 1' },
-          { description: 'Error 2' },
-        ],
+        errors: [{ description: 'Error 1' }, { description: 'Error 2' }],
       },
       'ABCDEF',
     );
@@ -1044,8 +1019,8 @@ describe('SabreAdapter', () => {
       const offers = await adapter.searchFlights(makeSearchInput());
       expect(offers).toHaveLength(1);
 
-      const searchCall = mockFetch.mock.calls.find(
-        (c: unknown[]) => (c[0] as string).includes('/v5/offers/shop'),
+      const searchCall = mockFetch.mock.calls.find((c: unknown[]) =>
+        (c[0] as string).includes('/v5/offers/shop'),
       );
       expect(searchCall).toBeDefined();
       const headers = (searchCall![1] as RequestInit).headers as Record<string, string>;
@@ -1118,8 +1093,8 @@ describe('SabreAdapter', () => {
       expect(result.bookingId).toBe('ABCDEF');
       expect(result.status).toBe('held');
 
-      const bookCall = mockFetch.mock.calls.find(
-        (c: unknown[]) => (c[0] as string).includes('/createBooking'),
+      const bookCall = mockFetch.mock.calls.find((c: unknown[]) =>
+        (c[0] as string).includes('/createBooking'),
       );
       expect(bookCall).toBeDefined();
     });
@@ -1148,9 +1123,7 @@ describe('SabreAdapter', () => {
         });
       });
 
-      await expect(adapter.createBooking(makeBookingInput())).rejects.toThrow(
-        ConnectError,
-      );
+      await expect(adapter.createBooking(makeBookingInput())).rejects.toThrow(ConnectError);
     });
   });
 

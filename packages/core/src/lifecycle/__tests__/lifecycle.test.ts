@@ -28,10 +28,7 @@ function tc(name: string, input: unknown, id = 'tc-1'): ToolCall {
   return { id, name, input };
 }
 
-function toolThenAnswerModel(
-  toolCalls: ToolCall[],
-  finalContent: string,
-): ModelCallFn {
+function toolThenAnswerModel(toolCalls: ToolCall[], finalContent: string): ModelCallFn {
   let callCount = 0;
   return async () => {
     callCount++;
@@ -51,11 +48,19 @@ describe('HookRegistry', () => {
     const registry = new HookRegistry();
     const order: number[] = [];
 
-    registry.on('afterToolCall', () => { order.push(1); });
-    registry.on('afterToolCall', () => { order.push(2); });
-    registry.on('afterToolCall', () => { order.push(3); });
+    registry.on('afterToolCall', () => {
+      order.push(1);
+    });
+    registry.on('afterToolCall', () => {
+      order.push(2);
+    });
+    registry.on('afterToolCall', () => {
+      order.push(3);
+    });
 
-    await registry.execute('afterToolCall', { state: { phase: 'tool_call', iteration: 1, messages: [] } });
+    await registry.execute('afterToolCall', {
+      state: { phase: 'tool_call', iteration: 1, messages: [] },
+    });
     expect(order).toEqual([1, 2, 3]);
   });
 
@@ -106,7 +111,9 @@ describe('HookRegistry', () => {
     const registry = new HookRegistry();
     const second = vi.fn();
 
-    registry.on('afterToolCall', () => { throw new Error('boom'); });
+    registry.on('afterToolCall', () => {
+      throw new Error('boom');
+    });
     registry.on('afterToolCall', second);
 
     await registry.execute('afterToolCall', {
@@ -168,6 +175,90 @@ describe('HookRegistry', () => {
     });
     expect(result).toBeUndefined();
   });
+
+  describe('error policies', () => {
+    it('swallow policy (default) continues after error', async () => {
+      const registry = new HookRegistry({ errorPolicy: 'swallow' });
+      const second = vi.fn();
+
+      registry.on('afterToolCall', () => {
+        throw new Error('boom');
+      });
+      registry.on('afterToolCall', second);
+
+      await registry.execute('afterToolCall', {
+        state: { phase: 'tool_call', iteration: 1, messages: [] },
+      });
+      expect(second).toHaveBeenCalled();
+    });
+
+    it('log policy calls onHookError and continues', async () => {
+      const onError = vi.fn();
+      const registry = new HookRegistry({ errorPolicy: 'log', onHookError: onError });
+      const second = vi.fn();
+
+      registry.on('afterToolCall', () => {
+        throw new Error('hook failed');
+      });
+      registry.on('afterToolCall', second);
+
+      await registry.execute('afterToolCall', {
+        state: { phase: 'tool_call', iteration: 1, messages: [] },
+      });
+
+      expect(onError).toHaveBeenCalledWith(expect.any(Error), 'afterToolCall');
+      expect((onError.mock.calls[0]![0] as Error).message).toBe('hook failed');
+      expect(second).toHaveBeenCalled();
+    });
+
+    it('propagate policy re-throws the error', async () => {
+      const registry = new HookRegistry({ errorPolicy: 'propagate' });
+
+      registry.on('afterToolCall', () => {
+        throw new Error('critical hook failure');
+      });
+
+      await expect(
+        registry.execute('afterToolCall', {
+          state: { phase: 'tool_call', iteration: 1, messages: [] },
+        }),
+      ).rejects.toThrow('critical hook failure');
+    });
+
+    it('propagate policy stops subsequent handlers', async () => {
+      const registry = new HookRegistry({ errorPolicy: 'propagate' });
+      const second = vi.fn();
+
+      registry.on('afterToolCall', () => {
+        throw new Error('stop here');
+      });
+      registry.on('afterToolCall', second);
+
+      try {
+        await registry.execute('afterToolCall', {
+          state: { phase: 'tool_call', iteration: 1, messages: [] },
+        });
+      } catch {
+        // expected
+      }
+      expect(second).not.toHaveBeenCalled();
+    });
+
+    it('defaults to swallow when no config provided', async () => {
+      const registry = new HookRegistry();
+      const second = vi.fn();
+
+      registry.on('onComplete', () => {
+        throw new Error('ignored');
+      });
+      registry.on('onComplete', second);
+
+      await registry.execute('onComplete', {
+        state: { phase: 'complete', iteration: 1, messages: [] },
+      });
+      expect(second).toHaveBeenCalled();
+    });
+  });
 });
 
 /* ------------------------------------------------------------------ */
@@ -181,11 +272,21 @@ describe('AgentLoop + HookRegistry integration', () => {
     const hooks = new HookRegistry();
 
     const events: LifecycleEvent[] = [];
-    hooks.on('onLoopStart', () => { events.push('onLoopStart'); });
-    hooks.on('beforeToolCall', () => { events.push('beforeToolCall'); });
-    hooks.on('afterToolCall', () => { events.push('afterToolCall'); });
-    hooks.on('onComplete', () => { events.push('onComplete'); });
-    hooks.on('onLoopEnd', () => { events.push('onLoopEnd'); });
+    hooks.on('onLoopStart', () => {
+      events.push('onLoopStart');
+    });
+    hooks.on('beforeToolCall', () => {
+      events.push('beforeToolCall');
+    });
+    hooks.on('afterToolCall', () => {
+      events.push('afterToolCall');
+    });
+    hooks.on('onComplete', () => {
+      events.push('onComplete');
+    });
+    hooks.on('onLoopEnd', () => {
+      events.push('onLoopEnd');
+    });
 
     const model = toolThenAnswerModel([tc('add', { a: 1, b: 2 })], 'Done');
     const loop = new AgentLoop(toolRegistry, model, { hooks });
@@ -233,9 +334,13 @@ describe('AgentLoop + HookRegistry integration', () => {
     const hooks = new HookRegistry();
     const errors: unknown[] = [];
 
-    hooks.on('onError', (ctx) => { errors.push(ctx.error); });
+    hooks.on('onError', (ctx) => {
+      errors.push(ctx.error);
+    });
 
-    const model: ModelCallFn = async () => { throw new Error('model down'); };
+    const model: ModelCallFn = async () => {
+      throw new Error('model down');
+    };
     const loop = new AgentLoop(toolRegistry, model, { hooks });
 
     const state = await loop.run([{ role: 'user', content: 'test' }]);
@@ -268,7 +373,9 @@ describe('AgentLoop + HookRegistry integration', () => {
     toolRegistry.register(makeTool());
     const hooks = new HookRegistry();
 
-    hooks.on('beforeToolCall', () => { throw new Error('hook crash'); });
+    hooks.on('beforeToolCall', () => {
+      throw new Error('hook crash');
+    });
 
     const model = toolThenAnswerModel([tc('add', { a: 1, b: 2 })], 'Done');
     const loop = new AgentLoop(toolRegistry, model, { hooks });

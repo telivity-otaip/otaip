@@ -117,7 +117,6 @@ function calculateDurationMinutes(departure: string, arrival: string): number {
   return Math.round((arr - dep) / 60_000);
 }
 
-
 // ============================================================
 // SEARCH REQUEST MAPPER
 // ============================================================
@@ -144,9 +143,7 @@ export function mapSearchRequest(
     });
   }
 
-  const types = [
-    { type: 'ADT', count: input.passengers.adults },
-  ];
+  const types = [{ type: 'ADT', count: input.passengers.adults }];
   if (input.passengers.children) {
     types.push({ type: 'CHD', count: input.passengers.children });
   }
@@ -161,7 +158,9 @@ export function mapSearchRequest(
   };
 }
 
-function buildFilters(input: SearchFlightsInput): { connectionType?: 'None' | 'Direct'; carrierCode?: string } | undefined {
+function buildFilters(
+  input: SearchFlightsInput,
+): { connectionType?: 'None' | 'Direct'; carrierCode?: string } | undefined {
   const filters: {
     connectionType?: 'None' | 'Direct';
     carrierCode?: string;
@@ -182,10 +181,7 @@ function buildFilters(input: SearchFlightsInput): { connectionType?: 'None' | 'D
 // SEARCH RESPONSE MAPPER
 // ============================================================
 
-export function mapSearchResponse(
-  response: AvailabilityResponse,
-  currency: string,
-): FlightOffer[] {
+export function mapSearchResponse(response: AvailabilityResponse, currency: string): FlightOffer[] {
   const offers: FlightOffer[] = [];
 
   for (const trip of response.trips ?? []) {
@@ -236,7 +232,10 @@ function mapJourneySegments(journey: AvailabilityJourney): FlightSegment[] {
       origin: seg.designator.origin,
       destination: seg.designator.destination,
       marketingCarrier: seg.identifier.carrierCode,
-      operatingCarrier: seg.externalIdentifier?.carrierCode ?? firstLeg?.operatingCarrier ?? seg.identifier.carrierCode,
+      operatingCarrier:
+        seg.externalIdentifier?.carrierCode ??
+        firstLeg?.operatingCarrier ??
+        seg.identifier.carrierCode,
       flightNumber: seg.identifier.identifier,
       departure: seg.designator.departure,
       arrival: seg.designator.arrival,
@@ -249,10 +248,7 @@ function mapJourneySegments(journey: AvailabilityJourney): FlightSegment[] {
   });
 }
 
-function mapAvailabilityFares(
-  fare: AvailabilityFare,
-  currency: string,
-): FareBreakdown[] {
+function mapAvailabilityFares(fare: AvailabilityFare, currency: string): FareBreakdown[] {
   const fareMap = new Map<string, { total: Decimal; base: Decimal; tax: Decimal; count: number }>();
 
   for (const pf of fare.passengerFares) {
@@ -351,9 +347,7 @@ export function mapPassengersRequest(
 // PRIMARY CONTACT REQUEST MAPPER
 // ============================================================
 
-export function mapPrimaryContactRequest(
-  input: CreateBookingInput,
-): PrimaryContactRequest {
+export function mapPrimaryContactRequest(input: CreateBookingInput): PrimaryContactRequest {
   const firstPax = input.passengers[0];
   return {
     name: {
@@ -362,9 +356,7 @@ export function mapPrimaryContactRequest(
       title: firstPax?.title,
     },
     emailAddress: input.contact.email,
-    phoneNumbers: [
-      { type: 'Home', number: input.contact.phone },
-    ],
+    phoneNumbers: [{ type: 'Home', number: input.contact.phone }],
   };
 }
 
@@ -434,10 +426,11 @@ export function mapCreateBookingResponse(
   passengers: PassengerDetail[],
   currency: string,
 ): BookingResult {
-  const recordLocator = commitData?.recordLocator
-    ?? bookingData?.recordLocator
-    ?? bookingData?.locators?.recordLocators?.[0]?.recordCode
-    ?? '';
+  const recordLocator =
+    commitData?.recordLocator ??
+    bookingData?.recordLocator ??
+    bookingData?.locators?.recordLocators?.[0]?.recordCode ??
+    '';
 
   const segments = extractBookingSegments(bookingData);
   const totalPrice = extractBookingTotal(bookingData, currency);
@@ -470,9 +463,8 @@ export function mapGetBookingResponse(
     };
   }
 
-  const recordLocator = data.recordLocator
-    ?? data.locators?.recordLocators?.[0]?.recordCode
-    ?? bookingId;
+  const recordLocator =
+    data.recordLocator ?? data.locators?.recordLocators?.[0]?.recordCode ?? bookingId;
 
   const status = deriveBookingStatus(data);
   const segments = extractBookingSegments(data);
@@ -567,7 +559,10 @@ function mapBookingSegmentToFlight(seg: BookingSegment): FlightSegment {
     origin: seg.designator.origin,
     destination: seg.designator.destination,
     marketingCarrier: seg.identifier.carrierCode,
-    operatingCarrier: seg.externalIdentifier?.carrierCode ?? firstLeg?.operatingCarrier ?? seg.identifier.carrierCode,
+    operatingCarrier:
+      seg.externalIdentifier?.carrierCode ??
+      firstLeg?.operatingCarrier ??
+      seg.identifier.carrierCode,
     flightNumber: seg.identifier.identifier,
     departure: seg.designator.departure,
     arrival: seg.designator.arrival,

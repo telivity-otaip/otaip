@@ -63,9 +63,10 @@ export function scoreConnection(input: ScoringInput): {
   factors.push({
     name: 'connection_time',
     score: timeScore,
-    description: timeScore === 0
-      ? `${input.availableMinutes}min < ${input.requiredMctMinutes}min MCT - illegal connection`
-      : `${input.availableMinutes}min available, ${input.requiredMctMinutes}min required`,
+    description:
+      timeScore === 0
+        ? `${input.availableMinutes}min < ${input.requiredMctMinutes}min MCT - illegal connection`
+        : `${input.availableMinutes}min available, ${input.requiredMctMinutes}min required`,
   });
 
   // Factor 2: Same carrier (weight: 0.25)

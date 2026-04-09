@@ -7,16 +7,8 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { PnrBuilderInput, PnrBuilderOutput, GdsSystem, SsrCode } from './types.js';
 import { buildPnrCommands } from './command-builder.js';
 
@@ -28,9 +20,7 @@ const VALID_PAX_TYPES = new Set(['ADT', 'CHD', 'INF']);
 const VALID_SEG_STATUS = new Set(['SS', 'NN', 'GK']);
 const VALID_SSR_CODES = new Set<SsrCode>(['WCHR', 'VGML', 'DOCS', 'FOID', 'CTCE', 'CTCM', 'INFT']);
 
-export class PnrBuilder
-  implements Agent<PnrBuilderInput, PnrBuilderOutput>
-{
+export class PnrBuilder implements Agent<PnrBuilderInput, PnrBuilderOutput> {
   readonly id = '3.2';
   readonly name = 'PNR Builder';
   readonly version = '0.1.0';
@@ -41,9 +31,7 @@ export class PnrBuilder
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<PnrBuilderInput>,
-  ): Promise<AgentOutput<PnrBuilderOutput>> {
+  async execute(input: AgentInput<PnrBuilderInput>): Promise<AgentOutput<PnrBuilderOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -103,22 +91,42 @@ export class PnrBuilder
     }
 
     if (!data.passengers || data.passengers.length === 0) {
-      throw new AgentInputValidationError(this.id, 'passengers', 'At least one passenger required.');
+      throw new AgentInputValidationError(
+        this.id,
+        'passengers',
+        'At least one passenger required.',
+      );
     }
 
     for (let i = 0; i < data.passengers.length; i++) {
       const pax = data.passengers[i]!;
       if (!pax.last_name || !NAME_RE.test(pax.last_name)) {
-        throw new AgentInputValidationError(this.id, `passengers[${i}].last_name`, 'Invalid name format.');
+        throw new AgentInputValidationError(
+          this.id,
+          `passengers[${i}].last_name`,
+          'Invalid name format.',
+        );
       }
       if (!pax.first_name || !NAME_RE.test(pax.first_name)) {
-        throw new AgentInputValidationError(this.id, `passengers[${i}].first_name`, 'Invalid name format.');
+        throw new AgentInputValidationError(
+          this.id,
+          `passengers[${i}].first_name`,
+          'Invalid name format.',
+        );
       }
       if (!VALID_PAX_TYPES.has(pax.passenger_type)) {
-        throw new AgentInputValidationError(this.id, `passengers[${i}].passenger_type`, 'Must be ADT, CHD, or INF.');
+        throw new AgentInputValidationError(
+          this.id,
+          `passengers[${i}].passenger_type`,
+          'Must be ADT, CHD, or INF.',
+        );
       }
       if (pax.passenger_type === 'INF' && pax.infant_accompanying_adult === undefined) {
-        throw new AgentInputValidationError(this.id, `passengers[${i}].infant_accompanying_adult`, 'Required for infant passengers.');
+        throw new AgentInputValidationError(
+          this.id,
+          `passengers[${i}].infant_accompanying_adult`,
+          'Required for infant passengers.',
+        );
       }
     }
 
@@ -129,16 +137,32 @@ export class PnrBuilder
     for (let i = 0; i < data.segments.length; i++) {
       const seg = data.segments[i]!;
       if (!seg.carrier || !IATA_CODE_RE.test(seg.carrier)) {
-        throw new AgentInputValidationError(this.id, `segments[${i}].carrier`, 'Must be a 2-3 letter IATA code.');
+        throw new AgentInputValidationError(
+          this.id,
+          `segments[${i}].carrier`,
+          'Must be a 2-3 letter IATA code.',
+        );
       }
       if (!seg.origin || !AIRPORT_RE.test(seg.origin)) {
-        throw new AgentInputValidationError(this.id, `segments[${i}].origin`, 'Must be a 3-letter IATA code.');
+        throw new AgentInputValidationError(
+          this.id,
+          `segments[${i}].origin`,
+          'Must be a 3-letter IATA code.',
+        );
       }
       if (!seg.destination || !AIRPORT_RE.test(seg.destination)) {
-        throw new AgentInputValidationError(this.id, `segments[${i}].destination`, 'Must be a 3-letter IATA code.');
+        throw new AgentInputValidationError(
+          this.id,
+          `segments[${i}].destination`,
+          'Must be a 3-letter IATA code.',
+        );
       }
       if (!VALID_SEG_STATUS.has(seg.status)) {
-        throw new AgentInputValidationError(this.id, `segments[${i}].status`, 'Must be SS, NN, or GK.');
+        throw new AgentInputValidationError(
+          this.id,
+          `segments[${i}].status`,
+          'Must be SS, NN, or GK.',
+        );
       }
     }
 
@@ -151,17 +175,29 @@ export class PnrBuilder
     }
 
     if (!data.received_from || data.received_from.trim().length === 0) {
-      throw new AgentInputValidationError(this.id, 'received_from', 'Received-from field required.');
+      throw new AgentInputValidationError(
+        this.id,
+        'received_from',
+        'Received-from field required.',
+      );
     }
 
     if (data.is_group && (!data.group_name || data.group_name.trim().length === 0)) {
-      throw new AgentInputValidationError(this.id, 'group_name', 'Group name required for group PNR.');
+      throw new AgentInputValidationError(
+        this.id,
+        'group_name',
+        'Group name required for group PNR.',
+      );
     }
 
     if (data.ssrs) {
       for (let i = 0; i < data.ssrs.length; i++) {
         if (!VALID_SSR_CODES.has(data.ssrs[i]!.code)) {
-          throw new AgentInputValidationError(this.id, `ssrs[${i}].code`, `Must be one of: ${[...VALID_SSR_CODES].join(', ')}.`);
+          throw new AgentInputValidationError(
+            this.id,
+            `ssrs[${i}].code`,
+            `Must be one of: ${[...VALID_SSR_CODES].join(', ')}.`,
+          );
         }
       }
     }

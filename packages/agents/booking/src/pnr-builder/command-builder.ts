@@ -50,7 +50,12 @@ function formatDateDocs(isoDate: string): string {
 // Name commands
 // ---------------------------------------------------------------------------
 
-function buildNameCommands(gds: GdsSystem, passengers: PnrPassenger[], isGroup: boolean, groupName?: string): PnrCommand[] {
+function buildNameCommands(
+  gds: GdsSystem,
+  passengers: PnrPassenger[],
+  isGroup: boolean,
+  groupName?: string,
+): PnrCommand[] {
   const commands: PnrCommand[] = [];
 
   if (isGroup && groupName) {

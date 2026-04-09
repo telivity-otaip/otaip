@@ -55,7 +55,10 @@ export interface ModificationInput {
 // Output
 // ---------------------------------------------------------------------------
 
-export type ChangeClassification = 'free_modification' | 'cancel_rebook_required' | 'not_modifiable';
+export type ChangeClassification =
+  | 'free_modification'
+  | 'cancel_rebook_required'
+  | 'not_modifiable';
 
 export interface PenaltyCalculation {
   penaltyAmount: MonetaryAmount;

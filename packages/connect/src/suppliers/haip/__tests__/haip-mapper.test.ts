@@ -99,18 +99,14 @@ function makeProperty(overrides?: Partial<HaipProperty>): HaipProperty {
   };
 }
 
-function makeSearchResponse(
-  properties?: HaipProperty[],
-): HaipSearchResponse {
+function makeSearchResponse(properties?: HaipProperty[]): HaipSearchResponse {
   return {
     properties: properties ?? [makeProperty()],
     totalResults: (properties ?? [makeProperty()]).length,
   };
 }
 
-function makeBookResponse(
-  overrides?: Partial<HaipBookResponse>,
-): HaipBookResponse {
+function makeBookResponse(overrides?: Partial<HaipBookResponse>): HaipBookResponse {
   return {
     confirmationNumber: 'HAIP-12345',
     externalConfirmationCode: 'OTAIP-EXT-001',

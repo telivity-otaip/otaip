@@ -11,7 +11,12 @@
  * Domain source: OTAIP Lodging Knowledge Base §10 (Content Merging After Deduplication)
  */
 
-import type { RawHotelResult, CanonicalProperty, GeoCoordinates, HotelAddress } from '../../types/hotel-common.js';
+import type {
+  RawHotelResult,
+  CanonicalProperty,
+  GeoCoordinates,
+  HotelAddress,
+} from '../../types/hotel-common.js';
 import type { MergeDecision } from '../types.js';
 
 /**
@@ -33,7 +38,9 @@ function getTrust(sourceId: string): number {
 
 /** Pick the most trusted source's value for an attribute. */
 function pickBestSource(results: RawHotelResult[]): RawHotelResult {
-  const sorted = [...results].sort((a, b) => getTrust(a.source.sourceId) - getTrust(b.source.sourceId));
+  const sorted = [...results].sort(
+    (a, b) => getTrust(a.source.sourceId) - getTrust(b.source.sourceId),
+  );
   return sorted[0]!;
 }
 
@@ -73,7 +80,7 @@ function pickBestAddress(results: RawHotelResult[]): HotelAddress {
     if (r.address.countryCode) score++;
 
     // Boost by trust
-    score += (10 - getTrust(r.source.sourceId));
+    score += 10 - getTrust(r.source.sourceId);
 
     if (score > bestScore) {
       bestScore = score;
@@ -156,7 +163,9 @@ export function singletonCanonical(result: RawHotelResult): CanonicalProperty {
 
 function buildMergeReasoning(decision: MergeDecision, results: RawHotelResult[]): string {
   const sb = decision.scoreBreakdown;
-  const sources = results.map((r) => `${r.source.sourceId}:${r.source.sourcePropertyId}`).join(', ');
+  const sources = results
+    .map((r) => `${r.source.sourceId}:${r.source.sourcePropertyId}`)
+    .join(', ');
   const parts: string[] = [
     `Merged ${results.length} sources (${sources})`,
     `Composite score: ${decision.score.toFixed(3)}`,

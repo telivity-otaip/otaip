@@ -59,11 +59,22 @@ class FastMockAdapter implements HotelSourceAdapter {
         starRating: 3,
         amenities: ['WiFi'],
         roomTypes: [{ roomTypeId: 'FM-001-STD', description: 'Standard Room', maxOccupancy: 2 }],
-        rates: [{
-          rateId: 'FM-001-R1', roomTypeId: 'FM-001-STD', nightlyRate: '100.00', totalRate: '200.00',
-          currency: 'USD', rateType: 'bar', paymentModel: 'pay_at_property',
-          cancellationPolicy: { refundable: true, deadlines: [{ hoursBeforeCheckin: 24, penaltyType: 'nights', penaltyValue: 1 }], freeCancel24hrBooking: true },
-        }],
+        rates: [
+          {
+            rateId: 'FM-001-R1',
+            roomTypeId: 'FM-001-STD',
+            nightlyRate: '100.00',
+            totalRate: '200.00',
+            currency: 'USD',
+            rateType: 'bar',
+            paymentModel: 'pay_at_property',
+            cancellationPolicy: {
+              refundable: true,
+              deadlines: [{ hoursBeforeCheckin: 24, penaltyType: 'nights', penaltyValue: 1 }],
+              freeCancel24hrBooking: true,
+            },
+          },
+        ],
         photos: [],
       },
     ];
@@ -184,15 +195,15 @@ describe('Agent 20.1 — Hotel Search Aggregator', () => {
 
   describe('Input validation', () => {
     it('rejects missing destination', async () => {
-      await expect(
-        agent.execute({ data: { ...VALID_INPUT, destination: '' } }),
-      ).rejects.toThrow('destination');
+      await expect(agent.execute({ data: { ...VALID_INPUT, destination: '' } })).rejects.toThrow(
+        'destination',
+      );
     });
 
     it('rejects missing check-in date', async () => {
-      await expect(
-        agent.execute({ data: { ...VALID_INPUT, checkIn: '' } }),
-      ).rejects.toThrow('checkIn');
+      await expect(agent.execute({ data: { ...VALID_INPUT, checkIn: '' } })).rejects.toThrow(
+        'checkIn',
+      );
     });
 
     it('rejects check-out before check-in', async () => {
@@ -202,15 +213,13 @@ describe('Agent 20.1 — Hotel Search Aggregator', () => {
     });
 
     it('rejects zero rooms', async () => {
-      await expect(
-        agent.execute({ data: { ...VALID_INPUT, rooms: 0 } }),
-      ).rejects.toThrow('rooms');
+      await expect(agent.execute({ data: { ...VALID_INPUT, rooms: 0 } })).rejects.toThrow('rooms');
     });
 
     it('rejects zero adults', async () => {
-      await expect(
-        agent.execute({ data: { ...VALID_INPUT, adults: 0 } }),
-      ).rejects.toThrow('adults');
+      await expect(agent.execute({ data: { ...VALID_INPUT, adults: 0 } })).rejects.toThrow(
+        'adults',
+      );
     });
   });
 
@@ -223,9 +232,7 @@ describe('Agent 20.1 — Hotel Search Aggregator', () => {
 
     it('throws when not initialized', async () => {
       const uninit = new HotelSearchAggregatorAgent();
-      await expect(
-        uninit.execute({ data: VALID_INPUT }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninit.execute({ data: VALID_INPUT })).rejects.toThrow('not been initialized');
     });
 
     it('reports healthy status after initialization', async () => {

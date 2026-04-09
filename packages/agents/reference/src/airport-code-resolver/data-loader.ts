@@ -43,9 +43,7 @@ export async function loadAirportData(dataDir?: string): Promise<AirportDataset>
 
   const airports = await loadJsonFile<ProcessedAirport[]>(airportsPath);
 
-  const metroAreas = existsSync(metroPath)
-    ? await loadJsonFile<MetroArea[]>(metroPath)
-    : [];
+  const metroAreas = existsSync(metroPath) ? await loadJsonFile<MetroArea[]>(metroPath) : [];
 
   const decommissioned = existsSync(decommissionedPath)
     ? await loadJsonFile<DecommissionedAirport[]>(decommissionedPath)
@@ -58,4 +56,3 @@ export async function loadAirportData(dataDir?: string): Promise<AirportDataset>
     loadedAt: new Date(),
   };
 }
-

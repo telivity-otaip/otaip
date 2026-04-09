@@ -63,11 +63,13 @@ describe('ADM Prevention', () => {
 
     it('fails when duplicate found', async () => {
       const input = makeInput({
-        duplicate_check_pnrs: [{
-          record_locator: 'DEF456',
-          passenger_name: 'SMITH/JOHN',
-          segments: [{ carrier: 'BA', flight_number: '115', departure_date: '2026-06-15' }],
-        }],
+        duplicate_check_pnrs: [
+          {
+            record_locator: 'DEF456',
+            passenger_name: 'SMITH/JOHN',
+            segments: [{ carrier: 'BA', flight_number: '115', departure_date: '2026-06-15' }],
+          },
+        ],
       });
       const result = await agent.execute({ data: input });
       const check = result.data.result.checks.find((c) => c.check_id === 'DUPLICATE_BOOKING');
@@ -77,11 +79,13 @@ describe('ADM Prevention', () => {
 
     it('ignores same PNR in duplicate list', async () => {
       const input = makeInput({
-        duplicate_check_pnrs: [{
-          record_locator: 'ABC123', // same as booking
-          passenger_name: 'SMITH/JOHN',
-          segments: [{ carrier: 'BA', flight_number: '115', departure_date: '2026-06-15' }],
-        }],
+        duplicate_check_pnrs: [
+          {
+            record_locator: 'ABC123', // same as booking
+            passenger_name: 'SMITH/JOHN',
+            segments: [{ carrier: 'BA', flight_number: '115', departure_date: '2026-06-15' }],
+          },
+        ],
       });
       const result = await agent.execute({ data: input });
       const check = result.data.result.checks.find((c) => c.check_id === 'DUPLICATE_BOOKING');
@@ -90,11 +94,13 @@ describe('ADM Prevention', () => {
 
     it('ignores different passenger', async () => {
       const input = makeInput({
-        duplicate_check_pnrs: [{
-          record_locator: 'DEF456',
-          passenger_name: 'JONES/MARY',
-          segments: [{ carrier: 'BA', flight_number: '115', departure_date: '2026-06-15' }],
-        }],
+        duplicate_check_pnrs: [
+          {
+            record_locator: 'DEF456',
+            passenger_name: 'JONES/MARY',
+            segments: [{ carrier: 'BA', flight_number: '115', departure_date: '2026-06-15' }],
+          },
+        ],
       });
       const result = await agent.execute({ data: input });
       const check = result.data.result.checks.find((c) => c.check_id === 'DUPLICATE_BOOKING');
@@ -104,20 +110,26 @@ describe('ADM Prevention', () => {
 
   describe('Check 2: Fare basis vs class mismatch', () => {
     it('passes when fare basis matches class', async () => {
-      const result = await agent.execute({ data: makeInput({ fare_basis: 'HOWUS', booked_class: 'H' }) });
+      const result = await agent.execute({
+        data: makeInput({ fare_basis: 'HOWUS', booked_class: 'H' }),
+      });
       const check = result.data.result.checks.find((c) => c.check_id === 'FARE_CLASS_MISMATCH');
       expect(check!.passed).toBe(true);
     });
 
     it('fails when fare basis does not match class', async () => {
-      const result = await agent.execute({ data: makeInput({ fare_basis: 'YOWUS', booked_class: 'B' }) });
+      const result = await agent.execute({
+        data: makeInput({ fare_basis: 'YOWUS', booked_class: 'B' }),
+      });
       const check = result.data.result.checks.find((c) => c.check_id === 'FARE_CLASS_MISMATCH');
       expect(check!.passed).toBe(false);
       expect(check!.severity).toBe('blocking');
     });
 
     it('allows business class cross-mapping (C/J/D)', async () => {
-      const result = await agent.execute({ data: makeInput({ fare_basis: 'COWUS', booked_class: 'J' }) });
+      const result = await agent.execute({
+        data: makeInput({ fare_basis: 'COWUS', booked_class: 'J' }),
+      });
       const check = result.data.result.checks.find((c) => c.check_id === 'FARE_CLASS_MISMATCH');
       expect(check!.passed).toBe(true);
     });
@@ -248,7 +260,9 @@ describe('ADM Prevention', () => {
     });
 
     it('passes for unrestricted Y class without endorsement', async () => {
-      const result = await agent.execute({ data: makeInput({ fare_basis: 'YOWUS', booked_class: 'Y' }) });
+      const result = await agent.execute({
+        data: makeInput({ fare_basis: 'YOWUS', booked_class: 'Y' }),
+      });
       const check = result.data.result.checks.find((c) => c.check_id === 'ENDORSEMENT_BOX');
       expect(check!.passed).toBe(true);
     });
@@ -364,11 +378,15 @@ describe('ADM Prevention', () => {
     });
 
     it('rejects empty fare basis', async () => {
-      await expect(agent.execute({ data: makeInput({ fare_basis: '' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ fare_basis: '' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid booked class', async () => {
-      await expect(agent.execute({ data: makeInput({ booked_class: 'XX' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ booked_class: 'XX' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
   });
 

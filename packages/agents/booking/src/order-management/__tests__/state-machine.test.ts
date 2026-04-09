@@ -71,12 +71,15 @@ describe('Test 2: Delayed confirmation — arrives after timeout but within retr
   it('transitions AWAITING → TIMEOUT → RETRY → CONFIRMED', () => {
     sm.initializeOrder('ORD-002', 'PAX-002');
     sm.capturePayment('ORD-002', 'CAP-002');
-    sm.initiateConfirmation('ORD-002', makeConfirmationRequest({
-      idempotency_key: 'k1',
-      order_id: 'ORD-002',
-      attempt_number: 1,
-      max_attempts: 3,
-    }));
+    sm.initiateConfirmation(
+      'ORD-002',
+      makeConfirmationRequest({
+        idempotency_key: 'k1',
+        order_id: 'ORD-002',
+        attempt_number: 1,
+        max_attempts: 3,
+      }),
+    );
 
     const s1 = sm.handleConfirmationTimeout('ORD-002');
     expect(s1.confirmation_status).toBe('TIMEOUT');
@@ -98,10 +101,13 @@ describe('Test 2: Delayed confirmation — arrives after timeout but within retr
   it('emits ORDER_CONFIRMATION_DELAYED event on timeout', () => {
     sm.initializeOrder('ORD-002', 'PAX-002');
     sm.capturePayment('ORD-002', 'CAP-002');
-    sm.initiateConfirmation('ORD-002', makeConfirmationRequest({
-      idempotency_key: 'k1',
-      order_id: 'ORD-002',
-    }));
+    sm.initiateConfirmation(
+      'ORD-002',
+      makeConfirmationRequest({
+        idempotency_key: 'k1',
+        order_id: 'ORD-002',
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-002');
 
     expect(audit.events).toHaveLength(1);
@@ -120,21 +126,27 @@ describe('Test 3: Failed confirmation — all retries exhausted, clean refund', 
     sm.capturePayment('ORD-003', 'CAP-003');
 
     // Attempt 1
-    sm.initiateConfirmation('ORD-003', makeConfirmationRequest({
-      idempotency_key: 'k1',
-      order_id: 'ORD-003',
-      attempt_number: 1,
-      max_attempts: 2,
-    }));
+    sm.initiateConfirmation(
+      'ORD-003',
+      makeConfirmationRequest({
+        idempotency_key: 'k1',
+        order_id: 'ORD-003',
+        attempt_number: 1,
+        max_attempts: 2,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-003');
 
     // Attempt 2 (retry)
-    sm.retryConfirmation('ORD-003', makeConfirmationRequest({
-      idempotency_key: 'k2',
-      order_id: 'ORD-003',
-      attempt_number: 2,
-      max_attempts: 2,
-    }));
+    sm.retryConfirmation(
+      'ORD-003',
+      makeConfirmationRequest({
+        idempotency_key: 'k2',
+        order_id: 'ORD-003',
+        attempt_number: 2,
+        max_attempts: 2,
+      }),
+    );
 
     // All retries exhausted → fail
     const s1 = sm.failConfirmation('ORD-003');
@@ -152,31 +164,37 @@ describe('Test 3: Failed confirmation — all retries exhausted, clean refund', 
   it('emits ORDER_CONFIRMATION_FAILED event', () => {
     sm.initializeOrder('ORD-003', 'PAX-003');
     sm.capturePayment('ORD-003', 'CAP-003');
-    sm.initiateConfirmation('ORD-003', makeConfirmationRequest({
-      idempotency_key: 'k1',
-      attempt_number: 1,
-      max_attempts: 1,
-    }));
+    sm.initiateConfirmation(
+      'ORD-003',
+      makeConfirmationRequest({
+        idempotency_key: 'k1',
+        attempt_number: 1,
+        max_attempts: 1,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-003');
     sm.failConfirmation('ORD-003');
 
-    const failedEvents = audit.events.filter(e => e.event_type === 'ORDER_CONFIRMATION_FAILED');
+    const failedEvents = audit.events.filter((e) => e.event_type === 'ORDER_CONFIRMATION_FAILED');
     expect(failedEvents).toHaveLength(1);
   });
 
   it('emits ORDER_REFUND_INITIATED event', () => {
     sm.initializeOrder('ORD-003b', 'PAX-003b');
     sm.capturePayment('ORD-003b', 'CAP-003b');
-    sm.initiateConfirmation('ORD-003b', makeConfirmationRequest({
-      idempotency_key: 'k1',
-      attempt_number: 1,
-      max_attempts: 1,
-    }));
+    sm.initiateConfirmation(
+      'ORD-003b',
+      makeConfirmationRequest({
+        idempotency_key: 'k1',
+        attempt_number: 1,
+        max_attempts: 1,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-003b');
     sm.failConfirmation('ORD-003b');
     sm.initiateRefund('ORD-003b', 'REF-003b');
 
-    const refundEvents = audit.events.filter(e => e.event_type === 'ORDER_REFUND_INITIATED');
+    const refundEvents = audit.events.filter((e) => e.event_type === 'ORDER_REFUND_INITIATED');
     expect(refundEvents).toHaveLength(1);
   });
 });
@@ -189,39 +207,51 @@ describe('Test 5: Duplicate retry prevention', () => {
   it('rejects retry with duplicate idempotency key', () => {
     sm.initializeOrder('ORD-005', 'PAX-005');
     sm.capturePayment('ORD-005', 'CAP-005');
-    sm.initiateConfirmation('ORD-005', makeConfirmationRequest({
-      idempotency_key: 'same-key',
-      attempt_number: 1,
-      max_attempts: 3,
-    }));
+    sm.initiateConfirmation(
+      'ORD-005',
+      makeConfirmationRequest({
+        idempotency_key: 'same-key',
+        attempt_number: 1,
+        max_attempts: 3,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-005');
 
     // Retry with SAME key should throw
     expect(() =>
-      sm.retryConfirmation('ORD-005', makeConfirmationRequest({
-        idempotency_key: 'same-key',
-        attempt_number: 2,
-        max_attempts: 3,
-      })),
+      sm.retryConfirmation(
+        'ORD-005',
+        makeConfirmationRequest({
+          idempotency_key: 'same-key',
+          attempt_number: 2,
+          max_attempts: 3,
+        }),
+      ),
     ).toThrow(InvalidStateTransitionError);
   });
 
   it('allows retry with different idempotency key', () => {
     sm.initializeOrder('ORD-005b', 'PAX-005b');
     sm.capturePayment('ORD-005b', 'CAP-005b');
-    sm.initiateConfirmation('ORD-005b', makeConfirmationRequest({
-      idempotency_key: 'key-1',
-      attempt_number: 1,
-      max_attempts: 3,
-    }));
+    sm.initiateConfirmation(
+      'ORD-005b',
+      makeConfirmationRequest({
+        idempotency_key: 'key-1',
+        attempt_number: 1,
+        max_attempts: 3,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-005b');
 
     expect(() =>
-      sm.retryConfirmation('ORD-005b', makeConfirmationRequest({
-        idempotency_key: 'key-2',
-        attempt_number: 2,
-        max_attempts: 3,
-      })),
+      sm.retryConfirmation(
+        'ORD-005b',
+        makeConfirmationRequest({
+          idempotency_key: 'key-2',
+          attempt_number: 2,
+          max_attempts: 3,
+        }),
+      ),
     ).not.toThrow();
   });
 });
@@ -234,11 +264,14 @@ describe('Test 6: Double refund prevention', () => {
   it('throws on second initiateRefund call', () => {
     sm.initializeOrder('ORD-006', 'PAX-006');
     sm.capturePayment('ORD-006', 'CAP-006');
-    sm.initiateConfirmation('ORD-006', makeConfirmationRequest({
-      idempotency_key: 'k1',
-      attempt_number: 1,
-      max_attempts: 1,
-    }));
+    sm.initiateConfirmation(
+      'ORD-006',
+      makeConfirmationRequest({
+        idempotency_key: 'k1',
+        attempt_number: 1,
+        max_attempts: 1,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-006');
     sm.failConfirmation('ORD-006');
 
@@ -278,11 +311,14 @@ describe('Test 7: Change request on unconfirmed booking', () => {
   it('canAcceptChange returns false when confirmation is FAILED', () => {
     sm.initializeOrder('ORD-007d', 'PAX-007d');
     sm.capturePayment('ORD-007d', 'CAP-007d');
-    sm.initiateConfirmation('ORD-007d', makeConfirmationRequest({
-      idempotency_key: 'k1',
-      attempt_number: 1,
-      max_attempts: 1,
-    }));
+    sm.initiateConfirmation(
+      'ORD-007d',
+      makeConfirmationRequest({
+        idempotency_key: 'k1',
+        attempt_number: 1,
+        max_attempts: 1,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-007d');
     sm.failConfirmation('ORD-007d');
     expect(sm.canAcceptChange('ORD-007d')).toBe(false);
@@ -309,11 +345,14 @@ describe('Test 8: Refund window expiry', () => {
   it('cannot refund before confirmation is FAILED', () => {
     sm.initializeOrder('ORD-008', 'PAX-008');
     sm.capturePayment('ORD-008', 'CAP-008');
-    sm.initiateConfirmation('ORD-008', makeConfirmationRequest({
-      idempotency_key: 'k1',
-      attempt_number: 1,
-      max_attempts: 1,
-    }));
+    sm.initiateConfirmation(
+      'ORD-008',
+      makeConfirmationRequest({
+        idempotency_key: 'k1',
+        attempt_number: 1,
+        max_attempts: 1,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-008');
 
     // Confirmation is TIMEOUT, not FAILED — refund should be blocked
@@ -390,7 +429,9 @@ describe('Invalid state machine operations', () => {
     sm.initializeOrder('ORD-F', 'PAX-F');
     sm.capturePayment('ORD-F', 'CAP-F');
     // Skipping initiateConfirmation — still PENDING
-    expect(() => sm.handleConfirmationSuccess('ORD-F', 'TKT-F')).toThrow(InvalidStateTransitionError);
+    expect(() => sm.handleConfirmationSuccess('ORD-F', 'TKT-F')).toThrow(
+      InvalidStateTransitionError,
+    );
   });
 
   it('cannot retry when not in TIMEOUT', () => {
@@ -407,19 +448,25 @@ describe('Invalid state machine operations', () => {
   it('rejects retry exceeding max attempts', () => {
     sm.initializeOrder('ORD-H', 'PAX-H');
     sm.capturePayment('ORD-H', 'CAP-H');
-    sm.initiateConfirmation('ORD-H', makeConfirmationRequest({
-      idempotency_key: 'kh1',
-      attempt_number: 1,
-      max_attempts: 1,
-    }));
+    sm.initiateConfirmation(
+      'ORD-H',
+      makeConfirmationRequest({
+        idempotency_key: 'kh1',
+        attempt_number: 1,
+        max_attempts: 1,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-H');
 
     expect(() =>
-      sm.retryConfirmation('ORD-H', makeConfirmationRequest({
-        idempotency_key: 'kh2',
-        attempt_number: 2,
-        max_attempts: 1,
-      })),
+      sm.retryConfirmation(
+        'ORD-H',
+        makeConfirmationRequest({
+          idempotency_key: 'kh2',
+          attempt_number: 2,
+          max_attempts: 1,
+        }),
+      ),
     ).toThrow(InvalidStateTransitionError);
   });
 });

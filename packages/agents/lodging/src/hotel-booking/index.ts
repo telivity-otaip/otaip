@@ -7,22 +7,12 @@
  * Downstream: Feeds Agent 20.7 (Confirmation Verification) and Agent 20.6 (Modification)
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { BookingInput, BookingOutput } from './types.js';
 import { executeBooking, getBooking, clearBookingStore } from './booking-flow.js';
 
-export class HotelBookingAgent
-  implements Agent<BookingInput, BookingOutput>
-{
+export class HotelBookingAgent implements Agent<BookingInput, BookingOutput> {
   readonly id = '20.5';
   readonly name = 'Hotel Booking';
   readonly version = '0.1.0';
@@ -33,9 +23,7 @@ export class HotelBookingAgent
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<BookingInput>,
-  ): Promise<AgentOutput<BookingOutput>> {
+  async execute(input: AgentInput<BookingInput>): Promise<AgentOutput<BookingOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -97,25 +85,52 @@ export class HotelBookingAgent
 
     const validOps = ['book', 'verify_rate', 'get_booking'];
     if (!validOps.includes(data.operation)) {
-      throw new AgentInputValidationError(this.id, 'operation', `Invalid operation. Must be one of: ${validOps.join(', ')}`);
+      throw new AgentInputValidationError(
+        this.id,
+        'operation',
+        `Invalid operation. Must be one of: ${validOps.join(', ')}`,
+      );
     }
 
     if (data.operation === 'book' || data.operation === 'verify_rate') {
       if (!data.bookingRequest) {
-        throw new AgentInputValidationError(this.id, 'bookingRequest', 'Booking request is required for book/verify_rate operations');
+        throw new AgentInputValidationError(
+          this.id,
+          'bookingRequest',
+          'Booking request is required for book/verify_rate operations',
+        );
       }
       if (!data.bookingRequest.guest) {
-        throw new AgentInputValidationError(this.id, 'bookingRequest.guest', 'Guest details are required');
+        throw new AgentInputValidationError(
+          this.id,
+          'bookingRequest.guest',
+          'Guest details are required',
+        );
       }
       if (!data.bookingRequest.checkIn || !data.bookingRequest.checkOut) {
-        throw new AgentInputValidationError(this.id, 'bookingRequest.dates', 'Check-in and check-out dates are required');
+        throw new AgentInputValidationError(
+          this.id,
+          'bookingRequest.dates',
+          'Check-in and check-out dates are required',
+        );
       }
     }
 
     if (data.operation === 'get_booking' && !data.bookingId) {
-      throw new AgentInputValidationError(this.id, 'bookingId', 'Booking ID is required for get_booking operation');
+      throw new AgentInputValidationError(
+        this.id,
+        'bookingId',
+        'Booking ID is required for get_booking operation',
+      );
     }
   }
 }
 
-export type { BookingInput, BookingOutput, BookingRecord, BookingRequest, VirtualCardInfo, BookingOperation } from './types.js';
+export type {
+  BookingInput,
+  BookingOutput,
+  BookingRecord,
+  BookingRequest,
+  VirtualCardInfo,
+  BookingOperation,
+} from './types.js';

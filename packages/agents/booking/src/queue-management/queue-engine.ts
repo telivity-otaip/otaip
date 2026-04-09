@@ -55,7 +55,10 @@ function assignPriority(entry: QueueEntry, now: Date): QueuePriority {
 // Action routing
 // ---------------------------------------------------------------------------
 
-function determineAction(entry: QueueEntry, priority: QueuePriority): { action: QueueAction; reason: string; target_agent?: string } {
+function determineAction(
+  entry: QueueEntry,
+  priority: QueuePriority,
+): { action: QueueAction; reason: string; target_agent?: string } {
   switch (entry.entry_type) {
     case 'TTL_DEADLINE':
       if (priority === 'urgent') {
@@ -117,7 +120,11 @@ function buildQueueCommands(gds: QueueGdsSystem, queueNumber: number): QueueComm
       return [
         { gds, command: `QR/${queueNumber}`, description: `Read queue ${queueNumber}` },
         { gds, command: `QD/${queueNumber}`, description: `Display queue ${queueNumber} count` },
-        { gds, command: `QC/${queueNumber}`, description: `Clear current item from queue ${queueNumber}` },
+        {
+          gds,
+          command: `QC/${queueNumber}`,
+          description: `Clear current item from queue ${queueNumber}`,
+        },
         { gds, command: `QN`, description: 'Move to next item in queue' },
         { gds, command: `QF`, description: 'Exit queue mode' },
       ];
@@ -178,9 +185,10 @@ export function processQueue(input: QueueManagementInput): QueueManagementOutput
     low: results.filter((r) => r.priority === 'low').length,
   };
 
-  const commands = input.gds && input.queue_number != null
-    ? buildQueueCommands(input.gds, input.queue_number)
-    : undefined;
+  const commands =
+    input.gds && input.queue_number != null
+      ? buildQueueCommands(input.gds, input.queue_number)
+      : undefined;
 
   return { results, commands, summary };
 }

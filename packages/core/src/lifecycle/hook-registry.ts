@@ -8,10 +8,19 @@ import type {
   HookHandler,
   HookContext,
   BeforeToolCallResult,
+  HookRegistryConfig,
+  HookErrorPolicy,
 } from './types.js';
 
 export class HookRegistry {
   private readonly hooks = new Map<LifecycleEvent, HookHandler[]>();
+  private readonly errorPolicy: HookErrorPolicy;
+  private readonly onHookError?: (error: unknown, event: LifecycleEvent) => void;
+
+  constructor(config?: HookRegistryConfig) {
+    this.errorPolicy = config?.errorPolicy ?? 'swallow';
+    this.onHookError = config?.onHookError;
+  }
 
   /** Register a handler for a lifecycle event. Returns an unregister function. */
   on(event: LifecycleEvent, handler: HookHandler): () => void {
@@ -40,10 +49,7 @@ export class HookRegistry {
    * Errors in individual handlers are caught and logged — they never
    * crash the loop or prevent subsequent handlers from running.
    */
-  async execute(
-    event: LifecycleEvent,
-    context: HookContext,
-  ): Promise<BeforeToolCallResult | void> {
+  async execute(event: LifecycleEvent, context: HookContext): Promise<BeforeToolCallResult | void> {
     const handlers = this.hooks.get(event);
     if (!handlers || handlers.length === 0) return;
 
@@ -59,8 +65,14 @@ export class HookRegistry {
         ) {
           return result as BeforeToolCallResult;
         }
-      } catch {
-        // Hook errors are swallowed — hooks must not crash the loop.
+      } catch (error: unknown) {
+        if (this.errorPolicy === 'propagate') {
+          throw error;
+        }
+        if (this.errorPolicy === 'log' && this.onHookError) {
+          this.onHookError(error, event);
+        }
+        // 'swallow' (default): silently continue
       }
     }
   }

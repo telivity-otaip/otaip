@@ -7,16 +7,8 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import Decimal from 'decimal.js';
 import type {
   OrderManagementInput,
@@ -33,15 +25,21 @@ import type {
 } from './types.js';
 
 const VALID_OPERATIONS = new Set([
-  'createOrder', 'modifyOrder', 'cancelOrder', 'getOrder', 'listOrders',
+  'createOrder',
+  'modifyOrder',
+  'cancelOrder',
+  'getOrder',
+  'listOrders',
 ]);
 
 const MODIFIABLE_STATUSES: ReadonlySet<OrderStatus> = new Set(['PENDING', 'CONFIRMED']);
-const CANCELLABLE_STATUSES: ReadonlySet<OrderStatus> = new Set(['PENDING', 'CONFIRMED', 'MODIFIED']);
+const CANCELLABLE_STATUSES: ReadonlySet<OrderStatus> = new Set([
+  'PENDING',
+  'CONFIRMED',
+  'MODIFIED',
+]);
 
-export class OrderManagement
-  implements Agent<OrderManagementInput, OrderManagementOutput>
-{
+export class OrderManagement implements Agent<OrderManagementInput, OrderManagementOutput> {
   readonly id = '3.6';
   readonly name = 'Order Management';
   readonly version = '0.1.0';
@@ -129,10 +127,12 @@ export class OrderManagement
     const orderId = `ORD${String(this.orderCounter).padStart(6, '0')}`;
     const now = new Date().toISOString();
 
-    const totalAmount = data.items.reduce(
-      (sum, item) => sum.plus(new Decimal(item.amount).times(item.quantity)),
-      new Decimal(0),
-    ).toFixed(2);
+    const totalAmount = data.items
+      .reduce(
+        (sum, item) => sum.plus(new Decimal(item.amount).times(item.quantity)),
+        new Decimal(0),
+      )
+      .toFixed(2);
 
     const initialHistory: OrderHistoryEntry = {
       timestamp: now,
@@ -204,10 +204,12 @@ export class OrderManagement
 
     if (data.items) {
       order.items = [...data.items];
-      order.totalAmount = data.items.reduce(
-        (sum, item) => sum.plus(new Decimal(item.amount).times(item.quantity)),
-        new Decimal(0),
-      ).toFixed(2);
+      order.totalAmount = data.items
+        .reduce(
+          (sum, item) => sum.plus(new Decimal(item.amount).times(item.quantity)),
+          new Decimal(0),
+        )
+        .toFixed(2);
     }
     if (data.passengerName) {
       order.passengerName = data.passengerName;
@@ -360,13 +362,21 @@ export class OrderManagement
 
   private validateCreateOrder(data: CreateOrderData | undefined): void {
     if (!data) {
-      throw new AgentInputValidationError(this.id, 'createOrder', 'createOrder data is required for createOrder operation.');
+      throw new AgentInputValidationError(
+        this.id,
+        'createOrder',
+        'createOrder data is required for createOrder operation.',
+      );
     }
     if (!data.passengerName || data.passengerName.trim().length === 0) {
       throw new AgentInputValidationError(this.id, 'passengerName', 'Passenger name is required.');
     }
     if (!data.passengerEmail || data.passengerEmail.trim().length === 0) {
-      throw new AgentInputValidationError(this.id, 'passengerEmail', 'Passenger email is required.');
+      throw new AgentInputValidationError(
+        this.id,
+        'passengerEmail',
+        'Passenger email is required.',
+      );
     }
     if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
       throw new AgentInputValidationError(this.id, 'items', 'At least one order item is required.');
@@ -384,7 +394,11 @@ export class OrderManagement
 
   private validateOrderItem(item: OrderItem): void {
     if (!item.description || item.description.trim().length === 0) {
-      throw new AgentInputValidationError(this.id, 'item.description', 'Item description is required.');
+      throw new AgentInputValidationError(
+        this.id,
+        'item.description',
+        'Item description is required.',
+      );
     }
     if (!item.amount) {
       throw new AgentInputValidationError(this.id, 'item.amount', 'Item amount is required.');
@@ -392,22 +406,38 @@ export class OrderManagement
     try {
       const d = new Decimal(item.amount);
       if (d.isNegative()) {
-        throw new AgentInputValidationError(this.id, 'item.amount', 'Item amount must be non-negative.');
+        throw new AgentInputValidationError(
+          this.id,
+          'item.amount',
+          'Item amount must be non-negative.',
+        );
       }
     } catch {
-      throw new AgentInputValidationError(this.id, 'item.amount', 'Item amount must be a valid decimal number.');
+      throw new AgentInputValidationError(
+        this.id,
+        'item.amount',
+        'Item amount must be a valid decimal number.',
+      );
     }
     if (!item.currency || item.currency.trim().length === 0) {
       throw new AgentInputValidationError(this.id, 'item.currency', 'Item currency is required.');
     }
     if (item.quantity == null || item.quantity < 1) {
-      throw new AgentInputValidationError(this.id, 'item.quantity', 'Item quantity must be at least 1.');
+      throw new AgentInputValidationError(
+        this.id,
+        'item.quantity',
+        'Item quantity must be at least 1.',
+      );
     }
   }
 
   private validateModifyOrder(data: ModifyOrderData | undefined): void {
     if (!data) {
-      throw new AgentInputValidationError(this.id, 'modifyOrder', 'modifyOrder data is required for modifyOrder operation.');
+      throw new AgentInputValidationError(
+        this.id,
+        'modifyOrder',
+        'modifyOrder data is required for modifyOrder operation.',
+      );
     }
     if (!data.orderId || data.orderId.trim().length === 0) {
       throw new AgentInputValidationError(this.id, 'orderId', 'Order ID is required.');
@@ -417,7 +447,11 @@ export class OrderManagement
     }
     if (data.items) {
       if (!Array.isArray(data.items) || data.items.length === 0) {
-        throw new AgentInputValidationError(this.id, 'items', 'Items array must not be empty when provided.');
+        throw new AgentInputValidationError(
+          this.id,
+          'items',
+          'Items array must not be empty when provided.',
+        );
       }
       for (const item of data.items) {
         this.validateOrderItem(item);
@@ -427,7 +461,11 @@ export class OrderManagement
 
   private validateCancelOrder(data: CancelOrderData | undefined): void {
     if (!data) {
-      throw new AgentInputValidationError(this.id, 'cancelOrder', 'cancelOrder data is required for cancelOrder operation.');
+      throw new AgentInputValidationError(
+        this.id,
+        'cancelOrder',
+        'cancelOrder data is required for cancelOrder operation.',
+      );
     }
     if (!data.orderId || data.orderId.trim().length === 0) {
       throw new AgentInputValidationError(this.id, 'orderId', 'Order ID is required.');
@@ -439,7 +477,11 @@ export class OrderManagement
 
   private validateGetOrder(data: GetOrderData | undefined): void {
     if (!data) {
-      throw new AgentInputValidationError(this.id, 'getOrder', 'getOrder data is required for getOrder operation.');
+      throw new AgentInputValidationError(
+        this.id,
+        'getOrder',
+        'getOrder data is required for getOrder operation.',
+      );
     }
     if (!data.orderId || data.orderId.trim().length === 0) {
       throw new AgentInputValidationError(this.id, 'orderId', 'Order ID is required.');

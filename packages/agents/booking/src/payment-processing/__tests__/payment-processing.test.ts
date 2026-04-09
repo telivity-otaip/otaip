@@ -6,10 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { PaymentProcessing } from '../index.js';
-import type {
-  PaymentProcessingInput,
-  FormOfPayment,
-} from '../types.js';
+import type { PaymentProcessingInput, FormOfPayment } from '../types.js';
 
 let agent: PaymentProcessing;
 
@@ -322,7 +319,9 @@ describe('Payment Processing', () => {
       const result = await agent.execute({
         data: {
           operation: 'buildGDSFOPString',
-          buildGDSFOPString: { fop: ccFOP({ cardToken: 'TOK999', expiryMonth: 3, expiryYear: 2027 }) },
+          buildGDSFOPString: {
+            fop: ccFOP({ cardToken: 'TOK999', expiryMonth: 3, expiryYear: 2027 }),
+          },
         },
       });
       expect(result.data.success).toBe(true);
@@ -632,9 +631,9 @@ describe('Payment Processing', () => {
     });
 
     it('rejects validateFOP without data', async () => {
-      await expect(
-        agent.execute({ data: { operation: 'validateFOP' } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: { operation: 'validateFOP' } })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects buildPaymentInstruction without amount', async () => {
@@ -680,9 +679,9 @@ describe('Payment Processing', () => {
     });
 
     it('rejects buildGDSFOPString without data', async () => {
-      await expect(
-        agent.execute({ data: { operation: 'buildGDSFOPString' } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: { operation: 'buildGDSFOPString' } })).rejects.toThrow(
+        'Invalid input',
+      );
     });
   });
 

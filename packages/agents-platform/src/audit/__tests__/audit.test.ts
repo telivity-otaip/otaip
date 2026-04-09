@@ -13,8 +13,13 @@ beforeAll(async () => {
   await agent.initialize();
 });
 
-afterAll(() => { agent.destroy(); });
-beforeEach(() => { agent.destroy(); void agent.initialize(); });
+afterAll(() => {
+  agent.destroy();
+});
+beforeEach(() => {
+  agent.destroy();
+  void agent.initialize();
+});
 
 function logEvent(overrides: Partial<AuditInput> = {}): AuditInput {
   return {
@@ -52,20 +57,28 @@ describe('Audit & Compliance', () => {
     });
 
     it('rejects missing event_type', async () => {
-      await expect(agent.execute({ data: { operation: 'log_event', agent_id: '3.2', payload: {} } })).rejects.toThrow('Invalid');
+      await expect(
+        agent.execute({ data: { operation: 'log_event', agent_id: '3.2', payload: {} } }),
+      ).rejects.toThrow('Invalid');
     });
 
     it('rejects missing payload', async () => {
-      await expect(agent.execute({ data: { operation: 'log_event', event_type: 'booking_created', agent_id: '3.2' } })).rejects.toThrow('Invalid');
+      await expect(
+        agent.execute({
+          data: { operation: 'log_event', event_type: 'booking_created', agent_id: '3.2' },
+        }),
+      ).rejects.toThrow('Invalid');
     });
   });
 
   describe('PII redaction', () => {
     it('redacts PII fields when pii_present=true', async () => {
-      const res = await agent.execute({ data: logEvent({
-        payload: { passport_number: 'A12345', email: 'john@example.com', name: 'SMITH' },
-        pii_present: true,
-      }) });
+      const res = await agent.execute({
+        data: logEvent({
+          payload: { passport_number: 'A12345', email: 'john@example.com', name: 'SMITH' },
+          pii_present: true,
+        }),
+      });
       expect(res.data.entry!.payload['passport_number']).toBe('[REDACTED]');
       expect(res.data.entry!.payload['email']).toBe('[REDACTED]');
       expect(res.data.entry!.payload['name']).toBe('SMITH'); // not a PII field
@@ -73,36 +86,46 @@ describe('Audit & Compliance', () => {
     });
 
     it('does not redact when pii_present=false', async () => {
-      const res = await agent.execute({ data: logEvent({
-        payload: { passport_number: 'A12345' },
-        pii_present: false,
-      }) });
+      const res = await agent.execute({
+        data: logEvent({
+          payload: { passport_number: 'A12345' },
+          pii_present: false,
+        }),
+      });
       expect(res.data.entry!.payload['passport_number']).toBe('A12345');
     });
 
     it('redacts nested PII fields', async () => {
-      const res = await agent.execute({ data: logEvent({
-        payload: { traveler: { email: 'test@test.com', name: 'DOE' } },
-        pii_present: true,
-      }) });
+      const res = await agent.execute({
+        data: logEvent({
+          payload: { traveler: { email: 'test@test.com', name: 'DOE' } },
+          pii_present: true,
+        }),
+      });
       const traveler = res.data.entry!.payload['traveler'] as Record<string, unknown>;
       expect(traveler['email']).toBe('[REDACTED]');
       expect(traveler['name']).toBe('DOE');
     });
 
     it('redact_pii operation redacts already-logged event', async () => {
-      const logRes = await agent.execute({ data: logEvent({
-        payload: { email: 'test@test.com', data: 'safe' },
-      }) });
+      const logRes = await agent.execute({
+        data: logEvent({
+          payload: { email: 'test@test.com', data: 'safe' },
+        }),
+      });
       const eventId = logRes.data.entry!.event_id;
 
-      const redactRes = await agent.execute({ data: { operation: 'redact_pii', event_id: eventId } });
+      const redactRes = await agent.execute({
+        data: { operation: 'redact_pii', event_id: eventId },
+      });
       expect(redactRes.data.entry!.pii_redacted).toBe(true);
       expect(redactRes.data.entry!.payload['email']).toBe('[REDACTED]');
     });
 
     it('redact_pii rejects unknown event_id', async () => {
-      await expect(agent.execute({ data: { operation: 'redact_pii', event_id: 'NONEXIST' } })).rejects.toThrow('not found');
+      await expect(
+        agent.execute({ data: { operation: 'redact_pii', event_id: 'NONEXIST' } }),
+      ).rejects.toThrow('not found');
     });
   });
 
@@ -117,7 +140,9 @@ describe('Audit & Compliance', () => {
     it('filters by event_type', async () => {
       await agent.execute({ data: logEvent() });
       await agent.execute({ data: logEvent({ event_type: 'ticket_issued', agent_id: '4.1' }) });
-      const res = await agent.execute({ data: { operation: 'query_audit_log', event_type: 'ticket_issued' } });
+      const res = await agent.execute({
+        data: { operation: 'query_audit_log', event_type: 'ticket_issued' },
+      });
       expect(res.data.entries!.length).toBe(1);
     });
 
@@ -137,26 +162,37 @@ describe('Audit & Compliance', () => {
 
   describe('flag_compliance_issue', () => {
     it('creates compliance issue', async () => {
-      const res = await agent.execute({ data: {
-        operation: 'flag_compliance_issue',
-        issue_type: 'gdpr_data_retention', description: 'PII data older than 3 years.',
-        severity: 'high', affected_records: ['EVT001'],
-      } });
+      const res = await agent.execute({
+        data: {
+          operation: 'flag_compliance_issue',
+          issue_type: 'gdpr_data_retention',
+          description: 'PII data older than 3 years.',
+          severity: 'high',
+          affected_records: ['EVT001'],
+        },
+      });
       expect(res.data.issue!.issue_id).toMatch(/^ISS\d{6}$/);
       expect(res.data.issue!.resolved).toBe(false);
     });
 
     it('warns on critical severity', async () => {
-      const res = await agent.execute({ data: {
-        operation: 'flag_compliance_issue',
-        issue_type: 'pci_data_exposure', description: 'Credit card data exposed.',
-        severity: 'critical',
-      } });
+      const res = await agent.execute({
+        data: {
+          operation: 'flag_compliance_issue',
+          issue_type: 'pci_data_exposure',
+          description: 'Credit card data exposed.',
+          severity: 'critical',
+        },
+      });
       expect(res.warnings).toBeDefined();
     });
 
     it('rejects missing fields', async () => {
-      await expect(agent.execute({ data: { operation: 'flag_compliance_issue', description: 'test', severity: 'low' } })).rejects.toThrow('Invalid');
+      await expect(
+        agent.execute({
+          data: { operation: 'flag_compliance_issue', description: 'test', severity: 'low' },
+        }),
+      ).rejects.toThrow('Invalid');
     });
   });
 
@@ -164,11 +200,14 @@ describe('Audit & Compliance', () => {
     it('generates compliance report', async () => {
       await agent.execute({ data: logEvent({ pii_present: true }) });
       await agent.execute({ data: logEvent() });
-      await agent.execute({ data: {
-        operation: 'flag_compliance_issue',
-        issue_type: 'iata_audit_gap', description: 'Missing audit.',
-        severity: 'medium',
-      } });
+      await agent.execute({
+        data: {
+          operation: 'flag_compliance_issue',
+          issue_type: 'iata_audit_gap',
+          description: 'Missing audit.',
+          severity: 'medium',
+        },
+      });
 
       const res = await agent.execute({ data: { operation: 'get_compliance_report' } });
       expect(res.data.report!.total_events).toBe(2);
@@ -180,8 +219,13 @@ describe('Audit & Compliance', () => {
   });
 
   describe('Agent compliance', () => {
-    it('has correct id/name', () => { expect(agent.id).toBe('9.4'); expect(agent.name).toBe('Audit & Compliance'); });
-    it('reports healthy', async () => { expect((await agent.health()).status).toBe('healthy'); });
+    it('has correct id/name', () => {
+      expect(agent.id).toBe('9.4');
+      expect(agent.name).toBe('Audit & Compliance');
+    });
+    it('reports healthy', async () => {
+      expect((await agent.health()).status).toBe('healthy');
+    });
     it('throws when not initialized', async () => {
       const u = new AuditAgent();
       await expect(u.execute({ data: logEvent() })).rejects.toThrow('not been initialized');

@@ -48,9 +48,7 @@ const SEARCH_RESPONSE = {
       coordinates: { latitude: 40.7128, longitude: -74.006 },
       starRating: 4,
       amenities: ['WiFi'],
-      roomTypes: [
-        { roomTypeId: 'rt-1', name: 'Standard King', maxOccupancy: 2, bedType: 'King' },
-      ],
+      roomTypes: [{ roomTypeId: 'rt-1', name: 'Standard King', maxOccupancy: 2, bedType: 'King' }],
       rates: [
         {
           rateId: 'rate-1',
@@ -258,9 +256,7 @@ describe('HaipAdapter', () => {
         externalConfirmationCode: 'OTAIP-EXT-001',
       });
 
-      expect(fetchMock.mock.calls[0]![0]).toBe(
-        'http://localhost:3000/api/v1/connect/book',
-      );
+      expect(fetchMock.mock.calls[0]![0]).toBe('http://localhost:3000/api/v1/connect/book');
 
       // Auto-confirm: status should be 'confirmed' immediately
       expect(result.status).toBe('confirmed');

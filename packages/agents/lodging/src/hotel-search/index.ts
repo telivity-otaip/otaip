@@ -8,16 +8,8 @@
  * Downstream: Feeds Agent 20.2 (Property Deduplication) and Agent 20.4 (Rate Comparison)
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { HotelSearchInput, HotelSearchOutput } from './types.js';
 import type { HotelSourceAdapter } from './adapters/base-adapter.js';
 import { MockAmadeusHotelAdapter } from './adapters/amadeus-hotel.js';
@@ -38,9 +30,7 @@ export interface HotelSearchAggregatorOptions {
   adapters?: HotelSourceAdapter[];
 }
 
-export class HotelSearchAggregatorAgent
-  implements Agent<HotelSearchInput, HotelSearchOutput>
-{
+export class HotelSearchAggregatorAgent implements Agent<HotelSearchInput, HotelSearchOutput> {
   readonly id = '20.1';
   readonly name = 'Hotel Search Aggregator';
   readonly version = '0.1.0';
@@ -66,9 +56,7 @@ export class HotelSearchAggregatorAgent
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<HotelSearchInput>,
-  ): Promise<AgentOutput<HotelSearchOutput>> {
+  async execute(input: AgentInput<HotelSearchInput>): Promise<AgentOutput<HotelSearchOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -80,9 +68,7 @@ export class HotelSearchAggregatorAgent
     // Filter adapters if specific IDs requested
     let activeAdapters = this.adapters;
     if (input.data.adapterIds && input.data.adapterIds.length > 0) {
-      activeAdapters = this.adapters.filter((a) =>
-        input.data.adapterIds!.includes(a.adapterId),
-      );
+      activeAdapters = this.adapters.filter((a) => input.data.adapterIds!.includes(a.adapterId));
     }
 
     const result = await aggregateSearch(
@@ -158,7 +144,11 @@ export class HotelSearchAggregatorAgent
       throw new AgentInputValidationError(this.id, 'checkOut', 'Check-out date is required');
     }
     if (data.checkIn >= data.checkOut) {
-      throw new AgentInputValidationError(this.id, 'checkOut', 'Check-out date must be after check-in date');
+      throw new AgentInputValidationError(
+        this.id,
+        'checkOut',
+        'Check-out date must be after check-in date',
+      );
     }
     if (!data.rooms || data.rooms < 1) {
       throw new AgentInputValidationError(this.id, 'rooms', 'At least 1 room is required');

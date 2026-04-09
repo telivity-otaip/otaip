@@ -22,7 +22,9 @@ beforeAll(async () => {
   await agent.initialize();
 });
 
-afterAll(() => { agent.destroy(); });
+afterAll(() => {
+  agent.destroy();
+});
 
 function makeInput(overrides: Partial<OrchestratorInput> = {}): OrchestratorInput {
   return { workflow: 'exchange_flow', input: { ticket: '1234567890123' }, ...overrides };
@@ -115,7 +117,9 @@ describe('Orchestrator', () => {
         return { ...input, result: agentId };
       };
       agent.setExecutor(slowExecutor);
-      const res = await agent.execute({ data: makeInput({ workflow: 'full_booking', options: { timeout_ms: 10 } }) });
+      const res = await agent.execute({
+        data: makeInput({ workflow: 'full_booking', options: { timeout_ms: 10 } }),
+      });
       expect(res.data.status).toBe('partial');
       expect(res.data.steps.some((s) => s.status === 'skipped')).toBe(true);
       agent.setExecutor(successExecutor);
@@ -124,13 +128,20 @@ describe('Orchestrator', () => {
 
   describe('Input validation', () => {
     it('rejects unknown workflow', async () => {
-      await expect(agent.execute({ data: makeInput({ workflow: 'nonexistent' }) })).rejects.toThrow('UNKNOWN_WORKFLOW');
+      await expect(agent.execute({ data: makeInput({ workflow: 'nonexistent' }) })).rejects.toThrow(
+        'UNKNOWN_WORKFLOW',
+      );
     });
   });
 
   describe('Agent compliance', () => {
-    it('has correct id/name', () => { expect(agent.id).toBe('9.1'); expect(agent.name).toBe('Orchestrator'); });
-    it('reports healthy', async () => { expect((await agent.health()).status).toBe('healthy'); });
+    it('has correct id/name', () => {
+      expect(agent.id).toBe('9.1');
+      expect(agent.name).toBe('Orchestrator');
+    });
+    it('reports healthy', async () => {
+      expect((await agent.health()).status).toBe('healthy');
+    });
     it('throws when not initialized', async () => {
       const u = new OrchestratorAgent(successExecutor);
       await expect(u.execute({ data: makeInput() })).rejects.toThrow('not been initialized');

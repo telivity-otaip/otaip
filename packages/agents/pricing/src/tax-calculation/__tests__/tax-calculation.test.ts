@@ -66,9 +66,7 @@ describe('Tax Calculation', () => {
         (t) => t.country === 'GB' && t.code !== 'GB' && t.code !== 'UB',
       );
       // GB departure taxes should NOT apply when GB is destination (not origin)
-      const gbDepartureTaxes = result.data.taxes.filter(
-        (t) => t.country === 'GB',
-      );
+      const gbDepartureTaxes = result.data.taxes.filter((t) => t.country === 'GB');
       expect(gbDepartureTaxes.length).toBe(0);
     });
 
@@ -410,13 +408,9 @@ describe('Tax Calculation', () => {
       const result = await agent.execute({ data: input });
 
       // Departure taxes should be exempt
-      const departureTaxes = result.data.taxes.filter(
-        (t) => !t.exempt,
-      );
+      const departureTaxes = result.data.taxes.filter((t) => !t.exempt);
       // Some taxes may remain (non-departure)
-      const exemptDeparture = result.data.taxes.filter(
-        (t) => t.exempt,
-      );
+      const exemptDeparture = result.data.taxes.filter((t) => t.exempt);
       expect(exemptDeparture.length).toBeGreaterThan(0);
     });
 
@@ -515,9 +509,9 @@ describe('Tax Calculation', () => {
 
   describe('Input validation', () => {
     it('rejects empty segments', async () => {
-      await expect(
-        agent.execute({ data: makeInput({ segments: [] }) }),
-      ).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ segments: [] }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid passenger type', async () => {
@@ -567,9 +561,9 @@ describe('Tax Calculation', () => {
     });
 
     it('rejects invalid selling currency', async () => {
-      await expect(
-        agent.execute({ data: makeInput({ selling_currency: 'us' }) }),
-      ).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ selling_currency: 'us' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid NUC amount', async () => {
@@ -599,9 +593,7 @@ describe('Tax Calculation', () => {
 
     it('throws when not initialized', async () => {
       const uninit = new TaxCalculation();
-      await expect(
-        uninit.execute({ data: makeInput() }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninit.execute({ data: makeInput() })).rejects.toThrow('not been initialized');
     });
 
     it('includes warnings for exempted taxes', async () => {

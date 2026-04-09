@@ -23,7 +23,9 @@ import type {
 // Data loading
 // ---------------------------------------------------------------------------
 
-interface ProviderData { providers: Record<string, ProviderConfig> }
+interface ProviderData {
+  providers: Record<string, ProviderConfig>;
+}
 
 const require = createRequire(import.meta.url);
 const providerData = require('./data/provider-configs.json') as ProviderData;
@@ -69,9 +71,13 @@ export class ApiClient {
 
   constructor(handler?: RequestHandler) {
     // Default handler always throws — real calls are never made
-    this.requestHandler = handler ?? ((): Promise<ApiResponse> => {
-      return Promise.reject(new Error('No request handler configured. Inject a mock handler for testing.'));
-    });
+    this.requestHandler =
+      handler ??
+      ((): Promise<ApiResponse> => {
+        return Promise.reject(
+          new Error('No request handler configured. Inject a mock handler for testing.'),
+        );
+      });
   }
 
   // -----------------------------------------------------------------------
@@ -266,7 +272,7 @@ export class ApiClient {
     const now = Date.now();
     const existing = this.rateLimits.get(provider.id);
 
-    if (!existing || (now - existing.window_start) >= provider.rate_limit_window_ms) {
+    if (!existing || now - existing.window_start >= provider.rate_limit_window_ms) {
       const fresh: RateLimitState = { request_count: 0, window_start: now };
       this.rateLimits.set(provider.id, fresh);
       return fresh;
@@ -310,49 +316,115 @@ export class ApiClient {
       const msg = err.message.toLowerCase();
 
       if (msg.includes('timeout') || msg.includes('timed out')) {
-        return { category: 'TIMEOUT', original_code: 'TIMEOUT', message: err.message, provider_id: providerId, retryable: true };
+        return {
+          category: 'TIMEOUT',
+          original_code: 'TIMEOUT',
+          message: err.message,
+          provider_id: providerId,
+          retryable: true,
+        };
       }
 
       if (msg.includes('network') || msg.includes('econnrefused') || msg.includes('econnreset')) {
-        return { category: 'NETWORK_ERROR', original_code: 'NETWORK', message: err.message, provider_id: providerId, retryable: true };
+        return {
+          category: 'NETWORK_ERROR',
+          original_code: 'NETWORK',
+          message: err.message,
+          provider_id: providerId,
+          retryable: true,
+        };
       }
 
       if (msg.includes('401') || msg.includes('unauthorized') || msg.includes('auth')) {
-        return { category: 'AUTH_FAILURE', original_code: '401', message: err.message, provider_id: providerId, retryable: false };
+        return {
+          category: 'AUTH_FAILURE',
+          original_code: '401',
+          message: err.message,
+          provider_id: providerId,
+          retryable: false,
+        };
       }
 
       if (msg.includes('404') || msg.includes('not found')) {
-        return { category: 'NOT_FOUND', original_code: '404', message: err.message, provider_id: providerId, retryable: false };
+        return {
+          category: 'NOT_FOUND',
+          original_code: '404',
+          message: err.message,
+          provider_id: providerId,
+          retryable: false,
+        };
       }
 
       if (msg.includes('409') || msg.includes('conflict')) {
-        return { category: 'CONFLICT', original_code: '409', message: err.message, provider_id: providerId, retryable: false };
+        return {
+          category: 'CONFLICT',
+          original_code: '409',
+          message: err.message,
+          provider_id: providerId,
+          retryable: false,
+        };
       }
 
       if (msg.includes('429') || msg.includes('rate limit') || msg.includes('too many')) {
-        return { category: 'RATE_LIMITED', original_code: '429', message: err.message, provider_id: providerId, retryable: true };
+        return {
+          category: 'RATE_LIMITED',
+          original_code: '429',
+          message: err.message,
+          provider_id: providerId,
+          retryable: true,
+        };
       }
 
       if (msg.includes('500') || msg.includes('internal server') || msg.includes('server error')) {
-        return { category: 'SERVER_ERROR', original_code: '500', message: err.message, provider_id: providerId, retryable: true };
+        return {
+          category: 'SERVER_ERROR',
+          original_code: '500',
+          message: err.message,
+          provider_id: providerId,
+          retryable: true,
+        };
       }
 
       // EDIFACT error patterns
       if (msg.includes('edifact') || /^[A-Z]{3}\d{3}/.test(err.message)) {
-        return { category: 'EDIFACT_ERROR', original_code: err.message.slice(0, 6), message: err.message, provider_id: providerId, retryable: false };
+        return {
+          category: 'EDIFACT_ERROR',
+          original_code: err.message.slice(0, 6),
+          message: err.message,
+          provider_id: providerId,
+          retryable: false,
+        };
       }
 
       // SOAP fault patterns
       if (msg.includes('soap') || msg.includes('fault')) {
-        return { category: 'SOAP_FAULT', original_code: 'SOAP_FAULT', message: err.message, provider_id: providerId, retryable: false };
+        return {
+          category: 'SOAP_FAULT',
+          original_code: 'SOAP_FAULT',
+          message: err.message,
+          provider_id: providerId,
+          retryable: false,
+        };
       }
 
       // NDC error patterns
       if (msg.includes('ndc') || msg.includes('order')) {
-        return { category: 'NDC_ERROR', original_code: 'NDC_ERROR', message: err.message, provider_id: providerId, retryable: false };
+        return {
+          category: 'NDC_ERROR',
+          original_code: 'NDC_ERROR',
+          message: err.message,
+          provider_id: providerId,
+          retryable: false,
+        };
       }
 
-      return { category: 'UNKNOWN', original_code: 'UNKNOWN', message: err.message, provider_id: providerId, retryable: false };
+      return {
+        category: 'UNKNOWN',
+        original_code: 'UNKNOWN',
+        message: err.message,
+        provider_id: providerId,
+        retryable: false,
+      };
     }
 
     return {
@@ -387,10 +459,22 @@ export class ApiClient {
       },
       circuit_breaker: provider
         ? this.getCircuitBreakerStatus(provider)
-        : { state: 'closed', failure_count: 0, threshold: 0, last_failure_at: null, reset_at: null },
+        : {
+            state: 'closed',
+            failure_count: 0,
+            threshold: 0,
+            last_failure_at: null,
+            reset_at: null,
+          },
       rate_limit: provider
         ? this.getRateLimitStatus(provider)
-        : { provider_id: providerId, request_count: 0, max_requests: 0, window_start: new Date().toISOString(), exceeded: false },
+        : {
+            provider_id: providerId,
+            request_count: 0,
+            max_requests: 0,
+            window_start: new Date().toISOString(),
+            exceeded: false,
+          },
       success: false,
     };
   }

@@ -92,9 +92,9 @@ describe('withRetry', () => {
     const error = new Error('persistent failure');
     const fn = vi.fn().mockRejectedValue(error);
 
-    await expect(
-      withRetry(fn, { maxRetries: 2 }, undefined, noopSleep),
-    ).rejects.toThrow('persistent failure');
+    await expect(withRetry(fn, { maxRetries: 2 }, undefined, noopSleep)).rejects.toThrow(
+      'persistent failure',
+    );
     expect(fn).toHaveBeenCalledTimes(3); // initial + 2 retries
   });
 
@@ -102,9 +102,9 @@ describe('withRetry', () => {
     const fn = vi.fn().mockRejectedValue(new Error('not retryable'));
     const isRetryable = vi.fn().mockReturnValue(false);
 
-    await expect(
-      withRetry(fn, { maxRetries: 3 }, isRetryable, noopSleep),
-    ).rejects.toThrow('not retryable');
+    await expect(withRetry(fn, { maxRetries: 3 }, isRetryable, noopSleep)).rejects.toThrow(
+      'not retryable',
+    );
     expect(fn).toHaveBeenCalledTimes(1);
     expect(noopSleep).not.toHaveBeenCalled();
   });
@@ -113,9 +113,7 @@ describe('withRetry', () => {
     const fn = vi.fn().mockRejectedValue(new Error('fail'));
     const isRetryable = () => true;
 
-    await expect(
-      withRetry(fn, undefined, isRetryable, noopSleep),
-    ).rejects.toThrow('fail');
+    await expect(withRetry(fn, undefined, isRetryable, noopSleep)).rejects.toThrow('fail');
     // Default maxRetries is 3 → 4 total calls
     expect(fn).toHaveBeenCalledTimes(DEFAULT_RETRY_CONFIG.maxRetries + 1);
   });
@@ -142,9 +140,7 @@ describe('withRetry', () => {
 
   it('maxRetries=0 means no retries', async () => {
     const fn = vi.fn().mockRejectedValue(new Error('once'));
-    await expect(
-      withRetry(fn, { maxRetries: 0 }, undefined, noopSleep),
-    ).rejects.toThrow('once');
+    await expect(withRetry(fn, { maxRetries: 0 }, undefined, noopSleep)).rejects.toThrow('once');
     expect(fn).toHaveBeenCalledTimes(1);
   });
 

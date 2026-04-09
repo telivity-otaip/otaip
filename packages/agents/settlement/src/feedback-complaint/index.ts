@@ -7,16 +7,8 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import Decimal from 'decimal.js';
 import type {
   FeedbackComplaintInput,
@@ -32,17 +24,33 @@ import type {
 } from './types.js';
 
 const VALID_OPERATIONS = new Set([
-  'submitComplaint', 'updateStatus', 'getCase', 'listCases',
-  'calculateCompensation', 'generateDOTRecord',
+  'submitComplaint',
+  'updateStatus',
+  'getCase',
+  'listCases',
+  'calculateCompensation',
+  'generateDOTRecord',
 ]);
 
 const VALID_COMPLAINT_TYPES = new Set<ComplaintType>([
-  'DELAY', 'CANCELLATION', 'DOWNGRADE', 'DENIED_BOARDING',
-  'BAGGAGE', 'SERVICE_QUALITY', 'REFUND_DISPUTE', 'ACCESSIBILITY', 'OTHER',
+  'DELAY',
+  'CANCELLATION',
+  'DOWNGRADE',
+  'DENIED_BOARDING',
+  'BAGGAGE',
+  'SERVICE_QUALITY',
+  'REFUND_DISPUTE',
+  'ACCESSIBILITY',
+  'OTHER',
 ]);
 
 const VALID_STATUSES = new Set<ComplaintStatus>([
-  'SUBMITTED', 'UNDER_REVIEW', 'COMPENSATION_OFFERED', 'RESOLVED', 'ESCALATED', 'CLOSED',
+  'SUBMITTED',
+  'UNDER_REVIEW',
+  'COMPENSATION_OFFERED',
+  'RESOLVED',
+  'ESCALATED',
+  'CLOSED',
 ]);
 
 const CARRIER_RE = /^[A-Z0-9]{2}$/;
@@ -93,9 +101,10 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export class FeedbackComplaintAgent
-  implements Agent<FeedbackComplaintInput, FeedbackComplaintOutput>
-{
+export class FeedbackComplaintAgent implements Agent<
+  FeedbackComplaintInput,
+  FeedbackComplaintOutput
+> {
   readonly id = '6.5';
   readonly name = 'Feedback & Complaint';
   readonly version = '0.1.0';
@@ -300,18 +309,34 @@ export class FeedbackComplaintAgent
       }
 
       const baseAmount = this.eu261BaseByDistance(distanceKm);
-      return this.applyEU261Reduction(baseAmount, distanceKm, data, currency, `EU261 delay compensation for ${distanceKm}km, ${delayMinutes}min delay.`);
+      return this.applyEU261Reduction(
+        baseAmount,
+        distanceKm,
+        data,
+        currency,
+        `EU261 delay compensation for ${distanceKm}km, ${delayMinutes}min delay.`,
+      );
     }
 
     // CANCELLATION
     if (complaintType === 'CANCELLATION') {
       const baseAmount = this.eu261BaseByDistance(distanceKm);
-      return this.applyEU261Reduction(baseAmount, distanceKm, data, currency, `EU261 cancellation compensation for ${distanceKm}km.`);
+      return this.applyEU261Reduction(
+        baseAmount,
+        distanceKm,
+        data,
+        currency,
+        `EU261 cancellation compensation for ${distanceKm}km.`,
+      );
     }
 
     // DOWNGRADE — 30%/50%/75% of fare by distance
     if (complaintType === 'DOWNGRADE') {
-      const farePaid = data.farePaid ? new Decimal(data.farePaid) : (data.fareAmount ? new Decimal(data.fareAmount) : new Decimal('0'));
+      const farePaid = data.farePaid
+        ? new Decimal(data.farePaid)
+        : data.fareAmount
+          ? new Decimal(data.fareAmount)
+          : new Decimal('0');
       let percent: number;
       if (distanceKm <= 1500) {
         percent = 30;
@@ -335,7 +360,13 @@ export class FeedbackComplaintAgent
     // DENIED_BOARDING
     if (complaintType === 'DENIED_BOARDING') {
       const baseAmount = this.eu261BaseByDistance(distanceKm);
-      return this.applyEU261Reduction(baseAmount, distanceKm, data, currency, `EU261 denied boarding compensation for ${distanceKm}km.`);
+      return this.applyEU261Reduction(
+        baseAmount,
+        distanceKm,
+        data,
+        currency,
+        `EU261 denied boarding compensation for ${distanceKm}km.`,
+      );
     }
 
     return {
@@ -425,7 +456,8 @@ export class FeedbackComplaintAgent
         finalAmount: '0.00',
         currency,
         reductionPercent: 0,
-        notes: 'US DOT does not mandate delay compensation. Carrier customer service policies apply.',
+        notes:
+          'US DOT does not mandate delay compensation. Carrier customer service policies apply.',
       };
     }
 
@@ -444,7 +476,11 @@ export class FeedbackComplaintAgent
 
     // DOWNGRADE — full refund required
     if (complaintType === 'DOWNGRADE') {
-      const fare = data.fareAmount ? new Decimal(data.fareAmount) : (data.farePaid ? new Decimal(data.farePaid) : new Decimal('0'));
+      const fare = data.fareAmount
+        ? new Decimal(data.fareAmount)
+        : data.farePaid
+          ? new Decimal(data.farePaid)
+          : new Decimal('0');
       return {
         eligible: true,
         regulation: 'US_DOT',
@@ -458,7 +494,11 @@ export class FeedbackComplaintAgent
 
     // DENIED_BOARDING — full implementation
     if (complaintType === 'DENIED_BOARDING') {
-      const fare = data.fareAmount ? new Decimal(data.fareAmount) : (data.farePaid ? new Decimal(data.farePaid) : new Decimal('0'));
+      const fare = data.fareAmount
+        ? new Decimal(data.fareAmount)
+        : data.farePaid
+          ? new Decimal(data.farePaid)
+          : new Decimal('0');
       const delayMinutes = this.getDelayMinutes(data);
       const isDomestic = data.isDomestic ?? true;
 
@@ -514,19 +554,39 @@ export class FeedbackComplaintAgent
     switch (data.operation) {
       case 'submitComplaint':
         if (!data.complaintType || !VALID_COMPLAINT_TYPES.has(data.complaintType)) {
-          throw new AgentInputValidationError(this.id, 'complaintType', 'Must be a valid complaint type.');
+          throw new AgentInputValidationError(
+            this.id,
+            'complaintType',
+            'Must be a valid complaint type.',
+          );
         }
         if (!data.passengerName || data.passengerName.trim().length === 0) {
-          throw new AgentInputValidationError(this.id, 'passengerName', 'Passenger name is required.');
+          throw new AgentInputValidationError(
+            this.id,
+            'passengerName',
+            'Passenger name is required.',
+          );
         }
         if (!data.bookingReference || data.bookingReference.trim().length === 0) {
-          throw new AgentInputValidationError(this.id, 'bookingReference', 'Booking reference is required.');
+          throw new AgentInputValidationError(
+            this.id,
+            'bookingReference',
+            'Booking reference is required.',
+          );
         }
         if (!data.airline || !CARRIER_RE.test(data.airline)) {
-          throw new AgentInputValidationError(this.id, 'airline', 'Must be a 2-character airline code.');
+          throw new AgentInputValidationError(
+            this.id,
+            'airline',
+            'Must be a 2-character airline code.',
+          );
         }
         if (!data.flightNumber || data.flightNumber.trim().length === 0) {
-          throw new AgentInputValidationError(this.id, 'flightNumber', 'Flight number is required.');
+          throw new AgentInputValidationError(
+            this.id,
+            'flightNumber',
+            'Flight number is required.',
+          );
         }
         if (!data.flightDate) {
           throw new AgentInputValidationError(this.id, 'flightDate', 'Flight date is required.');
@@ -554,7 +614,11 @@ export class FeedbackComplaintAgent
           throw new AgentInputValidationError(this.id, 'regulation', 'Regulation is required.');
         }
         if (!data.complaintType || !VALID_COMPLAINT_TYPES.has(data.complaintType)) {
-          throw new AgentInputValidationError(this.id, 'complaintType', 'Must be a valid complaint type.');
+          throw new AgentInputValidationError(
+            this.id,
+            'complaintType',
+            'Must be a valid complaint type.',
+          );
         }
         break;
       case 'listCases':

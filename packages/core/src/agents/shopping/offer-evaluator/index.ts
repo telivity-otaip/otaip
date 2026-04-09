@@ -90,11 +90,11 @@ export function evaluateOffers(request: OfferEvaluatorRequest): EvaluatorResult 
   }
 
   // Step 4: Apply hard filters
-  const { eligible, rejected: hardRejected, breakdown } = applyHardFilters(
-    request.offers,
-    request.constraints,
-    evaluationTime,
-  );
+  const {
+    eligible,
+    rejected: hardRejected,
+    breakdown,
+  } = applyHardFilters(request.offers, request.constraints, evaluationTime);
 
   // Step 5: Check eligible set
   if (eligible.length === 0) {
@@ -128,7 +128,8 @@ export function evaluateOffers(request: OfferEvaluatorRequest): EvaluatorResult 
     const priceDiff = a.offer.price.total - b.offer.price.total;
     if (Math.abs(priceDiff) > 0.01) return priceDiff;
     // Tiebreak 2: shorter duration
-    const durDiff = a.offer.itinerary.total_duration_minutes - b.offer.itinerary.total_duration_minutes;
+    const durDiff =
+      a.offer.itinerary.total_duration_minutes - b.offer.itinerary.total_duration_minutes;
     if (durDiff !== 0) return durDiff;
     // Tiebreak 3: input order (stable sort handles this)
     return 0;
@@ -146,9 +147,10 @@ export function evaluateOffers(request: OfferEvaluatorRequest): EvaluatorResult 
 
   const confidence = computeConfidence(margin, eligible.length, missingInputs, currencies.size > 1);
   const loadBearingFloor = computeLoadBearingFloor(request.chain_confidence);
-  const effectiveConfidence = loadBearingFloor !== null
-    ? round4(Math.min(confidence.score, loadBearingFloor))
-    : confidence.score;
+  const effectiveConfidence =
+    loadBearingFloor !== null
+      ? round4(Math.min(confidence.score, loadBearingFloor))
+      : confidence.score;
   const autoExecutable = effectiveConfidence >= AUTO_EXECUTE_THRESHOLD;
 
   // Build soft rejections
@@ -177,7 +179,10 @@ export function evaluateOffers(request: OfferEvaluatorRequest): EvaluatorResult 
   // Step 11: Assemble outputs
   const arrivalTime = getFinalArrivalTime(rank1.offer);
   const bufferMinutes = request.constraints.latest_arrival
-    ? Math.floor((new Date(request.constraints.latest_arrival).getTime() - new Date(arrivalTime).getTime()) / 60000)
+    ? Math.floor(
+        (new Date(request.constraints.latest_arrival).getTime() - new Date(arrivalTime).getTime()) /
+          60000,
+      )
     : 0;
 
   const selected: SelectedOffer = {
@@ -243,11 +248,20 @@ export function evaluateOffers(request: OfferEvaluatorRequest): EvaluatorResult 
 
 function validateInputs(request: OfferEvaluatorRequest): EvaluatorResult | null {
   if (!request.offers || request.offers.length === 0) {
-    return { ok: false, error: { error: 'NO_OFFERS_PROVIDED', details: 'Offers array is empty or missing.' } };
+    return {
+      ok: false,
+      error: { error: 'NO_OFFERS_PROVIDED', details: 'Offers array is empty or missing.' },
+    };
   }
 
   if (!request.constraints || !hasAnyConstraint(request.constraints)) {
-    return { ok: false, error: { error: 'NO_CONSTRAINTS_PROVIDED', details: 'At least one constraint field must be non-null.' } };
+    return {
+      ok: false,
+      error: {
+        error: 'NO_CONSTRAINTS_PROVIDED',
+        details: 'At least one constraint field must be non-null.',
+      },
+    };
   }
 
   if (request.constraints.latest_arrival) {
@@ -255,20 +269,28 @@ function validateInputs(request: OfferEvaluatorRequest): EvaluatorResult | null 
     if (isNaN(parsed.getTime())) {
       return {
         ok: false,
-        error: { error: 'INVALID_CONSTRAINTS', details: `latest_arrival is not valid ISO 8601: ${request.constraints.latest_arrival}` },
+        error: {
+          error: 'INVALID_CONSTRAINTS',
+          details: `latest_arrival is not valid ISO 8601: ${request.constraints.latest_arrival}`,
+        },
       };
     }
   }
 
   if (request.scoring_weights) {
-    const sum = request.scoring_weights.time_buffer +
+    const sum =
+      request.scoring_weights.time_buffer +
       request.scoring_weights.price +
       request.scoring_weights.connection_quality +
       request.scoring_weights.journey_duration;
     if (Math.abs(sum - 1.0) > 0.001) {
       return {
         ok: false,
-        error: { error: 'INVALID_SCORING_WEIGHTS', sum, details: `Weights sum to ${sum}, must be 1.0 (+-0.001).` },
+        error: {
+          error: 'INVALID_SCORING_WEIGHTS',
+          sum,
+          details: `Weights sum to ${sum}, must be 1.0 (+-0.001).`,
+        },
       };
     }
   }
@@ -276,7 +298,10 @@ function validateInputs(request: OfferEvaluatorRequest): EvaluatorResult | null 
   if (request.traveler_profile === 'CUSTOM' && !request.scoring_weights) {
     return {
       ok: false,
-      error: { error: 'INVALID_SCORING_WEIGHTS', details: 'CUSTOM profile requires scoring_weights to be provided.' },
+      error: {
+        error: 'INVALID_SCORING_WEIGHTS',
+        details: 'CUSTOM profile requires scoring_weights to be provided.',
+      },
     };
   }
 
@@ -342,10 +367,10 @@ function computeConfidence(
 ): ConfidenceResult {
   // Score from margin
   let score: number;
-  if (margin > 0.15) score = 0.90;
-  else if (margin >= 0.08) score = 0.80;
-  else if (margin >= 0.03) score = 0.70;
-  else score = 0.50;
+  if (margin > 0.15) score = 0.9;
+  else if (margin >= 0.08) score = 0.8;
+  else if (margin >= 0.03) score = 0.7;
+  else score = 0.5;
 
   // Basis determination
   let basis: ConfidenceBasis;
@@ -389,12 +414,14 @@ function buildStructuredExplanation(
 
   // Build flight descriptor
   const flightCodes = segments.map((s) => `${s.carrier}${s.flight_number}`).join('+');
-  const route = segments.length === 1
-    ? `${firstSeg.origin}-${lastSeg.destination}`
-    : `${firstSeg.origin}-${segments.map((s) => s.destination).join('-')}`;
-  const stops = offer.itinerary.connection_count === 0
-    ? 'Direct'
-    : `${offer.itinerary.connection_count} stop${offer.itinerary.connection_count > 1 ? 's' : ''}`;
+  const route =
+    segments.length === 1
+      ? `${firstSeg.origin}-${lastSeg.destination}`
+      : `${firstSeg.origin}-${segments.map((s) => s.destination).join('-')}`;
+  const stops =
+    offer.itinerary.connection_count === 0
+      ? 'Direct'
+      : `${offer.itinerary.connection_count} stop${offer.itinerary.connection_count > 1 ? 's' : ''}`;
   const departs = firstSeg.departure_time.slice(11, 16);
   const arrives = lastSeg.arrival_time.slice(11, 16);
 
@@ -404,7 +431,8 @@ function buildStructuredExplanation(
   let bufferStatement: string | undefined;
   if (constraints.latest_arrival) {
     const bufferMin = Math.floor(
-      (new Date(constraints.latest_arrival).getTime() - new Date(lastSeg.arrival_time).getTime()) / 60000,
+      (new Date(constraints.latest_arrival).getTime() - new Date(lastSeg.arrival_time).getTime()) /
+        60000,
     );
     bufferStatement = `Arrives ${bufferMin} minutes before your deadline. ${bufferMin >= 45 ? 'This meets the required buffer.' : bufferMin >= 30 ? 'This is a tight margin.' : 'This leaves very little buffer.'}`;
   }
@@ -415,7 +443,8 @@ function buildStructuredExplanation(
     if (offer.itinerary.connection_count === 0) {
       directAvailability = 'Direct flight selected as preferred.';
     } else {
-      directAvailability = 'No direct flights available within your constraints. Best connecting option selected.';
+      directAvailability =
+        'No direct flights available within your constraints. Best connecting option selected.';
     }
   }
 
@@ -462,9 +491,10 @@ function buildStructuredExplanation(
   // Confidence note
   let confidenceNote: string | undefined;
   if (confidence.basis === 'LOW_DATA') {
-    confidenceNote = eligibleCount === 1
-      ? 'LOW_DATA - only one eligible offer after constraint filtering.'
-      : `LOW_DATA - margin between top two offers is ${margin.toFixed(4)}. Near-tie — selection is not definitive.`;
+    confidenceNote =
+      eligibleCount === 1
+        ? 'LOW_DATA - only one eligible offer after constraint filtering.'
+        : `LOW_DATA - margin between top two offers is ${margin.toFixed(4)}. Near-tie — selection is not definitive.`;
   } else if (confidence.basis === 'MEDIUM_DATA') {
     confidenceNote = `MEDIUM_DATA - margin between top two offers is ${margin.toFixed(4)}.`;
   }

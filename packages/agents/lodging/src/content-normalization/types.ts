@@ -24,7 +24,16 @@ export interface ContentNormInput {
 // Output
 // ---------------------------------------------------------------------------
 
-export type PhotoCategory = 'exterior' | 'room' | 'bathroom' | 'lobby' | 'pool' | 'dining' | 'fitness' | 'view' | 'other';
+export type PhotoCategory =
+  | 'exterior'
+  | 'room'
+  | 'bathroom'
+  | 'lobby'
+  | 'pool'
+  | 'dining'
+  | 'fitness'
+  | 'view'
+  | 'other';
 
 export interface ScoredPhoto {
   url: string;

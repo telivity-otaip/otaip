@@ -55,9 +55,7 @@ export class NavitaireAuth {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Navitaire auth failed: ${response.status} ${response.statusText}`,
-      );
+      throw new Error(`Navitaire auth failed: ${response.status} ${response.statusText}`);
     }
 
     const data = (await response.json()) as NavitaireTokenResponse;
@@ -91,9 +89,7 @@ export class NavitaireAuth {
   }
 
   private cacheToken(data: NavitaireTokenResponse): void {
-    const expiresInMs = data.idleTimeoutInMinutes
-      ? data.idleTimeoutInMinutes * 60_000
-      : 1_200_000; // Default 20 minutes
+    const expiresInMs = data.idleTimeoutInMinutes ? data.idleTimeoutInMinutes * 60_000 : 1_200_000; // Default 20 minutes
 
     this.cached = {
       token: data.token,

@@ -4,10 +4,7 @@
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import type {
   ConnectAdapter,
   CreateBookingInput,
@@ -32,10 +29,7 @@ function argsAs<T>(args: Record<string, unknown> | undefined): T {
   return (args ?? {}) as unknown as T;
 }
 
-export function generateMcpServer(
-  adapter: ConnectAdapter,
-  config: McpServerConfig,
-): Server {
+export function generateMcpServer(adapter: ConnectAdapter, config: McpServerConfig): Server {
   const server = new Server(
     { name: config.serverName, version: config.version },
     { capabilities: { tools: {} } },
@@ -76,7 +70,9 @@ export function generateMcpServer(
         case 'request_ticketing':
           if (!adapter.requestTicketing) {
             return {
-              content: [{ type: 'text' as const, text: 'Ticketing is not supported by this supplier.' }],
+              content: [
+                { type: 'text' as const, text: 'Ticketing is not supported by this supplier.' },
+              ],
               isError: true,
             };
           }
@@ -86,7 +82,9 @@ export function generateMcpServer(
         case 'cancel_booking':
           if (!adapter.cancelBooking) {
             return {
-              content: [{ type: 'text' as const, text: 'Cancellation is not supported by this supplier.' }],
+              content: [
+                { type: 'text' as const, text: 'Cancellation is not supported by this supplier.' },
+              ],
               isError: true,
             };
           }

@@ -262,9 +262,7 @@ describe('Schedule Lookup', () => {
         },
       });
 
-      const ordConnection = result.data.connections!.find(
-        (c) => c.connection_airport === 'ORD',
-      );
+      const ordConnection = result.data.connections!.find((c) => c.connection_airport === 'ORD');
       expect(ordConnection).toBeDefined();
       expect(ordConnection!.first_leg.destination).toBe('ORD');
       expect(ordConnection!.second_leg.origin).toBe('ORD');

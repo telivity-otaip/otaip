@@ -24,13 +24,31 @@ import type {
 // ---------------------------------------------------------------------------
 
 const WEIGHT_PRESETS: Record<Exclude<TravelerProfile, 'CUSTOM'>, ScoringWeights> = {
-  BUSINESS_TIME_CRITICAL: { time_buffer: 0.45, price: 0.20, connection_quality: 0.25, journey_duration: 0.10 },
-  BUSINESS_PRICE_CONSTRAINED: { time_buffer: 0.25, price: 0.45, connection_quality: 0.20, journey_duration: 0.10 },
-  LEISURE: { time_buffer: 0.10, price: 0.50, connection_quality: 0.20, journey_duration: 0.20 },
-  CORPORATE_POLICY: { time_buffer: 0.35, price: 0.35, connection_quality: 0.20, journey_duration: 0.10 },
+  BUSINESS_TIME_CRITICAL: {
+    time_buffer: 0.45,
+    price: 0.2,
+    connection_quality: 0.25,
+    journey_duration: 0.1,
+  },
+  BUSINESS_PRICE_CONSTRAINED: {
+    time_buffer: 0.25,
+    price: 0.45,
+    connection_quality: 0.2,
+    journey_duration: 0.1,
+  },
+  LEISURE: { time_buffer: 0.1, price: 0.5, connection_quality: 0.2, journey_duration: 0.2 },
+  CORPORATE_POLICY: {
+    time_buffer: 0.35,
+    price: 0.35,
+    connection_quality: 0.2,
+    journey_duration: 0.1,
+  },
 };
 
-export function getWeightsForProfile(profile: TravelerProfile, custom?: ScoringWeights): ScoringWeights {
+export function getWeightsForProfile(
+  profile: TravelerProfile,
+  custom?: ScoringWeights,
+): ScoringWeights {
   if (profile === 'CUSTOM') {
     return custom!;
   }
@@ -66,13 +84,13 @@ export function autoDetectProfile(
 // ---------------------------------------------------------------------------
 
 function bufferTier(minutes: number): { score: number; tier: BufferTier } {
-  if (minutes < 0) return { score: 0.00, tier: 'CATASTROPHIC' };
+  if (minutes < 0) return { score: 0.0, tier: 'CATASTROPHIC' };
   if (minutes <= 15) return { score: 0.05, tier: 'CATASTROPHIC' };
-  if (minutes <= 30) return { score: 0.30, tier: 'HIGH_RISK' };
+  if (minutes <= 30) return { score: 0.3, tier: 'HIGH_RISK' };
   if (minutes <= 45) return { score: 0.65, tier: 'MARGINAL' };
   if (minutes <= 60) return { score: 0.85, tier: 'GOOD' };
-  if (minutes <= 90) return { score: 1.00, tier: 'IDEAL' };
-  if (minutes <= 120) return { score: 0.90, tier: 'DIMINISHING' };
+  if (minutes <= 90) return { score: 1.0, tier: 'IDEAL' };
+  if (minutes <= 120) return { score: 0.9, tier: 'DIMINISHING' };
   return { score: 0.75, tier: 'VERY_EARLY' };
 }
 
@@ -136,10 +154,10 @@ export function scorePriceRelative(
 function layoverScoreOneStop(layoverMinutes: number): { score: number; risk: ConnectionRisk } {
   if (layoverMinutes < 30) return { score: 0.05, risk: 'CRITICAL' };
   if (layoverMinutes < 45) return { score: 0.25, risk: 'HIGH' };
-  if (layoverMinutes < 60) return { score: 0.50, risk: 'MODERATE' };
+  if (layoverMinutes < 60) return { score: 0.5, risk: 'MODERATE' };
   if (layoverMinutes < 90) return { score: 0.75, risk: 'LOW' };
-  if (layoverMinutes <= 120) return { score: 0.80, risk: 'LOW' };
-  return { score: 0.70, risk: 'LOW' };
+  if (layoverMinutes <= 120) return { score: 0.8, risk: 'LOW' };
+  return { score: 0.7, risk: 'LOW' };
 }
 
 export function scoreConnectionQuality(
@@ -168,13 +186,13 @@ export function scoreConnectionQuality(
   } else {
     // 2+ stops: base 0.30, apply tightest layover penalty
     const layoverResult = layoverScoreOneStop(tightestLayover);
-    score = 0.30 * (layoverResult.score / 1.0); // scale by tightest layover quality
+    score = 0.3 * (layoverResult.score / 1.0); // scale by tightest layover quality
     risk = layoverResult.risk;
   }
 
   // Apply prefer_direct penalty (soft — ×0.80 multiplier)
   if (constraints.prefer_direct && connectionCount > 0) {
-    score *= 0.80;
+    score *= 0.8;
   }
 
   return {
@@ -229,16 +247,27 @@ export function scoreOffer(
     effectiveWeights = {
       time_buffer: 0,
       price: weights.price + redistributable * (weights.price / remainingTotal),
-      connection_quality: weights.connection_quality + redistributable * (weights.connection_quality / remainingTotal),
-      journey_duration: weights.journey_duration + redistributable * (weights.journey_duration / remainingTotal),
+      connection_quality:
+        weights.connection_quality +
+        redistributable * (weights.connection_quality / remainingTotal),
+      journey_duration:
+        weights.journey_duration + redistributable * (weights.journey_duration / remainingTotal),
     };
   } else {
     effectiveWeights = weights;
   }
 
   const time_buffer = scoreTimeBuffer(offer, constraints, effectiveWeights.time_buffer);
-  const price = scorePriceRelative(offer.price.total, cheapestEligiblePrice, effectiveWeights.price);
-  const connection_quality = scoreConnectionQuality(offer, constraints, effectiveWeights.connection_quality);
+  const price = scorePriceRelative(
+    offer.price.total,
+    cheapestEligiblePrice,
+    effectiveWeights.price,
+  );
+  const connection_quality = scoreConnectionQuality(
+    offer,
+    constraints,
+    effectiveWeights.connection_quality,
+  );
   const journey_duration = scoreJourneyDuration(
     offer.itinerary.total_duration_minutes,
     fastestEligibleDuration,

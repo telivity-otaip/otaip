@@ -5,8 +5,11 @@
  */
 
 export type MonitoringOperation =
-  | 'record_metric' | 'get_health' | 'list_alerts'
-  | 'acknowledge_alert' | 'get_sla_report';
+  | 'record_metric'
+  | 'get_health'
+  | 'list_alerts'
+  | 'acknowledge_alert'
+  | 'get_sla_report';
 
 export type MetricType = 'latency_ms' | 'error' | 'success' | 'timeout';
 

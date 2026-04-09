@@ -48,7 +48,10 @@ const passengerDetailSchema = {
     dateOfBirth: { type: 'string', description: 'Date of birth (YYYY-MM-DD)' },
     passportNumber: { type: 'string', description: 'Passport number' },
     passportExpiry: { type: 'string', description: 'Passport expiry date (YYYY-MM-DD)' },
-    passportCountry: { type: 'string', description: 'Passport issuing country (ISO 3166-1 alpha-2)' },
+    passportCountry: {
+      type: 'string',
+      description: 'Passport issuing country (ISO 3166-1 alpha-2)',
+    },
     nationality: { type: 'string', description: 'Nationality (ISO 3166-1 alpha-2)' },
   },
   required: ['type', 'gender', 'firstName', 'lastName', 'dateOfBirth'],

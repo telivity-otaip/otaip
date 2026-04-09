@@ -14,14 +14,8 @@ import type {
   AgentHealthStatus,
   DistributionAdapter,
 } from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
-import type {
-  AvailabilitySearchInput,
-  AvailabilitySearchOutput,
-} from './types.js';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
+import type { AvailabilitySearchInput, AvailabilitySearchOutput } from './types.js';
 import { executeSearch } from './search-engine.js';
 
 const VALID_CABIN_CLASSES = new Set(['economy', 'premium_economy', 'business', 'first']);
@@ -29,9 +23,10 @@ const VALID_SORT_FIELDS = new Set(['price', 'duration', 'departure', 'arrival', 
 const VALID_SORT_ORDERS = new Set(['asc', 'desc']);
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export class AvailabilitySearch
-  implements Agent<AvailabilitySearchInput, AvailabilitySearchOutput>
-{
+export class AvailabilitySearch implements Agent<
+  AvailabilitySearchInput,
+  AvailabilitySearchOutput
+> {
   readonly id = '1.1';
   readonly name = 'Availability Search';
   readonly version = '0.1.0';
@@ -109,39 +104,70 @@ export class AvailabilitySearch
       throw new AgentInputValidationError(this.id, 'origin', 'Required non-empty string.');
     }
 
-    if (!data.destination || typeof data.destination !== 'string' || data.destination.trim().length === 0) {
+    if (
+      !data.destination ||
+      typeof data.destination !== 'string' ||
+      data.destination.trim().length === 0
+    ) {
       throw new AgentInputValidationError(this.id, 'destination', 'Required non-empty string.');
     }
 
     if (data.origin.trim().toUpperCase() === data.destination.trim().toUpperCase()) {
-      throw new AgentInputValidationError(this.id, 'destination', 'Origin and destination must be different.');
+      throw new AgentInputValidationError(
+        this.id,
+        'destination',
+        'Origin and destination must be different.',
+      );
     }
 
     if (!data.departure_date || !ISO_DATE_RE.test(data.departure_date)) {
-      throw new AgentInputValidationError(this.id, 'departure_date', 'Required ISO 8601 date (YYYY-MM-DD).');
+      throw new AgentInputValidationError(
+        this.id,
+        'departure_date',
+        'Required ISO 8601 date (YYYY-MM-DD).',
+      );
     }
 
     if (data.return_date !== undefined && !ISO_DATE_RE.test(data.return_date)) {
-      throw new AgentInputValidationError(this.id, 'return_date', 'Must be ISO 8601 date (YYYY-MM-DD).');
+      throw new AgentInputValidationError(
+        this.id,
+        'return_date',
+        'Must be ISO 8601 date (YYYY-MM-DD).',
+      );
     }
 
     if (!data.passengers || !Array.isArray(data.passengers) || data.passengers.length === 0) {
-      throw new AgentInputValidationError(this.id, 'passengers', 'At least one passenger required.');
+      throw new AgentInputValidationError(
+        this.id,
+        'passengers',
+        'At least one passenger required.',
+      );
     }
 
     if (data.cabin_class !== undefined && !VALID_CABIN_CLASSES.has(data.cabin_class)) {
-      throw new AgentInputValidationError(this.id, 'cabin_class', `Must be one of: ${[...VALID_CABIN_CLASSES].join(', ')}`);
+      throw new AgentInputValidationError(
+        this.id,
+        'cabin_class',
+        `Must be one of: ${[...VALID_CABIN_CLASSES].join(', ')}`,
+      );
     }
 
     if (data.sort_by !== undefined && !VALID_SORT_FIELDS.has(data.sort_by)) {
-      throw new AgentInputValidationError(this.id, 'sort_by', `Must be one of: ${[...VALID_SORT_FIELDS].join(', ')}`);
+      throw new AgentInputValidationError(
+        this.id,
+        'sort_by',
+        `Must be one of: ${[...VALID_SORT_FIELDS].join(', ')}`,
+      );
     }
 
     if (data.sort_order !== undefined && !VALID_SORT_ORDERS.has(data.sort_order)) {
       throw new AgentInputValidationError(this.id, 'sort_order', 'Must be "asc" or "desc".');
     }
 
-    if (data.max_connections !== undefined && (data.max_connections < 0 || data.max_connections > 5)) {
+    if (
+      data.max_connections !== undefined &&
+      (data.max_connections < 0 || data.max_connections > 5)
+    ) {
       throw new AgentInputValidationError(this.id, 'max_connections', 'Must be between 0 and 5.');
     }
 
@@ -151,4 +177,11 @@ export class AvailabilitySearch
   }
 }
 
-export type { AvailabilitySearchInput, AvailabilitySearchOutput, SourceStatus, CabinClass, SortField, SortOrder } from './types.js';
+export type {
+  AvailabilitySearchInput,
+  AvailabilitySearchOutput,
+  SourceStatus,
+  CabinClass,
+  SortField,
+  SortOrder,
+} from './types.js';

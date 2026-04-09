@@ -27,7 +27,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'UA', fare_basis: 'V14NR', nuc_amount: '450.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'UA',
+              fare_basis: 'V14NR',
+              nuc_amount: '450.00',
+            },
           ],
           selling_currency: 'USD',
         },
@@ -45,7 +51,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'BA', fare_basis: 'Y', nuc_amount: '1200.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'BA',
+              fare_basis: 'Y',
+              nuc_amount: '1200.00',
+            },
           ],
           selling_currency: 'GBP',
         },
@@ -62,7 +74,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'SFO', destination: 'NRT', carrier: 'NH', fare_basis: 'V14NR', nuc_amount: '500.00' },
+            {
+              origin: 'SFO',
+              destination: 'NRT',
+              carrier: 'NH',
+              fare_basis: 'V14NR',
+              nuc_amount: '500.00',
+            },
           ],
           selling_currency: 'JPY',
         },
@@ -79,7 +97,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'UA', fare_basis: 'Y', nuc_amount: '333.33' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'UA',
+              fare_basis: 'Y',
+              nuc_amount: '333.33',
+            },
           ],
           selling_currency: 'CHF',
         },
@@ -96,7 +120,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'UA', fare_basis: 'Y', nuc_amount: '100.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'UA',
+              fare_basis: 'Y',
+              nuc_amount: '100.00',
+            },
           ],
           selling_currency: 'KRW',
         },
@@ -114,8 +144,20 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'RT',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'BA', fare_basis: 'V14NR', nuc_amount: '450.00' },
-            { origin: 'LHR', destination: 'JFK', carrier: 'BA', fare_basis: 'V14NR', nuc_amount: '450.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'BA',
+              fare_basis: 'V14NR',
+              nuc_amount: '450.00',
+            },
+            {
+              origin: 'LHR',
+              destination: 'JFK',
+              carrier: 'BA',
+              fare_basis: 'V14NR',
+              nuc_amount: '450.00',
+            },
           ],
           selling_currency: 'USD',
         },
@@ -130,8 +172,20 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'RT',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'BA', fare_basis: 'Y', nuc_amount: '600.00' },
-            { origin: 'LHR', destination: 'JFK', carrier: 'BA', fare_basis: 'Y', nuc_amount: '600.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'BA',
+              fare_basis: 'Y',
+              nuc_amount: '600.00',
+            },
+            {
+              origin: 'LHR',
+              destination: 'JFK',
+              carrier: 'BA',
+              fare_basis: 'Y',
+              nuc_amount: '600.00',
+            },
           ],
           selling_currency: 'USD',
         },
@@ -149,9 +203,27 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'CT',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'BA', fare_basis: 'Y', nuc_amount: '500.00' },
-            { origin: 'LHR', destination: 'CDG', carrier: 'AF', fare_basis: 'Y', nuc_amount: '100.00' },
-            { origin: 'CDG', destination: 'JFK', carrier: 'AF', fare_basis: 'Y', nuc_amount: '480.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'BA',
+              fare_basis: 'Y',
+              nuc_amount: '500.00',
+            },
+            {
+              origin: 'LHR',
+              destination: 'CDG',
+              carrier: 'AF',
+              fare_basis: 'Y',
+              nuc_amount: '100.00',
+            },
+            {
+              origin: 'CDG',
+              destination: 'JFK',
+              carrier: 'AF',
+              fare_basis: 'Y',
+              nuc_amount: '480.00',
+            },
           ],
           selling_currency: 'USD',
         },
@@ -166,7 +238,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'BA', fare_basis: 'Y', nuc_amount: '500.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'BA',
+              fare_basis: 'Y',
+              nuc_amount: '500.00',
+            },
           ],
           selling_currency: 'USD',
         },
@@ -182,7 +260,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'UA', fare_basis: 'Y', nuc_amount: '500.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'UA',
+              fare_basis: 'Y',
+              nuc_amount: '500.00',
+            },
           ],
           selling_currency: 'USD',
         },
@@ -197,7 +281,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'XXX', destination: 'YYY', carrier: 'UA', fare_basis: 'Y', nuc_amount: '100.00' },
+            {
+              origin: 'XXX',
+              destination: 'YYY',
+              carrier: 'UA',
+              fare_basis: 'Y',
+              nuc_amount: '100.00',
+            },
           ],
           selling_currency: 'USD',
         },
@@ -214,7 +304,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'BA', fare_basis: 'Y', nuc_amount: '500.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'BA',
+              fare_basis: 'Y',
+              nuc_amount: '500.00',
+            },
           ],
           selling_currency: 'USD',
         },
@@ -230,10 +326,34 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'CT',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'BA', fare_basis: 'Y', nuc_amount: '400.00' },
-            { origin: 'LHR', destination: 'CDG', carrier: 'AF', fare_basis: 'Y', nuc_amount: '100.00' },
-            { origin: 'CDG', destination: 'LHR', carrier: 'BA', fare_basis: 'Y', nuc_amount: '100.00' },
-            { origin: 'LHR', destination: 'JFK', carrier: 'BA', fare_basis: 'Y', nuc_amount: '400.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'BA',
+              fare_basis: 'Y',
+              nuc_amount: '400.00',
+            },
+            {
+              origin: 'LHR',
+              destination: 'CDG',
+              carrier: 'AF',
+              fare_basis: 'Y',
+              nuc_amount: '100.00',
+            },
+            {
+              origin: 'CDG',
+              destination: 'LHR',
+              carrier: 'BA',
+              fare_basis: 'Y',
+              nuc_amount: '100.00',
+            },
+            {
+              origin: 'LHR',
+              destination: 'JFK',
+              carrier: 'BA',
+              fare_basis: 'Y',
+              nuc_amount: '400.00',
+            },
           ],
           selling_currency: 'USD',
         },
@@ -250,7 +370,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'UA', fare_basis: 'Y', nuc_amount: '500.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'UA',
+              fare_basis: 'Y',
+              nuc_amount: '500.00',
+            },
           ],
           selling_currency: 'USD',
         },
@@ -269,7 +395,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'JFK', destination: 'CDG', carrier: 'AF', fare_basis: 'Y', nuc_amount: '1000.00' },
+            {
+              origin: 'JFK',
+              destination: 'CDG',
+              carrier: 'AF',
+              fare_basis: 'Y',
+              nuc_amount: '1000.00',
+            },
           ],
           selling_currency: 'EUR',
         },
@@ -285,7 +417,13 @@ describe('Fare Construction', () => {
         data: {
           journey_type: 'OW',
           components: [
-            { origin: 'JFK', destination: 'LHR', carrier: 'UA', fare_basis: 'Y', nuc_amount: '100.00' },
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'UA',
+              fare_basis: 'Y',
+              nuc_amount: '100.00',
+            },
           ],
           selling_currency: 'XYZ',
         },
@@ -301,7 +439,15 @@ describe('Fare Construction', () => {
         agent.execute({
           data: {
             journey_type: 'XX' as 'OW',
-            components: [{ origin: 'JFK', destination: 'LHR', carrier: 'UA', fare_basis: 'Y', nuc_amount: '100' }],
+            components: [
+              {
+                origin: 'JFK',
+                destination: 'LHR',
+                carrier: 'UA',
+                fare_basis: 'Y',
+                nuc_amount: '100',
+              },
+            ],
             selling_currency: 'USD',
           },
         }),
@@ -321,7 +467,15 @@ describe('Fare Construction', () => {
         agent.execute({
           data: {
             journey_type: 'OW',
-            components: [{ origin: '1', destination: 'LHR', carrier: 'UA', fare_basis: 'Y', nuc_amount: '100' }],
+            components: [
+              {
+                origin: '1',
+                destination: 'LHR',
+                carrier: 'UA',
+                fare_basis: 'Y',
+                nuc_amount: '100',
+              },
+            ],
             selling_currency: 'USD',
           },
         }),
@@ -333,7 +487,15 @@ describe('Fare Construction', () => {
         agent.execute({
           data: {
             journey_type: 'OW',
-            components: [{ origin: 'JFK', destination: 'LHR', carrier: 'UA', fare_basis: 'Y', nuc_amount: 'abc' }],
+            components: [
+              {
+                origin: 'JFK',
+                destination: 'LHR',
+                carrier: 'UA',
+                fare_basis: 'Y',
+                nuc_amount: 'abc',
+              },
+            ],
             selling_currency: 'USD',
           },
         }),
@@ -345,7 +507,15 @@ describe('Fare Construction', () => {
         agent.execute({
           data: {
             journey_type: 'OW',
-            components: [{ origin: 'JFK', destination: 'LHR', carrier: 'UA', fare_basis: 'Y', nuc_amount: '100' }],
+            components: [
+              {
+                origin: 'JFK',
+                destination: 'LHR',
+                carrier: 'UA',
+                fare_basis: 'Y',
+                nuc_amount: '100',
+              },
+            ],
             selling_currency: 'us',
           },
         }),
@@ -369,7 +539,15 @@ describe('Fare Construction', () => {
       const result = await agent.execute({
         data: {
           journey_type: 'OW',
-          components: [{ origin: 'JFK', destination: 'LHR', carrier: 'UA', fare_basis: 'Y', nuc_amount: '100' }],
+          components: [
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'UA',
+              fare_basis: 'Y',
+              nuc_amount: '100',
+            },
+          ],
           selling_currency: 'USD',
         },
       });
@@ -382,7 +560,15 @@ describe('Fare Construction', () => {
         uninit.execute({
           data: {
             journey_type: 'OW',
-            components: [{ origin: 'JFK', destination: 'LHR', carrier: 'UA', fare_basis: 'Y', nuc_amount: '100' }],
+            components: [
+              {
+                origin: 'JFK',
+                destination: 'LHR',
+                carrier: 'UA',
+                fare_basis: 'Y',
+                nuc_amount: '100',
+              },
+            ],
             selling_currency: 'USD',
           },
         }),

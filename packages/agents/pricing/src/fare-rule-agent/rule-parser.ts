@@ -134,7 +134,9 @@ function extractPenalty(categories: Record<string, RawCategory>): PenaltyRule | 
   };
 }
 
-function extractAdvancePurchase(categories: Record<string, RawCategory>): AdvancePurchaseRule | null {
+function extractAdvancePurchase(
+  categories: Record<string, RawCategory>,
+): AdvancePurchaseRule | null {
   const cat5 = categories['5'];
   if (!cat5?.structured) return null;
 
@@ -196,7 +198,12 @@ function checkBlackout(travelDate: string, seasonality: SeasonalityRule | null):
   return false;
 }
 
-function checkValidForDate(travelDate: string, seasonality: SeasonalityRule | null, effectiveDate: string, discontinueDate: string): boolean | null {
+function checkValidForDate(
+  travelDate: string,
+  seasonality: SeasonalityRule | null,
+  effectiveDate: string,
+  discontinueDate: string,
+): boolean | null {
   if (!travelDate) return null;
 
   // Check effective range
@@ -259,7 +266,12 @@ export function lookupFareRules(input: FareRuleInput): FareRuleOutput {
   // Date validation based on first matched rule
   const firstRule = results[0]!;
   const validForDate = input.travel_date
-    ? checkValidForDate(input.travel_date, firstRule.seasonality, firstRule.effective_date, firstRule.discontinue_date)
+    ? checkValidForDate(
+        input.travel_date,
+        firstRule.seasonality,
+        firstRule.effective_date,
+        firstRule.discontinue_date,
+      )
     : null;
   const inBlackout = input.travel_date
     ? checkBlackout(input.travel_date, firstRule.seasonality)

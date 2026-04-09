@@ -46,15 +46,15 @@ describe('validateHaipConfig', () => {
   });
 
   it('throws on negative timeoutMs', () => {
-    expect(() =>
-      validateHaipConfig({ baseUrl: 'http://localhost:3000', timeoutMs: -1 }),
-    ).toThrow('Invalid HAIP config');
+    expect(() => validateHaipConfig({ baseUrl: 'http://localhost:3000', timeoutMs: -1 })).toThrow(
+      'Invalid HAIP config',
+    );
   });
 
   it('throws on non-integer maxRetries', () => {
-    expect(() =>
-      validateHaipConfig({ baseUrl: 'http://localhost:3000', maxRetries: 1.5 }),
-    ).toThrow('Invalid HAIP config');
+    expect(() => validateHaipConfig({ baseUrl: 'http://localhost:3000', maxRetries: 1.5 })).toThrow(
+      'Invalid HAIP config',
+    );
   });
 
   it('allows zero retries', () => {

@@ -164,12 +164,14 @@ describe('GDS/NDC Router', () => {
     it('routes by operating carrier when codeshare is detected', async () => {
       const result = await agent.execute({
         data: {
-          segments: [{
-            marketing_carrier: 'QF',
-            operating_carrier: 'BA',
-            origin: 'LHR',
-            destination: 'SYD',
-          }],
+          segments: [
+            {
+              marketing_carrier: 'QF',
+              operating_carrier: 'BA',
+              origin: 'LHR',
+              destination: 'SYD',
+            },
+          ],
           include_fallbacks: true,
         },
       });
@@ -183,12 +185,14 @@ describe('GDS/NDC Router', () => {
     it('falls back to marketing carrier when operating carrier unknown', async () => {
       const result = await agent.execute({
         data: {
-          segments: [{
-            marketing_carrier: 'BA',
-            operating_carrier: 'XX',
-            origin: 'LHR',
-            destination: 'JFK',
-          }],
+          segments: [
+            {
+              marketing_carrier: 'BA',
+              operating_carrier: 'XX',
+              origin: 'LHR',
+              destination: 'JFK',
+            },
+          ],
           include_fallbacks: false,
         },
       });
@@ -200,12 +204,14 @@ describe('GDS/NDC Router', () => {
     it('warns about codeshare routing', async () => {
       const result = await agent.execute({
         data: {
-          segments: [{
-            marketing_carrier: 'QF',
-            operating_carrier: 'BA',
-            origin: 'LHR',
-            destination: 'SYD',
-          }],
+          segments: [
+            {
+              marketing_carrier: 'QF',
+              operating_carrier: 'BA',
+              origin: 'LHR',
+              destination: 'SYD',
+            },
+          ],
           include_fallbacks: false,
         },
       });
@@ -331,7 +337,9 @@ describe('GDS/NDC Router', () => {
     it('produces GDS PNR format for GDS routing', async () => {
       const result = await agent.execute({
         data: {
-          segments: [{ marketing_carrier: 'DL', origin: 'JFK', destination: 'LAX', flight_number: '100' }],
+          segments: [
+            { marketing_carrier: 'DL', origin: 'JFK', destination: 'LAX', flight_number: '100' },
+          ],
           include_fallbacks: false,
         },
       });

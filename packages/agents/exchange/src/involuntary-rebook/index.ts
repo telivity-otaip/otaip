@@ -7,16 +7,8 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { InvoluntaryRebookInput, InvoluntaryRebookOutput } from './types.js';
 import { processInvoluntaryRebook } from './rebook-engine.js';
 
@@ -25,11 +17,14 @@ const CARRIER_RE = /^[A-Z0-9]{2}$/;
 const AIRPORT_RE = /^[A-Z]{3}$/;
 const PASSENGER_NAME_RE = /^[A-Z][A-Z' -]+\/[A-Z][A-Z' -]+$/;
 const COUNTRY_RE = /^[A-Z]{2}$/;
-const VALID_CHANGE_TYPES = new Set(['TIME_CHANGE', 'ROUTING_CHANGE', 'EQUIPMENT_DOWNGRADE', 'FLIGHT_CANCELLATION']);
+const VALID_CHANGE_TYPES = new Set([
+  'TIME_CHANGE',
+  'ROUTING_CHANGE',
+  'EQUIPMENT_DOWNGRADE',
+  'FLIGHT_CANCELLATION',
+]);
 
-export class InvoluntaryRebook
-  implements Agent<InvoluntaryRebookInput, InvoluntaryRebookOutput>
-{
+export class InvoluntaryRebook implements Agent<InvoluntaryRebookInput, InvoluntaryRebookOutput> {
   readonly id = '5.3';
   readonly name = 'Involuntary Rebook';
   readonly version = '0.1.0';
@@ -94,28 +89,56 @@ export class InvoluntaryRebook
   private validateInput(data: InvoluntaryRebookInput): void {
     const pnr = data.original_pnr;
     if (!pnr.record_locator || !RECORD_LOCATOR_RE.test(pnr.record_locator)) {
-      throw new AgentInputValidationError(this.id, 'record_locator', 'Must be a 6-character alphanumeric PNR locator.');
+      throw new AgentInputValidationError(
+        this.id,
+        'record_locator',
+        'Must be a 6-character alphanumeric PNR locator.',
+      );
     }
     if (!pnr.passenger_name || !PASSENGER_NAME_RE.test(pnr.passenger_name)) {
-      throw new AgentInputValidationError(this.id, 'passenger_name', 'Must be in LAST/FIRST format.');
+      throw new AgentInputValidationError(
+        this.id,
+        'passenger_name',
+        'Must be in LAST/FIRST format.',
+      );
     }
     const seg = pnr.affected_segment;
     if (!seg.carrier || !CARRIER_RE.test(seg.carrier)) {
-      throw new AgentInputValidationError(this.id, 'carrier', 'Must be a 2-character IATA carrier code.');
+      throw new AgentInputValidationError(
+        this.id,
+        'carrier',
+        'Must be a 2-character IATA carrier code.',
+      );
     }
     if (!AIRPORT_RE.test(seg.origin) || !AIRPORT_RE.test(seg.destination)) {
-      throw new AgentInputValidationError(this.id, 'origin/destination', 'Must be 3-letter IATA airport codes.');
+      throw new AgentInputValidationError(
+        this.id,
+        'origin/destination',
+        'Must be 3-letter IATA airport codes.',
+      );
     }
     if (!pnr.departure_country || !COUNTRY_RE.test(pnr.departure_country)) {
-      throw new AgentInputValidationError(this.id, 'departure_country', 'Must be ISO 2-letter country code.');
+      throw new AgentInputValidationError(
+        this.id,
+        'departure_country',
+        'Must be ISO 2-letter country code.',
+      );
     }
     if (!pnr.arrival_country || !COUNTRY_RE.test(pnr.arrival_country)) {
-      throw new AgentInputValidationError(this.id, 'arrival_country', 'Must be ISO 2-letter country code.');
+      throw new AgentInputValidationError(
+        this.id,
+        'arrival_country',
+        'Must be ISO 2-letter country code.',
+      );
     }
 
     const sc = data.schedule_change;
     if (!sc.change_type || !VALID_CHANGE_TYPES.has(sc.change_type)) {
-      throw new AgentInputValidationError(this.id, 'change_type', `Must be one of: ${[...VALID_CHANGE_TYPES].join(', ')}`);
+      throw new AgentInputValidationError(
+        this.id,
+        'change_type',
+        `Must be one of: ${[...VALID_CHANGE_TYPES].join(', ')}`,
+      );
     }
   }
 }

@@ -6,11 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { OrderManagement } from '../index.js';
-import type {
-  OrderManagementInput,
-  OrderItem,
-  CreateOrderData,
-} from '../types.js';
+import type { OrderManagementInput, OrderItem, CreateOrderData } from '../types.js';
 
 let agent: OrderManagement;
 
@@ -229,9 +225,7 @@ describe('Order Management', () => {
           operation: 'modifyOrder',
           modifyOrder: {
             orderId,
-            items: [
-              makeItem({ amount: '200.50', quantity: 3 }),
-            ],
+            items: [makeItem({ amount: '200.50', quantity: 3 })],
             reason: 'Upgrade',
           },
         },
@@ -447,21 +441,21 @@ describe('Order Management', () => {
     });
 
     it('rejects createOrder without data', async () => {
-      await expect(
-        agent.execute({ data: { operation: 'createOrder' } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: { operation: 'createOrder' } })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects createOrder with empty passengerName', async () => {
-      await expect(
-        agent.execute({ data: createInput({ passengerName: '' }) }),
-      ).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: createInput({ passengerName: '' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects createOrder with empty items', async () => {
-      await expect(
-        agent.execute({ data: createInput({ items: [] }) }),
-      ).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: createInput({ items: [] }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects item with negative amount', async () => {
@@ -503,9 +497,9 @@ describe('Order Management', () => {
     });
 
     it('rejects getOrder without data', async () => {
-      await expect(
-        agent.execute({ data: { operation: 'getOrder' } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: { operation: 'getOrder' } })).rejects.toThrow(
+        'Invalid input',
+      );
     });
   });
 
@@ -532,9 +526,7 @@ describe('Order Management', () => {
 
     it('throws when not initialized', async () => {
       const uninit = new OrderManagement();
-      await expect(
-        uninit.execute({ data: createInput() }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninit.execute({ data: createInput() })).rejects.toThrow('not been initialized');
     });
 
     it('returns metadata in output', async () => {
@@ -556,9 +548,7 @@ describe('Order Management', () => {
       await createOrderAndGetId();
       agent.destroy();
       // After destroy, agent is uninitialized
-      await expect(
-        agent.execute({ data: createInput() }),
-      ).rejects.toThrow('not been initialized');
+      await expect(agent.execute({ data: createInput() })).rejects.toThrow('not been initialized');
     });
 
     it('re-initializes cleanly after destroy', async () => {

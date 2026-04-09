@@ -40,8 +40,15 @@ function makeOriginal(overrides: Partial<OriginalTicketSummary> = {}): OriginalT
 function makeRequested(overrides: Partial<RequestedItinerary> = {}): RequestedItinerary {
   return {
     segments: [
-      { carrier: 'BA', flight_number: '117', origin: 'LHR', destination: 'JFK',
-        departure_date: '2026-07-01', booking_class: 'H', fare_basis: 'HOWUS' },
+      {
+        carrier: 'BA',
+        flight_number: '117',
+        origin: 'LHR',
+        destination: 'JFK',
+        departure_date: '2026-07-01',
+        booking_class: 'H',
+        fare_basis: 'HOWUS',
+      },
     ],
     new_fare: '550.00',
     new_fare_currency: 'USD',

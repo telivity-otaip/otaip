@@ -7,16 +7,8 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type {
   ConnectionBuilderInput,
   ConnectionBuilderOutput,
@@ -28,9 +20,7 @@ import { scoreConnection } from './connection-scorer.js';
 
 const IATA_CODE_RE = /^[A-Z]{3}$/i;
 
-export class ConnectionBuilder
-  implements Agent<ConnectionBuilderInput, ConnectionBuilderOutput>
-{
+export class ConnectionBuilder implements Agent<ConnectionBuilderInput, ConnectionBuilderOutput> {
   readonly id = '1.3';
   readonly name = 'Connection Builder';
   readonly version = '0.1.0';
@@ -124,9 +114,7 @@ export class ConnectionBuilder
       warnings.push('Long connection — over 6 hours at connecting airport.');
     }
     if (interline && !interline.interline_allowed) {
-      warnings.push(
-        `No interline agreement between ${arriving.carrier} and ${departing.carrier}.`,
-      );
+      warnings.push(`No interline agreement between ${arriving.carrier} and ${departing.carrier}.`);
     }
 
     return {
@@ -168,7 +156,11 @@ export class ConnectionBuilder
     }
 
     if (!data.connection_airport || !IATA_CODE_RE.test(data.connection_airport.trim())) {
-      throw new AgentInputValidationError(this.id, 'connection_airport', 'Must be a 3-letter IATA code.');
+      throw new AgentInputValidationError(
+        this.id,
+        'connection_airport',
+        'Must be a 3-letter IATA code.',
+      );
     }
 
     if (!data.arriving_segment.arrival_time) {

@@ -58,18 +58,22 @@ describe('Document Verification', () => {
     });
 
     it('fails when names differ', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ ticket_name: 'SMITH/JOHN', passport_name: 'JONES/JOHN' })],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ ticket_name: 'SMITH/JOHN', passport_name: 'JONES/JOHN' })],
+        }),
+      });
       const nameCheck = result.data.results[0]!.checks.find((c) => c.name === 'Name Match')!;
       expect(nameCheck.passed).toBe(false);
       expect(nameCheck.severity).toBe('blocking');
     });
 
     it('passes with minor differences (middle name)', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ ticket_name: 'SMITH/JOHN', passport_name: 'SMITH/JOHN WILLIAM' })],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ ticket_name: 'SMITH/JOHN', passport_name: 'SMITH/JOHN WILLIAM' })],
+        }),
+      });
       const nameCheck = result.data.results[0]!.checks.find((c) => c.name === 'Name Match')!;
       expect(nameCheck.passed).toBe(true);
     });
@@ -83,18 +87,22 @@ describe('Document Verification', () => {
     });
 
     it('fails when DOB missing', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ date_of_birth: undefined })],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ date_of_birth: undefined })],
+        }),
+      });
       const dobCheck = result.data.results[0]!.checks.find((c) => c.name === 'DOB Present')!;
       expect(dobCheck.passed).toBe(false);
       expect(dobCheck.severity).toBe('blocking');
     });
 
     it('fails with invalid DOB format', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ date_of_birth: 'not-a-date' })],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ date_of_birth: 'not-a-date' })],
+        }),
+      });
       const dobCheck = result.data.results[0]!.checks.find((c) => c.name === 'DOB Present')!;
       expect(dobCheck.passed).toBe(false);
     });
@@ -108,18 +116,22 @@ describe('Document Verification', () => {
     });
 
     it('flags invalid passport format (advisory)', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ passport_number: 'AB' })], // too short
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ passport_number: 'AB' })], // too short
+        }),
+      });
       const ppCheck = result.data.results[0]!.checks.find((c) => c.name === 'Passport Format')!;
       expect(ppCheck.passed).toBe(false);
       expect(ppCheck.severity).toBe('advisory');
     });
 
     it('validates GB passport format', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ nationality: 'GB', passport_number: 'AB1234567' })],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ nationality: 'GB', passport_number: 'AB1234567' })],
+        }),
+      });
       const ppCheck = result.data.results[0]!.checks.find((c) => c.name === 'Passport Format')!;
       expect(ppCheck.passed).toBe(true);
     });
@@ -133,45 +145,53 @@ describe('Document Verification', () => {
     });
 
     it('fails when passport expires within 6 months of travel', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ passport_expiry: '2026-09-01' })],
-        segments: [makeSeg({ travel_date: '2026-06-15' })],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ passport_expiry: '2026-09-01' })],
+          segments: [makeSeg({ travel_date: '2026-06-15' })],
+        }),
+      });
       const valCheck = result.data.results[0]!.checks.find((c) => c.name === 'Passport Validity')!;
       expect(valCheck.passed).toBe(false);
       expect(valCheck.severity).toBe('blocking');
     });
 
     it('uses latest travel date for validity check', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ passport_expiry: '2026-11-01' })],
-        segments: [
-          makeSeg({ travel_date: '2026-06-01' }),
-          makeSeg({ travel_date: '2026-06-15', destination_country: 'FR' }),
-        ],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ passport_expiry: '2026-11-01' })],
+          segments: [
+            makeSeg({ travel_date: '2026-06-01' }),
+            makeSeg({ travel_date: '2026-06-15', destination_country: 'FR' }),
+          ],
+        }),
+      });
       const valCheck = result.data.results[0]!.checks.find((c) => c.name === 'Passport Validity')!;
       // Needs valid until 2026-12-15 (6 months after Jun 15), but expires Nov 1
       expect(valCheck.passed).toBe(false);
     });
 
     it('respects configurable validity months', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ passport_expiry: '2026-09-01' })],
-        segments: [makeSeg({ travel_date: '2026-06-15' })],
-        passport_validity_months: 3, // only 3 months required
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ passport_expiry: '2026-09-01' })],
+          segments: [makeSeg({ travel_date: '2026-06-15' })],
+          passport_validity_months: 3, // only 3 months required
+        }),
+      });
       const valCheck = result.data.results[0]!.checks.find((c) => c.name === 'Passport Validity')!;
       // Expires Sep 1, travel Jun 15, +3 months = Sep 15, fails
       expect(valCheck.passed).toBe(false);
     });
 
     it('passes when expiry matches exactly the required date', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ passport_expiry: '2027-06-15' })],
-        segments: [makeSeg({ travel_date: '2026-06-15' })],
-        passport_validity_months: 12,
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ passport_expiry: '2027-06-15' })],
+          segments: [makeSeg({ travel_date: '2026-06-15' })],
+          passport_validity_months: 12,
+        }),
+      });
       const valCheck = result.data.results[0]!.checks.find((c) => c.name === 'Passport Validity')!;
       expect(valCheck.passed).toBe(true);
     });
@@ -185,9 +205,11 @@ describe('Document Verification', () => {
     });
 
     it('warns when gender missing (advisory)', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ gender: undefined })],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ gender: undefined })],
+        }),
+      });
       const gCheck = result.data.results[0]!.checks.find((c) => c.name === 'Gender Present')!;
       expect(gCheck.passed).toBe(false);
       expect(gCheck.severity).toBe('advisory');
@@ -197,28 +219,38 @@ describe('Document Verification', () => {
   describe('Visa check (stub)', () => {
     it('passes for US→GB (visa free)', async () => {
       const result = await agent.execute({ data: makeInput() });
-      const visaCheck = result.data.results[0]!.checks.find((c) => c.name.startsWith('Visa Check'))!;
+      const visaCheck = result.data.results[0]!.checks.find((c) =>
+        c.name.startsWith('Visa Check'),
+      )!;
       expect(visaCheck.passed).toBe(true);
     });
 
     it('flags potential visa requirement for unknown pair', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ nationality: 'NG' })],
-        segments: [makeSeg({ destination_country: 'US' })],
-      }) });
-      const visaCheck = result.data.results[0]!.checks.find((c) => c.name.startsWith('Visa Check'))!;
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ nationality: 'NG' })],
+          segments: [makeSeg({ destination_country: 'US' })],
+        }),
+      });
+      const visaCheck = result.data.results[0]!.checks.find((c) =>
+        c.name.startsWith('Visa Check'),
+      )!;
       expect(visaCheck.passed).toBe(false);
       expect(visaCheck.severity).toBe('advisory');
     });
 
     it('checks visa for each unique destination', async () => {
-      const result = await agent.execute({ data: makeInput({
-        segments: [
-          makeSeg({ destination_country: 'GB' }),
-          makeSeg({ destination_country: 'FR' }),
-        ],
-      }) });
-      const visaChecks = result.data.results[0]!.checks.filter((c) => c.name.startsWith('Visa Check'));
+      const result = await agent.execute({
+        data: makeInput({
+          segments: [
+            makeSeg({ destination_country: 'GB' }),
+            makeSeg({ destination_country: 'FR' }),
+          ],
+        }),
+      });
+      const visaChecks = result.data.results[0]!.checks.filter((c) =>
+        c.name.startsWith('Visa Check'),
+      );
       expect(visaChecks).toHaveLength(2);
     });
   });
@@ -231,17 +263,21 @@ describe('Document Verification', () => {
     });
 
     it('all_passed is false with blocking failure', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ date_of_birth: undefined })],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ date_of_birth: undefined })],
+        }),
+      });
       expect(result.data.all_passed).toBe(false);
       expect(result.data.blocking_failures).toBeGreaterThan(0);
     });
 
     it('counts advisory warnings separately', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ gender: undefined })],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ gender: undefined })],
+        }),
+      });
       expect(result.data.advisory_warnings).toBeGreaterThan(0);
     });
 
@@ -251,47 +287,73 @@ describe('Document Verification', () => {
     });
 
     it('handles multiple passengers', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [
-          makePax(),
-          makePax({ ticket_name: 'DOE/JANE', passport_name: 'DOE/JANE', passport_number: 'Q87654321' }),
-        ],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [
+            makePax(),
+            makePax({
+              ticket_name: 'DOE/JANE',
+              passport_name: 'DOE/JANE',
+              passport_number: 'Q87654321',
+            }),
+          ],
+        }),
+      });
       expect(result.data.results).toHaveLength(2);
     });
   });
 
   describe('Input validation', () => {
     it('rejects empty passengers', async () => {
-      await expect(agent.execute({ data: makeInput({ passengers: [] }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ passengers: [] }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects empty segments', async () => {
-      await expect(agent.execute({ data: makeInput({ segments: [] }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ segments: [] }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid passenger name format', async () => {
-      await expect(agent.execute({ data: makeInput({
-        passengers: [makePax({ ticket_name: 'bad name' })],
-      }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({
+          data: makeInput({
+            passengers: [makePax({ ticket_name: 'bad name' })],
+          }),
+        }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects missing passport number', async () => {
-      await expect(agent.execute({ data: makeInput({
-        passengers: [makePax({ passport_number: '' })],
-      }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({
+          data: makeInput({
+            passengers: [makePax({ passport_number: '' })],
+          }),
+        }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects invalid nationality', async () => {
-      await expect(agent.execute({ data: makeInput({
-        passengers: [makePax({ nationality: 'USA' })],
-      }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({
+          data: makeInput({
+            passengers: [makePax({ nationality: 'USA' })],
+          }),
+        }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects invalid destination country', async () => {
-      await expect(agent.execute({ data: makeInput({
-        segments: [makeSeg({ destination_country: 'United Kingdom' })],
-      }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({
+          data: makeInput({
+            segments: [makeSeg({ destination_country: 'United Kingdom' })],
+          }),
+        }),
+      ).rejects.toThrow('Invalid input');
     });
   });
 
@@ -313,9 +375,11 @@ describe('Document Verification', () => {
     });
 
     it('warns on blocking failures', async () => {
-      const result = await agent.execute({ data: makeInput({
-        passengers: [makePax({ date_of_birth: undefined })],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          passengers: [makePax({ date_of_birth: undefined })],
+        }),
+      });
       expect(result.warnings).toBeDefined();
       expect(result.warnings![0]).toContain('blocking');
     });

@@ -66,32 +66,60 @@ const taxData = require('./data/tax-rates.json') as TaxData;
 
 // TODO: [NEEDS DOMAIN INPUT] Real implementation needs full IATA airport-country database
 const AIRPORT_COUNTRY: Record<string, string> = {
-  JFK: 'US', LAX: 'US', SFO: 'US', ORD: 'US', MIA: 'US', ATL: 'US', DFW: 'US', SEA: 'US', BOS: 'US', EWR: 'US',
-  LHR: 'GB', LGW: 'GB', MAN: 'GB',
-  CDG: 'FR', ORY: 'FR',
-  FRA: 'DE', MUC: 'DE',
-  FCO: 'IT', MXP: 'IT',
-  MAD: 'ES', BCN: 'ES',
+  JFK: 'US',
+  LAX: 'US',
+  SFO: 'US',
+  ORD: 'US',
+  MIA: 'US',
+  ATL: 'US',
+  DFW: 'US',
+  SEA: 'US',
+  BOS: 'US',
+  EWR: 'US',
+  LHR: 'GB',
+  LGW: 'GB',
+  MAN: 'GB',
+  CDG: 'FR',
+  ORY: 'FR',
+  FRA: 'DE',
+  MUC: 'DE',
+  FCO: 'IT',
+  MXP: 'IT',
+  MAD: 'ES',
+  BCN: 'ES',
   AMS: 'NL',
   DUB: 'IE',
   LIS: 'PT',
-  ZRH: 'CH', GVA: 'CH',
+  ZRH: 'CH',
+  GVA: 'CH',
   ARN: 'SE',
   OSL: 'NO',
-  NRT: 'JP', HND: 'JP', KIX: 'JP',
+  NRT: 'JP',
+  HND: 'JP',
+  KIX: 'JP',
   SIN: 'SG',
-  SYD: 'AU', MEL: 'AU',
-  YYZ: 'CA', YVR: 'CA',
-  GRU: 'BR', GIG: 'BR',
-  MEX: 'MX', CUN: 'MX',
-  DXB: 'AE', AUH: 'AE',
-  DEL: 'IN', BOM: 'IN',
-  ICN: 'KR', GMP: 'KR',
+  SYD: 'AU',
+  MEL: 'AU',
+  YYZ: 'CA',
+  YVR: 'CA',
+  GRU: 'BR',
+  GIG: 'BR',
+  MEX: 'MX',
+  CUN: 'MX',
+  DXB: 'AE',
+  AUH: 'AE',
+  DEL: 'IN',
+  BOM: 'IN',
+  ICN: 'KR',
+  GMP: 'KR',
   BKK: 'TH',
   AKL: 'NZ',
-  JNB: 'ZA', CPT: 'ZA',
-  RUH: 'SA', JED: 'SA',
-  PEK: 'CN', PVG: 'CN',
+  JNB: 'ZA',
+  CPT: 'ZA',
+  RUH: 'SA',
+  JED: 'SA',
+  PEK: 'CN',
+  PVG: 'CN',
   KUL: 'MY',
   HKG: 'HK',
 };
@@ -148,11 +176,15 @@ function resolveTieredAmount(
   }
 
   // Class-only tiers
-  const classTier = tiers.find((t) => t.class !== undefined && t.band === undefined && t.class === classKey);
+  const classTier = tiers.find(
+    (t) => t.class !== undefined && t.band === undefined && t.class === classKey,
+  );
   if (classTier) return { amount: classTier.amount, currency: classTier.currency };
 
   // Band-only tiers
-  const bandTier = tiers.find((t) => t.band !== undefined && t.class === undefined && t.band === bandKey);
+  const bandTier = tiers.find(
+    (t) => t.band !== undefined && t.class === undefined && t.band === bandKey,
+  );
   if (bandTier) return { amount: bandTier.amount, currency: bandTier.currency };
   const anyBand = tiers.find((t) => t.band !== undefined && t.class === undefined);
   if (anyBand) return { amount: anyBand.amount, currency: anyBand.currency };
@@ -264,7 +296,12 @@ export function calculateTaxes(input: TaxCalculationInput): TaxCalculationOutput
       // Check per-type applicability
       if (taxRule.per === 'arrival' && taxRule.country !== destCountry) continue;
       if (taxRule.per === 'departure' && taxRule.country !== originCountry) continue;
-      if (taxRule.per === 'segment' && taxRule.country !== originCountry && taxRule.country !== 'INTL') continue;
+      if (
+        taxRule.per === 'segment' &&
+        taxRule.country !== originCountry &&
+        taxRule.country !== 'INTL'
+      )
+        continue;
       if (taxRule.per === 'enplanement' && taxRule.country !== originCountry) continue;
 
       // Check exemption

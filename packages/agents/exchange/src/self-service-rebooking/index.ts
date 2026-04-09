@@ -2,7 +2,10 @@
 import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError } from '@otaip/core';
 
-export class SelfServiceRebookingAgent implements Agent<Record<string, unknown>, Record<string, unknown>> {
+export class SelfServiceRebookingAgent implements Agent<
+  Record<string, unknown>,
+  Record<string, unknown>
+> {
   readonly id = '5.5';
   readonly name = 'Self-Service Rebooking';
   readonly version = '0.0.0';

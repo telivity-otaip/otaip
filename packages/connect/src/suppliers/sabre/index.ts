@@ -69,10 +69,7 @@ export class SabreAdapter extends BaseAdapter implements ConnectAdapter {
     });
   }
 
-  async priceItinerary(
-    offerId: string,
-    passengers: PassengerCount,
-  ): Promise<PricedItinerary> {
+  async priceItinerary(offerId: string, passengers: PassengerCount): Promise<PricedItinerary> {
     return this.withRetry('priceItinerary', async () => {
       const searchInput: SearchFlightsInput = {
         origin: '',
@@ -185,9 +182,7 @@ export class SabreAdapter extends BaseAdapter implements ConnectAdapter {
     });
   }
 
-  async cancelBooking(
-    bookingId: string,
-  ): Promise<{ success: boolean; message: string }> {
+  async cancelBooking(bookingId: string): Promise<{ success: boolean; message: string }> {
     return this.withRetry('cancelBooking', async () => {
       const body = {
         confirmationId: bookingId,
@@ -235,11 +230,7 @@ export class SabreAdapter extends BaseAdapter implements ConnectAdapter {
   // PRIVATE HELPERS
   // ============================================================
 
-  private async sabrePost<T>(
-    url: string,
-    body: unknown,
-    operation: string,
-  ): Promise<T> {
+  private async sabrePost<T>(url: string, body: unknown, operation: string): Promise<T> {
     const token = await this.auth.getToken();
 
     const response = await this.fetchWithTimeout(url, {

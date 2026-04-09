@@ -9,20 +9,9 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
-import type {
-  ClassOfServiceMapperInput,
-  ClassOfServiceMapperOutput,
-} from './types.js';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
+import type { ClassOfServiceMapperInput, ClassOfServiceMapperOutput } from './types.js';
 import { mapClassOfService } from './mapper.js';
 
 /** Valid IATA 2-letter carrier code pattern */
@@ -31,9 +20,10 @@ const CARRIER_PATTERN = /^[A-Z0-9]{2}$/;
 /** Valid booking class: single letter A-Z */
 const BOOKING_CLASS_PATTERN = /^[A-Z]$/;
 
-export class ClassOfServiceMapper
-  implements Agent<ClassOfServiceMapperInput, ClassOfServiceMapperOutput>
-{
+export class ClassOfServiceMapper implements Agent<
+  ClassOfServiceMapperInput,
+  ClassOfServiceMapperOutput
+> {
   readonly id = '0.4';
   readonly name = 'Class of Service Mapper';
   readonly version = '0.1.0';
@@ -85,11 +75,7 @@ export class ClassOfServiceMapper
 
     const trimmedClass = data.booking_class.trim().toUpperCase();
     if (!BOOKING_CLASS_PATTERN.test(trimmedClass)) {
-      throw new AgentInputValidationError(
-        this.id,
-        'booking_class',
-        'Must be a single letter A-Z.',
-      );
+      throw new AgentInputValidationError(this.id, 'booking_class', 'Must be a single letter A-Z.');
     }
 
     if (!data.carrier || typeof data.carrier !== 'string') {

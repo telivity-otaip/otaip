@@ -378,9 +378,7 @@ export function mapBookingResponse(
   };
 }
 
-export function mapVerifyResponse(
-  response: HaipBookingStatusResponse,
-): HaipVerificationResult {
+export function mapVerifyResponse(response: HaipBookingStatusResponse): HaipVerificationResult {
   const v = response.verification;
   const allMatch = v?.allMatch ?? false;
 

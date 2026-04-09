@@ -28,7 +28,7 @@ Every agent implements one interface. Every output includes confidence scores. N
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
-[![Tests](https://img.shields.io/badge/tests-2499%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
+[![Tests](https://img.shields.io/badge/tests-2616%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
 [![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-cc00ff.svg)](https://pnpm.io/)
 
 ---
@@ -49,9 +49,9 @@ Every agent implements one interface. Every output includes confidence scores. N
 | Stage 9 - Platform & Integration | `@otaip/agents-platform` | 5 | 97 | Complete |
 | Stage 20 - Lodging | `@otaip/agents-lodging` | 7 | 158 | Complete |
 
-*4 agents marked coming soon (1.8, 2.6, 2.7, 7.4) - stubs exported, pending domain input or future phase.*
+*7 agents marked coming soon (1.8, 2.6, 2.7, 5.4, 5.5, 5.6, 7.4) — stubs exported, pending domain input or future phase.*
 
-**70 agents. 6 core runtime modules. 2,499 tests. All green.**
+**70 agents. 6 core runtime modules. 2,616 tests. All green.**
 
 ---
 
@@ -77,11 +77,12 @@ Every agent implements one interface. Every output includes confidence scores. N
      | Distribution |
      |   Adapters   |
      |              |
-     | Duffel       |
-     | Amadeus      |
-     | Sabre        |
-     | Verteil      |
-     | Accelya      |
+     | Duffel (NDC) |
+     | + Connect:   |
+     | Sabre, Amad- |
+     | eus, Navit-  |
+     | aire, TripPro|
+     | HAIP (hotel) |
      +--------------+
             |
     v          v          v
@@ -94,9 +95,12 @@ All agents implement the `Agent<TInput, TOutput>` interface from `@otaip/core`:
 
 ```typescript
 interface Agent<TInput, TOutput> {
+  readonly id: string;
+  readonly name: string;
+  readonly version: string;
   initialize(): Promise<void>;
-  execute(input: TInput): Promise<TOutput>;
-  health(): Promise<HealthStatus>;
+  execute(input: AgentInput<TInput>): Promise<AgentOutput<TOutput>>;
+  health(): Promise<AgentHealthStatus>;
 }
 ```
 
@@ -144,7 +148,7 @@ pnpm typecheck
 pnpm lint
 ```
 
-Requirements: Node 24+, pnpm 9+.
+Requirements: Node 24+, pnpm 10+.
 
 ---
 
@@ -168,8 +172,8 @@ import { AirportCodeResolver } from '@otaip/agents-reference';
 const resolver = new AirportCodeResolver();
 await resolver.initialize();
 
-const result = await resolver.execute({ query: 'LON' });
-// => { airports: ['LHR', 'LGW', 'LCY', 'STN', 'LTN', 'SEN'], type: 'metro' }
+const result = await resolver.execute({ data: { code: 'LON' } });
+// => { data: { airports: ['LHR', 'LGW', 'LCY', 'STN', 'LTN', 'SEN'], type: 'metro' }, confidence: 0.95 }
 ```
 
 ---
@@ -364,11 +368,12 @@ OTAIP is source-agnostic. Agents work with any distribution source via the `Dist
 
 | Package | Coverage | API type | Status |
 |---------|----------|----------|--------|
-| `@otaip/adapter-duffel` | NDC-participating airlines | REST | Live |
-| `@otaip/connect` (Sabre) | Full-service carriers via GDS | REST (Sabre APIs v5/v1) | Live |
-| `@otaip/connect` (Navitaire) | LCCs via Navitaire (New Skies/dotREZ) | REST (session-stateful) | Live |
-| `@otaip/connect` (Amadeus) | Amadeus Self-Service airlines | REST (Self-Service v2) | Live |
-| `@otaip/connect` (HAIP) | Hotel PMS via HAIP Connect API | REST | Live |
+| `@otaip/adapter-duffel` | NDC-participating airlines | REST | Implemented (requires your credentials) |
+| `@otaip/connect` (Sabre) | Full-service carriers via GDS | REST (Sabre APIs v5/v1) | Implemented (requires your credentials) |
+| `@otaip/connect` (Navitaire) | LCCs via Navitaire (New Skies/dotREZ) | REST (session-stateful) | Implemented (requires your credentials) |
+| `@otaip/connect` (Amadeus) | Amadeus Self-Service airlines | REST (Self-Service v2) | Implemented (requires your credentials) |
+| `@otaip/connect` (TripPro) | TripPro/Mondee carriers | REST + SOAP | Implemented (requires your credentials) |
+| `@otaip/connect` (HAIP) | Hotel PMS via HAIP Connect API | REST | Implemented (requires your credentials) |
 
 **Roadmap:**
 
@@ -387,30 +392,23 @@ OTAIP is source-agnostic. Agents work with any distribution source via the `Dist
 otaip/
 +-- packages/
 |   +-- core/                    # @otaip/core - Agent interface, tool registry, agent loop, lifecycle, context, retry, sub-agent
-|   +-- agents-reference/        # @otaip/agents-reference - Stage 0
-|   +-- agents-search/           # @otaip/agents-search - Stage 1
-|   +-- agents-pricing/          # @otaip/agents-pricing - Stage 2
-|   +-- agents-booking/          # @otaip/agents-booking - Stage 3
-|   +-- agents-ticketing/        # @otaip/agents-ticketing - Stage 4
-|   +-- agents-exchange/         # @otaip/agents-exchange - Stage 5
-|   +-- agents-settlement/       # @otaip/agents-settlement - Stage 6
-|   +-- agents-reconciliation/   # @otaip/agents-reconciliation - Stage 7
+|   +-- agents/
+|   |   +-- reference/           # @otaip/agents-reference - Stage 0
+|   |   +-- search/              # @otaip/agents-search - Stage 1
+|   |   +-- pricing/             # @otaip/agents-pricing - Stage 2
+|   |   +-- booking/             # @otaip/agents-booking - Stage 3
+|   |   +-- ticketing/           # @otaip/agents-ticketing - Stage 4
+|   |   +-- exchange/            # @otaip/agents-exchange - Stage 5
+|   |   +-- settlement/          # @otaip/agents-settlement - Stage 6
+|   |   +-- reconciliation/      # @otaip/agents-reconciliation - Stage 7
+|   |   +-- lodging/             # @otaip/agents-lodging - Stage 20
 |   +-- agents-tmc/              # @otaip/agents-tmc - Stage 8
 |   +-- agents-platform/         # @otaip/agents-platform - Stage 9
-|   +-- agents/
-|   |   +-- booking/             # Stage 3 - Booking agents
-|   |   +-- exchange/            # Stage 5 - Change & exchange agents
-|   |   +-- lodging/             # Stage 20 - Hotel booking lifecycle
-|   |   +-- pricing/             # Stage 2 - Pricing agents
-|   |   +-- reconciliation/      # Stage 7 - BSP/ARC reconciliation agents
-|   |   +-- reference/           # Stage 0 - Reference data agents
-|   |   +-- search/              # Stage 1 - Search agents
-|   |   +-- settlement/          # Stage 6 - Refund & ADM agents
-|   |   +-- ticketing/           # Stage 4 - Ticketing agents
-|   +-- adapter-duffel/          # @otaip/adapter-duffel - Mock + live Duffel adapter
-|   +-- connect/                # @otaip/connect - Sabre GDS, Navitaire, TripPro adapters + ChatGPT/Claude channel generators
+|   +-- adapters/
+|   |   +-- duffel/              # @otaip/adapter-duffel - Mock + live Duffel NDC adapter
+|   +-- connect/                 # @otaip/connect - Sabre, Amadeus, Navitaire, TripPro, HAIP adapters + ChatGPT/Claude channel generators
 +-- agents/
-|   +-- TAXONOMY.md              # Full 63-agent taxonomy
+|   +-- TAXONOMY.md              # Full agent taxonomy
 |   +-- specs/                   # YAML specs for all agents
 +-- docs/
 |   +-- architecture/            # ADRs, adapter target list

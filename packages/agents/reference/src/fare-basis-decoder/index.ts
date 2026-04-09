@@ -8,25 +8,12 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
-import type {
-  FareBasisDecoderInput,
-  FareBasisDecoderOutput,
-} from './types.js';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
+import type { FareBasisDecoderInput, FareBasisDecoderOutput } from './types.js';
 import { decodeFareBasis } from './decoder.js';
 
-export class FareBasisDecoder
-  implements Agent<FareBasisDecoderInput, FareBasisDecoderOutput>
-{
+export class FareBasisDecoder implements Agent<FareBasisDecoderInput, FareBasisDecoderOutput> {
   readonly id = '0.3';
   readonly name = 'Fare Basis Code Decoder';
   readonly version = '0.1.0';

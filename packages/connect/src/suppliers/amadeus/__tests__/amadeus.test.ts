@@ -14,10 +14,7 @@ import {
   reverseMapPaxType,
   toMoney,
 } from '../mapper.js';
-import type {
-  AmadeusFlightOffer,
-  AmadeusFlightOrder,
-} from '../types.js';
+import type { AmadeusFlightOffer, AmadeusFlightOrder } from '../types.js';
 
 // ============================================================
 // TEST HELPERS
@@ -242,7 +239,8 @@ describe('reverseMapPaxType', () => {
 
 describe('mapCabinClass', () => {
   it('maps ECONOMY to economy', () => expect(mapCabinClass('ECONOMY')).toBe('economy'));
-  it('maps PREMIUM_ECONOMY to premium_economy', () => expect(mapCabinClass('PREMIUM_ECONOMY')).toBe('premium_economy'));
+  it('maps PREMIUM_ECONOMY to premium_economy', () =>
+    expect(mapCabinClass('PREMIUM_ECONOMY')).toBe('premium_economy'));
   it('maps BUSINESS to business', () => expect(mapCabinClass('BUSINESS')).toBe('business'));
   it('maps FIRST to first', () => expect(mapCabinClass('FIRST')).toBe('first'));
   it('defaults unknown to economy', () => expect(mapCabinClass('UNKNOWN')).toBe('economy'));
@@ -252,7 +250,8 @@ describe('reverseMapCabinClass', () => {
   it('maps economy to ECONOMY', () => expect(reverseMapCabinClass('economy')).toBe('ECONOMY'));
   it('maps business to BUSINESS', () => expect(reverseMapCabinClass('business')).toBe('BUSINESS'));
   it('maps first to FIRST', () => expect(reverseMapCabinClass('first')).toBe('FIRST'));
-  it('maps premium_economy to PREMIUM_ECONOMY', () => expect(reverseMapCabinClass('premium_economy')).toBe('PREMIUM_ECONOMY'));
+  it('maps premium_economy to PREMIUM_ECONOMY', () =>
+    expect(reverseMapCabinClass('premium_economy')).toBe('PREMIUM_ECONOMY'));
 });
 
 // ============================================================
@@ -324,10 +323,7 @@ describe('mapSearchParams', () => {
   });
 
   it('sets preferred airlines', () => {
-    const params = mapSearchParams(
-      makeSearchInput({ preferredAirlines: ['BA', 'AA'] }),
-      'USD',
-    );
+    const params = mapSearchParams(makeSearchInput({ preferredAirlines: ['BA', 'AA'] }), 'USD');
     expect(params.includedAirlineCodes).toBe('BA,AA');
   });
 
@@ -438,10 +434,9 @@ describe('mapSearchResponse', () => {
   });
 
   it('maps carrier name from dictionaries', () => {
-    const offers = mapSearchResponse(
-      [makeAmadeusFlightOffer()],
-      { carriers: { BA: 'BRITISH AIRWAYS' } },
-    );
+    const offers = mapSearchResponse([makeAmadeusFlightOffer()], {
+      carriers: { BA: 'BRITISH AIRWAYS' },
+    });
     expect(offers[0].validatingCarrierName).toBe('BRITISH AIRWAYS');
   });
 
@@ -486,9 +481,7 @@ describe('mapSearchResponse', () => {
       fareOption: 'STANDARD',
       travelerType: 'ADULT',
       price: { currency: 'USD', total: '610.50', base: '500.00' },
-      fareDetailsBySegment: [
-        { segmentId: '1', cabin: 'ECONOMY', class: 'Y' },
-      ],
+      fareDetailsBySegment: [{ segmentId: '1', cabin: 'ECONOMY', class: 'Y' }],
     });
     const offers = mapSearchResponse([offer]);
     expect(offers[0].fares).toHaveLength(1);

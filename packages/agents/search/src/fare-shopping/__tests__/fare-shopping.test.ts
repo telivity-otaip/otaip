@@ -250,7 +250,9 @@ describe('Fare Shopping', () => {
 
   describe('Passenger type pricing', () => {
     it('calculates ADT pricing (full fare)', () => {
-      const mockOffer = { price: { total: 300, base_fare: 250, taxes: 50, currency: 'USD' } } as SearchOffer;
+      const mockOffer = {
+        price: { total: 300, base_fare: 250, taxes: 50, currency: 'USD' },
+      } as SearchOffer;
       const pricing = calculatePassengerPricing(mockOffer, [{ type: 'ADT', count: 2 }]);
 
       expect(pricing.length).toBe(1);
@@ -260,7 +262,9 @@ describe('Fare Shopping', () => {
     });
 
     it('calculates CHD pricing (75% of adult)', () => {
-      const mockOffer = { price: { total: 400, base_fare: 350, taxes: 50, currency: 'USD' } } as SearchOffer;
+      const mockOffer = {
+        price: { total: 400, base_fare: 350, taxes: 50, currency: 'USD' },
+      } as SearchOffer;
       const pricing = calculatePassengerPricing(mockOffer, [{ type: 'CHD', count: 1 }]);
 
       expect(pricing[0]!.type).toBe('CHD');
@@ -269,7 +273,9 @@ describe('Fare Shopping', () => {
     });
 
     it('calculates INF pricing (10% of adult)', () => {
-      const mockOffer = { price: { total: 1000, base_fare: 900, taxes: 100, currency: 'USD' } } as SearchOffer;
+      const mockOffer = {
+        price: { total: 1000, base_fare: 900, taxes: 100, currency: 'USD' },
+      } as SearchOffer;
       const pricing = calculatePassengerPricing(mockOffer, [{ type: 'INF', count: 1 }]);
 
       expect(pricing[0]!.type).toBe('INF');
@@ -278,7 +284,9 @@ describe('Fare Shopping', () => {
     });
 
     it('handles mixed passenger types', () => {
-      const mockOffer = { price: { total: 200, base_fare: 170, taxes: 30, currency: 'USD' } } as SearchOffer;
+      const mockOffer = {
+        price: { total: 200, base_fare: 170, taxes: 30, currency: 'USD' },
+      } as SearchOffer;
       const pricing = calculatePassengerPricing(mockOffer, [
         { type: 'ADT', count: 2 },
         { type: 'CHD', count: 1 },
@@ -288,7 +296,7 @@ describe('Fare Shopping', () => {
       expect(pricing.length).toBe(3);
       expect(pricing[0]!.subtotal).toBe(400); // 2 ADT × 200
       expect(pricing[1]!.subtotal).toBe(150); // 1 CHD × 150
-      expect(pricing[2]!.subtotal).toBe(20);  // 1 INF × 20
+      expect(pricing[2]!.subtotal).toBe(20); // 1 INF × 20
     });
 
     it('includes passenger pricing in fare offers', async () => {

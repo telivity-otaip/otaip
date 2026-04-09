@@ -168,10 +168,7 @@ export class HaipAdapter extends BaseAdapter {
     });
   }
 
-  async checkRate(
-    propertyId: string,
-    roomTypeId: string,
-  ): Promise<HaipRawRate | null> {
+  async checkRate(propertyId: string, roomTypeId: string): Promise<HaipRawRate | null> {
     return this.withRetry('checkRate', async () => {
       const body: HaipSearchRequest = {
         destination: propertyId,
@@ -224,20 +221,14 @@ export class HaipAdapter extends BaseAdapter {
         specialRequests: params.specialRequests,
       };
 
-      const response = await this.request<HaipBookResponse>(
-        'POST',
-        '/api/v1/connect/book',
-        body,
-      );
+      const response = await this.request<HaipBookResponse>('POST', '/api/v1/connect/book', body);
 
       // HAIP auto-confirms agent bookings — status should be 'confirmed'
       return mapBookingResponse(response, params.externalConfirmationCode);
     });
   }
 
-  async getBookingStatus(
-    confirmationNumber: string,
-  ): Promise<HaipVerificationResult> {
+  async getBookingStatus(confirmationNumber: string): Promise<HaipVerificationResult> {
     return this.withRetry('getBookingStatus', async () => {
       const response = await this.request<HaipBookingStatusResponse>(
         'GET',
@@ -273,9 +264,7 @@ export class HaipAdapter extends BaseAdapter {
     });
   }
 
-  async cancelBooking(
-    confirmationNumber: string,
-  ): Promise<HaipCancellationResult> {
+  async cancelBooking(confirmationNumber: string): Promise<HaipCancellationResult> {
     return this.withRetry('cancelBooking', async () => {
       const response = await this.request<HaipCancelResponse>(
         'DELETE',
@@ -293,10 +282,7 @@ export class HaipAdapter extends BaseAdapter {
   async healthCheck(): Promise<{ healthy: boolean; latencyMs: number }> {
     const start = Date.now();
     try {
-      const response = await this.request<HaipHealthResponse>(
-        'GET',
-        '/health',
-      );
+      const response = await this.request<HaipHealthResponse>('GET', '/health');
       return {
         healthy: response.status === 'ok' || response.status === 'healthy',
         latencyMs: Date.now() - start,
@@ -313,16 +299,12 @@ export class HaipAdapter extends BaseAdapter {
   // HTTP helper
   // -----------------------------------------------------------------------
 
-  private async request<T>(
-    method: string,
-    path: string,
-    body?: unknown,
-  ): Promise<T> {
+  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     const url = `${this.config.baseUrl}${path}`;
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
     };
 
     // Auth header — empty for HAIP v1.0.0, ready for OAuth token later

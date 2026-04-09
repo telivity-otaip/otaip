@@ -222,9 +222,7 @@ describe('TruncateOldestStrategy', () => {
   });
 
   it('returns empty if all must be removed', () => {
-    const entries = [
-      { id: '1', role: 'user', content: 'aaa', tokens: 100, createdAt: 1 },
-    ];
+    const entries = [{ id: '1', role: 'user', content: 'aaa', tokens: 100, createdAt: 1 }];
     const result = strategy.compact(entries, 0);
     expect(result).toHaveLength(0);
   });
@@ -242,9 +240,7 @@ describe('DropLargeToolOutputsStrategy', () => {
   });
 
   it('leaves small entries unchanged', () => {
-    const entries = [
-      { id: '1', role: 'tool_result', content: 'short', tokens: 5, createdAt: 1 },
-    ];
+    const entries = [{ id: '1', role: 'tool_result', content: 'short', tokens: 5, createdAt: 1 }];
     const result = strategy.compact(entries, 100);
     expect(result[0]!.content).toBe('short');
   });

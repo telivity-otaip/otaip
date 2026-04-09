@@ -136,7 +136,9 @@ describe('HOT File Parser', () => {
 
   it('handles forced format override', () => {
     const parser = new HOTFileParser('EDI_X12');
-    const records = parser.parse('TKT*1234567890123*PAX*LHR*JFK*BA*2026-01-01*100.00*7.00*20.00**SALE*001*CC*USD*P01~');
+    const records = parser.parse(
+      'TKT*1234567890123*PAX*LHR*JFK*BA*2026-01-01*100.00*7.00*20.00**SALE*001*CC*USD*P01~',
+    );
     expect(records.length).toBe(1);
   });
 });
@@ -342,7 +344,9 @@ describe('BSP Reconciliation', () => {
     });
 
     it('rejects empty billing period', async () => {
-      await expect(agent.execute({ data: makeInput({ billing_period: '' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ billing_period: '' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
   });
 

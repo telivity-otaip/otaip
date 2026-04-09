@@ -41,4 +41,7 @@ export interface OrchestratorOutput {
 }
 
 /** Injectable step executor for testing without real agent imports */
-export type StepExecutor = (agentId: string, input: Record<string, unknown>) => Promise<Record<string, unknown>>;
+export type StepExecutor = (
+  agentId: string,
+  input: Record<string, unknown>,
+) => Promise<Record<string, unknown>>;

@@ -7,30 +7,16 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
-import type {
-  ScheduleLookupInput,
-  ScheduleLookupOutput,
-  ConnectionOption,
-} from './types.js';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
+import type { ScheduleLookupInput, ScheduleLookupOutput, ConnectionOption } from './types.js';
 import { querySchedules, findConnections } from './schedule-data.js';
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const IATA_CODE_RE = /^[A-Z]{2,3}$/i;
 const FLIGHT_NUM_RE = /^[A-Z0-9]{1,5}$/i;
 
-export class ScheduleLookup
-  implements Agent<ScheduleLookupInput, ScheduleLookupOutput>
-{
+export class ScheduleLookup implements Agent<ScheduleLookupInput, ScheduleLookupOutput> {
   readonly id = '1.2';
   readonly name = 'Schedule Lookup';
   readonly version = '0.1.0';
@@ -78,7 +64,8 @@ export class ScheduleLookup
         second_leg: c.secondLeg,
         connection_minutes: c.connectionMinutes,
         connection_airport: c.connectionAirport,
-        total_duration_minutes: c.firstLeg.duration_minutes + c.connectionMinutes + c.secondLeg.duration_minutes,
+        total_duration_minutes:
+          c.firstLeg.duration_minutes + c.connectionMinutes + c.secondLeg.duration_minutes,
       }));
     }
 
@@ -120,12 +107,20 @@ export class ScheduleLookup
       throw new AgentInputValidationError(this.id, 'origin', 'Must be a 2-3 letter IATA code.');
     }
 
-    if (!data.destination || typeof data.destination !== 'string' || data.destination.trim().length === 0) {
+    if (
+      !data.destination ||
+      typeof data.destination !== 'string' ||
+      data.destination.trim().length === 0
+    ) {
       throw new AgentInputValidationError(this.id, 'destination', 'Required non-empty string.');
     }
 
     if (!IATA_CODE_RE.test(data.destination.trim())) {
-      throw new AgentInputValidationError(this.id, 'destination', 'Must be a 2-3 letter IATA code.');
+      throw new AgentInputValidationError(
+        this.id,
+        'destination',
+        'Must be a 2-3 letter IATA code.',
+      );
     }
 
     if (!data.date || !ISO_DATE_RE.test(data.date)) {
@@ -138,10 +133,18 @@ export class ScheduleLookup
 
     if (data.flight_number !== undefined) {
       if (!data.carrier) {
-        throw new AgentInputValidationError(this.id, 'flight_number', 'Carrier is required when specifying flight_number.');
+        throw new AgentInputValidationError(
+          this.id,
+          'flight_number',
+          'Carrier is required when specifying flight_number.',
+        );
       }
       if (!FLIGHT_NUM_RE.test(data.flight_number.trim())) {
-        throw new AgentInputValidationError(this.id, 'flight_number', 'Must be 1-5 alphanumeric characters.');
+        throw new AgentInputValidationError(
+          this.id,
+          'flight_number',
+          'Must be 1-5 alphanumeric characters.',
+        );
       }
     }
   }

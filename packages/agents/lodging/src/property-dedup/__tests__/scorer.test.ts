@@ -74,7 +74,7 @@ describe('Deduplication Scoring Algorithms', () => {
 
   describe('Haversine Distance', () => {
     it('returns 0 for identical coordinates', () => {
-      expect(haversineDistance(40.7580, -73.9855, 40.7580, -73.9855)).toBe(0);
+      expect(haversineDistance(40.758, -73.9855, 40.758, -73.9855)).toBe(0);
     });
 
     it('calculates ~111km for 1 degree latitude', () => {
@@ -85,37 +85,37 @@ describe('Deduplication Scoring Algorithms', () => {
 
     it('calculates short distances accurately', () => {
       // Two points ~100m apart in Manhattan
-      const distance = haversineDistance(40.7580, -73.9855, 40.7581, -73.9856);
+      const distance = haversineDistance(40.758, -73.9855, 40.7581, -73.9856);
       expect(distance).toBeGreaterThan(5);
       expect(distance).toBeLessThan(200);
     });
 
     it('handles coordinates across hemispheres', () => {
-      const distance = haversineDistance(40.7580, -73.9855, -33.8688, 151.2093);
+      const distance = haversineDistance(40.758, -73.9855, -33.8688, 151.2093);
       expect(distance).toBeGreaterThan(15_000_000); // NYC to Sydney > 15,000km
     });
   });
 
   describe('Haversine Score', () => {
     it('returns 1.0 for same location', () => {
-      expect(haversineScore(40.7580, -73.9855, 40.7580, -73.9855)).toBe(1.0);
+      expect(haversineScore(40.758, -73.9855, 40.758, -73.9855)).toBe(1.0);
     });
 
     it('returns 1.0 for very close locations (within 50m)', () => {
       // ~10m apart
-      const score = haversineScore(40.7580, -73.9855, 40.75801, -73.98551);
+      const score = haversineScore(40.758, -73.9855, 40.75801, -73.98551);
       expect(score).toBe(1.0);
     });
 
     it('returns 0.0 for far apart locations (>500m)', () => {
       // ~5km apart
-      const score = haversineScore(40.7580, -73.9855, 40.8000, -73.9855);
+      const score = haversineScore(40.758, -73.9855, 40.8, -73.9855);
       expect(score).toBe(0.0);
     });
 
     it('returns intermediate score for 250m threshold area', () => {
       // Properties within industry 250m threshold should score > 0.4
-      const score = haversineScore(40.7580, -73.9855, 40.7581, -73.9856);
+      const score = haversineScore(40.758, -73.9855, 40.7581, -73.9856);
       expect(score).toBeGreaterThan(0.4);
     });
   });
@@ -178,7 +178,11 @@ describe('Deduplication Scoring Algorithms', () => {
 
     it('returns 0 when all components are 0', () => {
       const result = compositeScore({
-        name: 0, address: 0, coordinates: 0, chainCode: 0, starRating: 0,
+        name: 0,
+        address: 0,
+        coordinates: 0,
+        chainCode: 0,
+        starRating: 0,
       });
       expect(result.weighted).toBe(0);
     });
@@ -186,13 +190,21 @@ describe('Deduplication Scoring Algorithms', () => {
     it('applies correct weights', () => {
       // Only name component = 1.0, rest = 0
       const nameOnly = compositeScore({
-        name: 1.0, address: 0, coordinates: 0, chainCode: 0, starRating: 0,
+        name: 1.0,
+        address: 0,
+        coordinates: 0,
+        chainCode: 0,
+        starRating: 0,
       });
       expect(nameOnly.weighted).toBeCloseTo(0.3, 5); // name weight = 0.3
 
       // Only coordinates component = 1.0
       const coordOnly = compositeScore({
-        name: 0, address: 0, coordinates: 1.0, chainCode: 0, starRating: 0,
+        name: 0,
+        address: 0,
+        coordinates: 1.0,
+        chainCode: 0,
+        starRating: 0,
       });
       expect(coordOnly.weighted).toBeCloseTo(0.25, 5); // coord weight = 0.25
     });
@@ -200,7 +212,11 @@ describe('Deduplication Scoring Algorithms', () => {
     it('weights sum to 1.0', () => {
       // All components at 0.5 should give exactly 0.5
       const result = compositeScore({
-        name: 0.5, address: 0.5, coordinates: 0.5, chainCode: 0.5, starRating: 0.5,
+        name: 0.5,
+        address: 0.5,
+        coordinates: 0.5,
+        chainCode: 0.5,
+        starRating: 0.5,
       });
       expect(result.weighted).toBeCloseTo(0.5, 5);
     });

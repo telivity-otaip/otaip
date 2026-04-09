@@ -5,13 +5,7 @@
 import type { HookRegistry } from '../lifecycle/hook-registry.js';
 
 /** Possible states of the agent loop state machine. */
-export type LoopPhase =
-  | 'idle'
-  | 'running'
-  | 'tool_call'
-  | 'tool_result'
-  | 'complete'
-  | 'error';
+export type LoopPhase = 'idle' | 'running' | 'tool_call' | 'tool_result' | 'complete' | 'error';
 
 /** A tool invocation request from the model. */
 export interface ToolCall {
@@ -52,12 +46,7 @@ export interface LoopState {
 
 /** Structured event emitted by the loop at key points. */
 export interface LoopEvent {
-  readonly type:
-    | 'loop_start'
-    | 'loop_end'
-    | 'before_tool_call'
-    | 'after_tool_call'
-    | 'error';
+  readonly type: 'loop_start' | 'loop_end' | 'before_tool_call' | 'after_tool_call' | 'error';
   readonly state: LoopState;
   readonly toolCall?: ToolCall;
   readonly toolResult?: ToolResult;

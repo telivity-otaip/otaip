@@ -5,8 +5,14 @@
  */
 
 export type KnowledgeTopic =
-  | 'distribution' | 'ticketing' | 'settlement'
-  | 'operations' | 'tmc' | 'fares' | 'regulations' | 'reference';
+  | 'distribution'
+  | 'ticketing'
+  | 'settlement'
+  | 'operations'
+  | 'tmc'
+  | 'fares'
+  | 'regulations'
+  | 'reference';
 
 export type KnowledgeOperation = 'query' | 'index_document' | 'list_topics' | 'get_document';
 

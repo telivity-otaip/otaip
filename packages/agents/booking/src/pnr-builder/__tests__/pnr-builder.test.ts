@@ -22,9 +22,7 @@ afterAll(() => {
 function makeBaseInput(gds: 'AMADEUS' | 'SABRE' | 'TRAVELPORT'): PnrBuilderInput {
   return {
     gds,
-    passengers: [
-      { last_name: 'Smith', first_name: 'John', title: 'MR', passenger_type: 'ADT' },
-    ],
+    passengers: [{ last_name: 'Smith', first_name: 'John', title: 'MR', passenger_type: 'ADT' }],
     segments: [
       {
         carrier: 'BA',
@@ -172,17 +170,29 @@ describe('PNR Builder', () => {
       input.ssrs = [{ code: 'WCHR', carrier: 'BA', text: 'WHEELCHAIR NEEDED', passenger_index: 1 }];
 
       const result = await agent.execute({ data: input });
-      const ssrCmd = result.data.commands.find((c) => c.element_type === 'SSR' && c.description.includes('WCHR'));
+      const ssrCmd = result.data.commands.find(
+        (c) => c.element_type === 'SSR' && c.description.includes('WCHR'),
+      );
       expect(ssrCmd).toBeDefined();
       expect(ssrCmd!.command).toContain('WCHR');
     });
 
     it('generates VGML vegetarian meal SSR', async () => {
       const input = makeBaseInput('SABRE');
-      input.ssrs = [{ code: 'VGML', carrier: 'BA', text: 'VEGETARIAN MEAL', passenger_index: 1, segment_index: 1 }];
+      input.ssrs = [
+        {
+          code: 'VGML',
+          carrier: 'BA',
+          text: 'VEGETARIAN MEAL',
+          passenger_index: 1,
+          segment_index: 1,
+        },
+      ];
 
       const result = await agent.execute({ data: input });
-      const ssrCmd = result.data.commands.find((c) => c.element_type === 'SSR' && c.description.includes('VGML'));
+      const ssrCmd = result.data.commands.find(
+        (c) => c.element_type === 'SSR' && c.description.includes('VGML'),
+      );
       expect(ssrCmd).toBeDefined();
     });
 
@@ -272,7 +282,11 @@ describe('PNR Builder', () => {
       input.group_name = 'ACME CORP TRIP';
       // Add more passengers for group
       for (let i = 0; i < 11; i++) {
-        input.passengers.push({ last_name: 'Groupmember', first_name: 'Person', passenger_type: 'ADT' });
+        input.passengers.push({
+          last_name: 'Groupmember',
+          first_name: 'Person',
+          passenger_type: 'ADT',
+        });
       }
 
       const result = await agent.execute({ data: input });
@@ -383,7 +397,9 @@ describe('PNR Builder', () => {
 
     it('throws when not initialized', async () => {
       const uninit = new PnrBuilder();
-      await expect(uninit.execute({ data: makeBaseInput('AMADEUS') })).rejects.toThrow('not been initialized');
+      await expect(uninit.execute({ data: makeBaseInput('AMADEUS') })).rejects.toThrow(
+        'not been initialized',
+      );
     });
   });
 });

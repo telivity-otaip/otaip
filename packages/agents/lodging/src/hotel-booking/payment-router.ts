@@ -22,10 +22,7 @@ export interface PaymentResult {
 /**
  * Route payment based on the selected payment model.
  */
-export function routePayment(
-  model: PaymentModel,
-  totalAmount: MonetaryAmount,
-): PaymentResult {
+export function routePayment(model: PaymentModel, totalAmount: MonetaryAmount): PaymentResult {
   switch (model) {
     case 'prepaid':
       return routePrepaid(totalAmount);

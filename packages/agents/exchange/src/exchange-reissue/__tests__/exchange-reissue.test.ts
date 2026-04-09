@@ -36,8 +36,13 @@ function makeInput(overrides: Partial<ExchangeReissueInput> = {}): ExchangeReiss
     residual_value: '250.00', // 450 - 200 = 250
     new_segments: [
       {
-        carrier: 'BA', flight_number: '117', origin: 'LHR', destination: 'JFK',
-        departure_date: '2026-07-01', booking_class: 'H', fare_basis: 'HOWUS',
+        carrier: 'BA',
+        flight_number: '117',
+        origin: 'LHR',
+        destination: 'JFK',
+        departure_date: '2026-07-01',
+        booking_class: 'H',
+        fare_basis: 'HOWUS',
       },
     ],
     new_fare: '550.00',
@@ -48,7 +53,13 @@ function makeInput(overrides: Partial<ExchangeReissueInput> = {}): ExchangeReiss
       { code: 'YQ', amount: '15.00', currency: 'USD' },
     ],
     fare_calculation: 'LON BA NYC 550.00 NUC550.00 END ROE1.00',
-    form_of_payment: { type: 'CREDIT_CARD', card_code: 'VI', card_last_four: '4242', amount: '505.00', currency: 'USD' },
+    form_of_payment: {
+      type: 'CREDIT_CARD',
+      card_code: 'VI',
+      card_last_four: '4242',
+      amount: '505.00',
+      currency: 'USD',
+    },
     same_origin_destination: true,
     issue_date: '2026-04-01',
     ...overrides,
@@ -189,7 +200,9 @@ describe('Exchange/Reissue', () => {
       const input = makeInput({ gds: 'AMADEUS' });
       const result = await agent.execute({ data: input });
       expect(result.data.reissue.exchange_commands).toBeDefined();
-      const tktxch = result.data.reissue.exchange_commands!.find((c) => c.command_name === 'TKTXCH');
+      const tktxch = result.data.reissue.exchange_commands!.find(
+        (c) => c.command_name === 'TKTXCH',
+      );
       expect(tktxch).toBeDefined();
       expect(tktxch!.gds).toBe('AMADEUS');
     });
@@ -197,14 +210,18 @@ describe('Exchange/Reissue', () => {
     it('generates Sabre EXCHANGE_PNR command', async () => {
       const input = makeInput({ gds: 'SABRE' });
       const result = await agent.execute({ data: input });
-      const cmd = result.data.reissue.exchange_commands!.find((c) => c.command_name === 'EXCHANGE_PNR');
+      const cmd = result.data.reissue.exchange_commands!.find(
+        (c) => c.command_name === 'EXCHANGE_PNR',
+      );
       expect(cmd).toBeDefined();
     });
 
     it('generates Travelport UNIVERSAL_RECORD_EXCHANGE command', async () => {
       const input = makeInput({ gds: 'TRAVELPORT' });
       const result = await agent.execute({ data: input });
-      const cmd = result.data.reissue.exchange_commands!.find((c) => c.command_name === 'UNIVERSAL_RECORD_EXCHANGE');
+      const cmd = result.data.reissue.exchange_commands!.find(
+        (c) => c.command_name === 'UNIVERSAL_RECORD_EXCHANGE',
+      );
       expect(cmd).toBeDefined();
     });
 
@@ -222,7 +239,9 @@ describe('Exchange/Reissue', () => {
       });
       const result = await agent.execute({ data: input });
       expect(result.data.reissue.exchange_audit.conjunction_originals).toHaveLength(2);
-      const conjRef = result.data.reissue.exchange_commands!.find((c) => c.command_name === 'CONJUNCTION_REFERENCE');
+      const conjRef = result.data.reissue.exchange_commands!.find(
+        (c) => c.command_name === 'CONJUNCTION_REFERENCE',
+      );
       expect(conjRef).toBeDefined();
     });
 
@@ -236,27 +255,39 @@ describe('Exchange/Reissue', () => {
 
   describe('Input validation', () => {
     it('rejects invalid original ticket number', async () => {
-      await expect(agent.execute({ data: makeInput({ original_ticket_number: 'BAD' }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeInput({ original_ticket_number: 'BAD' }) }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects invalid carrier', async () => {
-      await expect(agent.execute({ data: makeInput({ issuing_carrier: 'X' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ issuing_carrier: 'X' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid passenger name', async () => {
-      await expect(agent.execute({ data: makeInput({ passenger_name: 'bad' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ passenger_name: 'bad' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects empty segments', async () => {
-      await expect(agent.execute({ data: makeInput({ new_segments: [] }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ new_segments: [] }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid conjunction ticket number', async () => {
-      await expect(agent.execute({ data: makeInput({ conjunction_originals: ['BAD'] }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeInput({ conjunction_originals: ['BAD'] }) }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects invalid GDS', async () => {
-      await expect(agent.execute({ data: makeInput({ gds: 'INVALID' as 'AMADEUS' }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeInput({ gds: 'INVALID' as 'AMADEUS' }) }),
+      ).rejects.toThrow('Invalid input');
     });
   });
 

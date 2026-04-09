@@ -6,7 +6,11 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { InvoluntaryRebook } from '../index.js';
-import type { InvoluntaryRebookInput, OriginalPnrSummary, ScheduleChangeNotification } from '../types.js';
+import type {
+  InvoluntaryRebookInput,
+  OriginalPnrSummary,
+  ScheduleChangeNotification,
+} from '../types.js';
 
 let agent: InvoluntaryRebook;
 
@@ -24,9 +28,14 @@ function makePnr(overrides: Partial<OriginalPnrSummary> = {}): OriginalPnrSummar
     record_locator: 'ABC123',
     passenger_name: 'SMITH/JOHN',
     affected_segment: {
-      carrier: 'BA', flight_number: '115', origin: 'LHR', destination: 'JFK',
-      departure_date: '2026-06-15', departure_time: '09:00',
-      booking_class: 'Y', fare_basis: 'YOWUS',
+      carrier: 'BA',
+      flight_number: '115',
+      origin: 'LHR',
+      destination: 'JFK',
+      departure_date: '2026-06-15',
+      departure_time: '09:00',
+      booking_class: 'Y',
+      fare_basis: 'YOWUS',
     },
     issuing_carrier: 'BA',
     departure_country: 'GB',
@@ -37,7 +46,9 @@ function makePnr(overrides: Partial<OriginalPnrSummary> = {}): OriginalPnrSummar
   };
 }
 
-function makeChange(overrides: Partial<ScheduleChangeNotification> = {}): ScheduleChangeNotification {
+function makeChange(
+  overrides: Partial<ScheduleChangeNotification> = {},
+): ScheduleChangeNotification {
   return {
     change_type: 'TIME_CHANGE',
     original_departure_time: '09:00',
@@ -53,19 +64,34 @@ function makeInput(overrides: Partial<InvoluntaryRebookInput> = {}): Involuntary
     schedule_change: makeChange(),
     available_flights: [
       {
-        carrier: 'BA', flight_number: '117', departure_date: '2026-06-15',
-        departure_time: '14:00', booking_class: 'Y',
-        is_same_carrier: true, is_alliance_partner: false, is_interline: false,
+        carrier: 'BA',
+        flight_number: '117',
+        departure_date: '2026-06-15',
+        departure_time: '14:00',
+        booking_class: 'Y',
+        is_same_carrier: true,
+        is_alliance_partner: false,
+        is_interline: false,
       },
       {
-        carrier: 'AA', flight_number: '100', departure_date: '2026-06-15',
-        departure_time: '15:00', booking_class: 'Y',
-        is_same_carrier: false, is_alliance_partner: true, is_interline: false,
+        carrier: 'AA',
+        flight_number: '100',
+        departure_date: '2026-06-15',
+        departure_time: '15:00',
+        booking_class: 'Y',
+        is_same_carrier: false,
+        is_alliance_partner: true,
+        is_interline: false,
       },
       {
-        carrier: 'UA', flight_number: '900', departure_date: '2026-06-15',
-        departure_time: '18:00', booking_class: 'Y',
-        is_same_carrier: false, is_alliance_partner: false, is_interline: true,
+        carrier: 'UA',
+        flight_number: '900',
+        departure_date: '2026-06-15',
+        departure_time: '18:00',
+        booking_class: 'Y',
+        is_same_carrier: false,
+        is_alliance_partner: false,
+        is_interline: true,
       },
     ],
     ...overrides,
@@ -168,9 +194,14 @@ describe('Involuntary Rebook', () => {
       const input = makeInput({
         available_flights: [
           {
-            carrier: 'AA', flight_number: '100', departure_date: '2026-06-15',
-            departure_time: '15:00', booking_class: 'Y',
-            is_same_carrier: false, is_alliance_partner: true, is_interline: false,
+            carrier: 'AA',
+            flight_number: '100',
+            departure_date: '2026-06-15',
+            departure_time: '15:00',
+            booking_class: 'Y',
+            is_same_carrier: false,
+            is_alliance_partner: true,
+            is_interline: false,
           },
         ],
       });
@@ -182,9 +213,14 @@ describe('Involuntary Rebook', () => {
       const input = makeInput({
         available_flights: [
           {
-            carrier: 'UA', flight_number: '900', departure_date: '2026-06-15',
-            departure_time: '18:00', booking_class: 'Y',
-            is_same_carrier: false, is_alliance_partner: false, is_interline: true,
+            carrier: 'UA',
+            flight_number: '900',
+            departure_date: '2026-06-15',
+            departure_time: '18:00',
+            booking_class: 'Y',
+            is_same_carrier: false,
+            is_alliance_partner: false,
+            is_interline: true,
           },
         ],
       });
@@ -226,7 +262,8 @@ describe('Involuntary Rebook', () => {
     it('flags EU261 for EU carrier regardless of route', async () => {
       const input = makeInput({
         original_pnr: makePnr({
-          departure_country: 'US', arrival_country: 'JP',
+          departure_country: 'US',
+          arrival_country: 'JP',
           is_eu_carrier: true,
         }),
       });
@@ -238,12 +275,18 @@ describe('Involuntary Rebook', () => {
     it('does not flag EU261 for non-EU carrier from non-EU country', async () => {
       const input = makeInput({
         original_pnr: makePnr({
-          departure_country: 'US', arrival_country: 'JP',
+          departure_country: 'US',
+          arrival_country: 'JP',
           is_eu_carrier: false,
           affected_segment: {
-            carrier: 'NH', flight_number: '10', origin: 'JFK', destination: 'NRT',
-            departure_date: '2026-06-15', departure_time: '11:00',
-            booking_class: 'Y', fare_basis: 'YOWJP',
+            carrier: 'NH',
+            flight_number: '10',
+            origin: 'JFK',
+            destination: 'NRT',
+            departure_date: '2026-06-15',
+            departure_time: '11:00',
+            booking_class: 'Y',
+            fare_basis: 'YOWJP',
           },
         }),
       });
@@ -272,11 +315,17 @@ describe('Involuntary Rebook', () => {
     it('does not flag US DOT for non-US route', async () => {
       const input = makeInput({
         original_pnr: makePnr({
-          departure_country: 'GB', arrival_country: 'JP',
+          departure_country: 'GB',
+          arrival_country: 'JP',
           affected_segment: {
-            carrier: 'BA', flight_number: '5', origin: 'LHR', destination: 'NRT',
-            departure_date: '2026-06-15', departure_time: '11:00',
-            booking_class: 'Y', fare_basis: 'YOWJP',
+            carrier: 'BA',
+            flight_number: '5',
+            origin: 'LHR',
+            destination: 'NRT',
+            departure_date: '2026-06-15',
+            departure_time: '11:00',
+            booking_class: 'Y',
+            fare_basis: 'YOWJP',
           },
         }),
       });

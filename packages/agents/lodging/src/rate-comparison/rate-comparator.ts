@@ -43,8 +43,8 @@ export function comparePropertyRates(
   }
 
   // Sort by grand total (lowest first)
-  allRates.sort((a, b) =>
-    parseFloat(a.totalCost.grandTotal.amount) - parseFloat(b.totalCost.grandTotal.amount),
+  allRates.sort(
+    (a, b) => parseFloat(a.totalCost.grandTotal.amount) - parseFloat(b.totalCost.grandTotal.amount),
   );
 
   // Best rate per rate type

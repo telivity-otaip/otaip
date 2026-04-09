@@ -14,10 +14,26 @@ import type {
 } from './types.js';
 
 const airlinePrefixes: Record<string, string> = {
-  AA: '001', BA: '125', LH: '220', AF: '057', KL: '074',
-  UA: '016', DL: '006', SQ: '618', CX: '160', QF: '081',
-  EK: '176', QR: '157', TK: '235', NH: '205', JL: '131',
-  AC: '014', IB: '075', SK: '117', LX: '724', OS: '257',
+  AA: '001',
+  BA: '125',
+  LH: '220',
+  AF: '057',
+  KL: '074',
+  UA: '016',
+  DL: '006',
+  SQ: '618',
+  CX: '160',
+  QF: '081',
+  EK: '176',
+  QR: '157',
+  TK: '235',
+  NH: '205',
+  JL: '131',
+  AC: '014',
+  IB: '075',
+  SK: '117',
+  LX: '724',
+  OS: '257',
 };
 
 function generateSerial(recordLocator: string, salt: string): string {
@@ -46,9 +62,12 @@ function sumTaxes(taxes: TaxItem[]): Decimal {
 // Tax carryforward logic
 // ---------------------------------------------------------------------------
 
-function computeTaxes(
-  input: ExchangeReissueInput,
-): { taxes: TaxItem[]; carriedForward: TaxItem[]; newTaxes: TaxItem[]; totalTax: Decimal } {
+function computeTaxes(input: ExchangeReissueInput): {
+  taxes: TaxItem[];
+  carriedForward: TaxItem[];
+  newTaxes: TaxItem[];
+  totalTax: Decimal;
+} {
   if (input.same_origin_destination) {
     // Carry forward: for matching tax codes, use the max of original and new
     // For new codes not in original, collect the new amount
@@ -113,7 +132,10 @@ function computeTaxes(
 // GDS exchange commands
 // ---------------------------------------------------------------------------
 
-function buildExchangeCommands(input: ExchangeReissueInput, additionalCollection: string): ExchangeCommand[] {
+function buildExchangeCommands(
+  input: ExchangeReissueInput,
+  additionalCollection: string,
+): ExchangeCommand[] {
   if (!input.gds) return [];
 
   const commands: ExchangeCommand[] = [];

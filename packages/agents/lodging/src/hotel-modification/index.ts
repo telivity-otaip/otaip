@@ -7,23 +7,13 @@
  * Key domain rule: Date changes = cancel + rebook (NOT a modification).
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { ModificationInput, ModificationOutput } from './types.js';
 import { classifyChange } from './modification-classifier.js';
 import { calculateCancellationPenalty, calculateNoShowPenalty } from './cancellation-calculator.js';
 
-export class HotelModificationAgent
-  implements Agent<ModificationInput, ModificationOutput>
-{
+export class HotelModificationAgent implements Agent<ModificationInput, ModificationOutput> {
   readonly id = '20.6';
   readonly name = 'Hotel Modification & Cancellation';
   readonly version = '0.1.0';
@@ -34,9 +24,7 @@ export class HotelModificationAgent
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<ModificationInput>,
-  ): Promise<AgentOutput<ModificationOutput>> {
+  async execute(input: AgentInput<ModificationInput>): Promise<AgentOutput<ModificationOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -81,7 +69,8 @@ export class HotelModificationAgent
         classification,
         isFreeMod: false,
         rebookRequired: true,
-        message: 'Date changes require cancel and rebook — new rates will apply. This is NOT a modification.',
+        message:
+          'Date changes require cancel and rebook — new rates will apply. This is NOT a modification.',
       };
     }
 
@@ -131,7 +120,9 @@ export class HotelModificationAgent
   }
 
   private handleNoShow(input: ModificationInput): ModificationOutput {
-    const penalty = calculateNoShowPenalty(input.nightlyRate ?? { amount: '0.00', currency: 'USD' });
+    const penalty = calculateNoShowPenalty(
+      input.nightlyRate ?? { amount: '0.00', currency: 'USD' },
+    );
 
     return {
       success: true,
@@ -160,7 +151,11 @@ export class HotelModificationAgent
     }
     const validOps = ['modify', 'cancel', 'check_penalty', 'process_no_show'];
     if (!validOps.includes(data.operation)) {
-      throw new AgentInputValidationError(this.id, 'operation', `Invalid operation. Must be one of: ${validOps.join(', ')}`);
+      throw new AgentInputValidationError(
+        this.id,
+        'operation',
+        `Invalid operation. Must be one of: ${validOps.join(', ')}`,
+      );
     }
     if (!data.bookingId) {
       throw new AgentInputValidationError(this.id, 'bookingId', 'Booking ID is required');
@@ -169,7 +164,11 @@ export class HotelModificationAgent
 }
 
 export type {
-  ModificationInput, ModificationOutput, FreeModifications,
-  DateChangeRequest, ChangeClassification, PenaltyCalculation,
+  ModificationInput,
+  ModificationOutput,
+  FreeModifications,
+  DateChangeRequest,
+  ChangeClassification,
+  PenaltyCalculation,
   ModificationOperation,
 } from './types.js';

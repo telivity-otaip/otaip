@@ -153,9 +153,7 @@ describe('ToolRegistry', () => {
     it('listEnabled excludes disabled tools', () => {
       const registry = new ToolRegistry();
       registry.register(makeTool({ name: 'enabled-tool' }));
-      registry.register(
-        makeTool({ name: 'disabled-tool', isEnabled: () => false }),
-      );
+      registry.register(makeTool({ name: 'disabled-tool', isEnabled: () => false }));
 
       const enabled = registry.listEnabled();
       expect(enabled).toHaveLength(1);
@@ -165,9 +163,7 @@ describe('ToolRegistry', () => {
     it('listAll includes disabled tools', () => {
       const registry = new ToolRegistry();
       registry.register(makeTool({ name: 'enabled-tool' }));
-      registry.register(
-        makeTool({ name: 'disabled-tool', isEnabled: () => false }),
-      );
+      registry.register(makeTool({ name: 'disabled-tool', isEnabled: () => false }));
 
       expect(registry.listAll()).toHaveLength(2);
     });

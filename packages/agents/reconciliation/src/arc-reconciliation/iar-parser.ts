@@ -20,17 +20,30 @@ function detectFormat(content: string): IARFormat {
 
 function parseTransactionType(code: string): 'SALE' | 'REFUND' | 'ADM' | 'ACM' {
   switch (code.trim().toUpperCase()) {
-    case 'SALE': case 'S': return 'SALE';
-    case 'REFUND': case 'R': case 'RFND': return 'REFUND';
-    case 'ADM': case 'D': return 'ADM';
-    case 'ACM': case 'C': return 'ACM';
-    default: return 'SALE';
+    case 'SALE':
+    case 'S':
+      return 'SALE';
+    case 'REFUND':
+    case 'R':
+    case 'RFND':
+      return 'REFUND';
+    case 'ADM':
+    case 'D':
+      return 'ADM';
+    case 'ACM':
+    case 'C':
+      return 'ACM';
+    default:
+      return 'SALE';
   }
 }
 
 function parseEdiX12(content: string): IARRecord[] {
   const records: IARRecord[] = [];
-  const segments = content.split('~').map((s) => s.trim()).filter(Boolean);
+  const segments = content
+    .split('~')
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   for (const segment of segments) {
     const fields = segment.split('*');

@@ -51,27 +51,15 @@ export type {
   GuestInfo,
 } from './types/hotel-common.js';
 
-export type {
-  BedType,
-  RoomCategory,
-  ViewType,
-  NormalizedRoomType,
-} from './types/room-taxonomy.js';
+export type { BedType, RoomCategory, ViewType, NormalizedRoomType } from './types/room-taxonomy.js';
 
-export type {
-  AmenityCategory,
-  NormalizedAmenity,
-} from './types/amenity-taxonomy.js';
+export type { AmenityCategory, NormalizedAmenity } from './types/amenity-taxonomy.js';
 
 // ---------------------------------------------------------------------------
 // Agent-specific types
 // ---------------------------------------------------------------------------
 
-export type {
-  HotelSearchInput,
-  AdapterResult,
-  HotelSearchOutput,
-} from './hotel-search/types.js';
+export type { HotelSearchInput, AdapterResult, HotelSearchOutput } from './hotel-search/types.js';
 
 export type {
   DedupInput,

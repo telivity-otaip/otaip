@@ -12,11 +12,7 @@ export type InvoluntaryTrigger =
   | 'FLIGHT_CANCELLATION'
   | 'NO_SHOW';
 
-export type ProtectionPath =
-  | 'SAME_CARRIER'
-  | 'ALLIANCE_PARTNER'
-  | 'INTERLINE'
-  | 'NONE_AVAILABLE';
+export type ProtectionPath = 'SAME_CARRIER' | 'ALLIANCE_PARTNER' | 'INTERLINE' | 'NONE_AVAILABLE';
 
 export type RegulatoryFramework = 'EU261' | 'US_DOT';
 

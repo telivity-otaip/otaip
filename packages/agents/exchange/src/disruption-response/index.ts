@@ -2,7 +2,10 @@
 import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError } from '@otaip/core';
 
-export class DisruptionResponseAgent implements Agent<Record<string, unknown>, Record<string, unknown>> {
+export class DisruptionResponseAgent implements Agent<
+  Record<string, unknown>,
+  Record<string, unknown>
+> {
   readonly id = '5.4';
   readonly name = 'Disruption Response';
   readonly version = '0.0.0';

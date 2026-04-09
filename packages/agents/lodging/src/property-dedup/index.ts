@@ -11,22 +11,12 @@
  * Downstream: Feeds Agent 20.3 (Content Normalization) and Agent 20.4 (Rate Comparison)
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { DedupInput, DedupOutput } from './types.js';
 import { runDeduplicationPipeline } from './deduplication-pipeline.js';
 
-export class PropertyDeduplicationAgent
-  implements Agent<DedupInput, DedupOutput>
-{
+export class PropertyDeduplicationAgent implements Agent<DedupInput, DedupOutput> {
   readonly id = '20.2';
   readonly name = 'Property Deduplication';
   readonly version = '0.1.0';
@@ -37,34 +27,35 @@ export class PropertyDeduplicationAgent
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<DedupInput>,
-  ): Promise<AgentOutput<DedupOutput>> {
+  async execute(input: AgentInput<DedupInput>): Promise<AgentOutput<DedupOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
 
     this.validateInput(input.data);
 
-    const result = runDeduplicationPipeline(
-      input.data.properties,
-      input.data.thresholds,
-    );
+    const result = runDeduplicationPipeline(input.data.properties, input.data.thresholds);
 
     const warnings: string[] = [];
     if (result.stats.reviewFlagged > 0) {
       warnings.push(`${result.stats.reviewFlagged} property merge(s) flagged for human review`);
     }
 
-    const dedupRate = result.stats.inputCount > 0
-      ? ((result.stats.inputCount - result.stats.outputCount) / result.stats.inputCount * 100).toFixed(1)
-      : '0';
+    const dedupRate =
+      result.stats.inputCount > 0
+        ? (
+            ((result.stats.inputCount - result.stats.outputCount) / result.stats.inputCount) *
+            100
+          ).toFixed(1)
+        : '0';
 
     return {
       data: result,
-      confidence: result.canonical.length > 0
-        ? result.canonical.reduce((sum, p) => sum + p.mergeConfidence, 0) / result.canonical.length
-        : 1.0,
+      confidence:
+        result.canonical.length > 0
+          ? result.canonical.reduce((sum, p) => sum + p.mergeConfidence, 0) /
+            result.canonical.length
+          : 1.0,
       warnings: warnings.length > 0 ? warnings : undefined,
       metadata: {
         agent_id: this.id,
@@ -97,11 +88,19 @@ export class PropertyDeduplicationAgent
     if (data.thresholds) {
       if (data.thresholds.autoMerge <= data.thresholds.review) {
         throw new AgentInputValidationError(
-          this.id, 'thresholds', 'autoMerge threshold must be greater than review threshold',
+          this.id,
+          'thresholds',
+          'autoMerge threshold must be greater than review threshold',
         );
       }
     }
   }
 }
 
-export type { DedupInput, DedupOutput, MergeDecision, ScoreBreakdown, DedupStats } from './types.js';
+export type {
+  DedupInput,
+  DedupOutput,
+  MergeDecision,
+  ScoreBreakdown,
+  DedupStats,
+} from './types.js';

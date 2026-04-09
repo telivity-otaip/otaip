@@ -9,28 +9,29 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
-import type { TaxCalculationInput, TaxCalculationOutput, PassengerType, CabinClass } from './types.js';
+  TaxCalculationInput,
+  TaxCalculationOutput,
+  PassengerType,
+  CabinClass,
+} from './types.js';
 import { calculateTaxes } from './tax-engine.js';
 
 const IATA_CODE_RE = /^[A-Z]{3}$/i;
 const COUNTRY_CODE_RE = /^[A-Z]{2}$/;
 const CURRENCY_RE = /^[A-Z]{3}$/;
-const VALID_PASSENGER_TYPES = new Set<PassengerType>(['adult', 'child', 'infant', 'crew', 'diplomatic']);
+const VALID_PASSENGER_TYPES = new Set<PassengerType>([
+  'adult',
+  'child',
+  'infant',
+  'crew',
+  'diplomatic',
+]);
 const VALID_CABIN_CLASSES = new Set<CabinClass>(['economy', 'premium', 'business', 'first']);
 
-export class TaxCalculation
-  implements Agent<TaxCalculationInput, TaxCalculationOutput>
-{
+export class TaxCalculation implements Agent<TaxCalculationInput, TaxCalculationOutput> {
   readonly id = '2.3';
   readonly name = 'Tax Calculation';
   readonly version = '0.1.0';
@@ -94,35 +95,71 @@ export class TaxCalculation
     for (let i = 0; i < data.segments.length; i++) {
       const seg = data.segments[i]!;
       if (!seg.origin || !IATA_CODE_RE.test(seg.origin)) {
-        throw new AgentInputValidationError(this.id, `segments[${i}].origin`, 'Must be a 3-letter IATA code.');
+        throw new AgentInputValidationError(
+          this.id,
+          `segments[${i}].origin`,
+          'Must be a 3-letter IATA code.',
+        );
       }
       if (!seg.destination || !IATA_CODE_RE.test(seg.destination)) {
-        throw new AgentInputValidationError(this.id, `segments[${i}].destination`, 'Must be a 3-letter IATA code.');
+        throw new AgentInputValidationError(
+          this.id,
+          `segments[${i}].destination`,
+          'Must be a 3-letter IATA code.',
+        );
       }
       if (!seg.origin_country || !COUNTRY_CODE_RE.test(seg.origin_country)) {
-        throw new AgentInputValidationError(this.id, `segments[${i}].origin_country`, 'Must be a 2-letter ISO country code.');
+        throw new AgentInputValidationError(
+          this.id,
+          `segments[${i}].origin_country`,
+          'Must be a 2-letter ISO country code.',
+        );
       }
       if (!seg.destination_country || !COUNTRY_CODE_RE.test(seg.destination_country)) {
-        throw new AgentInputValidationError(this.id, `segments[${i}].destination_country`, 'Must be a 2-letter ISO country code.');
+        throw new AgentInputValidationError(
+          this.id,
+          `segments[${i}].destination_country`,
+          'Must be a 2-letter ISO country code.',
+        );
       }
       if (!seg.base_fare_nuc || isNaN(Number(seg.base_fare_nuc))) {
-        throw new AgentInputValidationError(this.id, `segments[${i}].base_fare_nuc`, 'Must be a valid numeric string.');
+        throw new AgentInputValidationError(
+          this.id,
+          `segments[${i}].base_fare_nuc`,
+          'Must be a valid numeric string.',
+        );
       }
       if (!VALID_CABIN_CLASSES.has(seg.cabin_class)) {
-        throw new AgentInputValidationError(this.id, `segments[${i}].cabin_class`, 'Must be economy, premium, business, or first.');
+        throw new AgentInputValidationError(
+          this.id,
+          `segments[${i}].cabin_class`,
+          'Must be economy, premium, business, or first.',
+        );
       }
     }
 
     if (!VALID_PASSENGER_TYPES.has(data.passenger_type)) {
-      throw new AgentInputValidationError(this.id, 'passenger_type', 'Must be adult, child, infant, crew, or diplomatic.');
+      throw new AgentInputValidationError(
+        this.id,
+        'passenger_type',
+        'Must be adult, child, infant, crew, or diplomatic.',
+      );
     }
 
     if (!data.total_base_fare_nuc || isNaN(Number(data.total_base_fare_nuc))) {
-      throw new AgentInputValidationError(this.id, 'total_base_fare_nuc', 'Must be a valid numeric string.');
+      throw new AgentInputValidationError(
+        this.id,
+        'total_base_fare_nuc',
+        'Must be a valid numeric string.',
+      );
     }
 
     if (!data.selling_currency || !CURRENCY_RE.test(data.selling_currency)) {
-      throw new AgentInputValidationError(this.id, 'selling_currency', 'Must be a 3-letter ISO 4217 currency code.');
+      throw new AgentInputValidationError(
+        this.id,
+        'selling_currency',
+        'Must be a 3-letter ISO 4217 currency code.',
+      );
     }
   }
 }

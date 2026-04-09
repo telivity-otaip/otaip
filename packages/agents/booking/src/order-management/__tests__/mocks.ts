@@ -140,20 +140,22 @@ export class MockADMPrevention implements ADMPreventionPort {
 // Helper: create a confirmation request
 // ---------------------------------------------------------------------------
 
-export function makeConfirmationRequest(overrides: {
-  idempotency_key?: string;
-  order_id?: string;
-  payment_capture_ref?: string;
-  attempt_number?: number;
-  max_attempts?: number;
-  channel?: 'GDS' | 'NDC';
-} = {}) {
+export function makeConfirmationRequest(
+  overrides: {
+    idempotency_key?: string;
+    order_id?: string;
+    payment_capture_ref?: string;
+    attempt_number?: number;
+    max_attempts?: number;
+    channel?: 'GDS' | 'NDC';
+  } = {},
+) {
   return {
     idempotency_key: overrides.idempotency_key ?? `idem-${Date.now()}-${Math.random()}`,
     order_id: overrides.order_id ?? 'ORD-001',
     payment_capture_ref: overrides.payment_capture_ref ?? 'CAP-001',
     attempt_number: overrides.attempt_number ?? 1,
     max_attempts: overrides.max_attempts ?? 3,
-    channel: overrides.channel ?? 'GDS' as const,
+    channel: overrides.channel ?? ('GDS' as const),
   };
 }

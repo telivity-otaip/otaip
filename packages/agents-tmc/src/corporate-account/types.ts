@@ -7,8 +7,12 @@
 export type CabinClass = 'economy' | 'business' | 'first';
 
 export type CorporateOperation =
-  | 'get_account' | 'create_account' | 'update_account'
-  | 'validate_booking' | 'get_policy' | 'list_accounts'
+  | 'get_account'
+  | 'create_account'
+  | 'update_account'
+  | 'validate_booking'
+  | 'get_policy'
+  | 'list_accounts'
   | 'get_preferred_suppliers';
 
 export type ViolationSeverity = 'hard' | 'soft';

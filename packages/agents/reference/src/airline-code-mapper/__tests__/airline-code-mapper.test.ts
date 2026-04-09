@@ -272,15 +272,13 @@ describe('Airline Code & Alliance Mapper', () => {
 
   describe('Input validation', () => {
     it('rejects empty code', async () => {
-      await expect(
-        mapper.execute({ data: { code: '' } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(mapper.execute({ data: { code: '' } })).rejects.toThrow('Invalid input');
     });
 
     it('rejects code longer than 100 characters', async () => {
-      await expect(
-        mapper.execute({ data: { code: 'a'.repeat(101) } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(mapper.execute({ data: { code: 'a'.repeat(101) } })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid code_type', async () => {
@@ -316,9 +314,9 @@ describe('Airline Code & Alliance Mapper', () => {
 
     it('throws when not initialized', async () => {
       const uninitMapper = new AirlineCodeMapper();
-      await expect(
-        uninitMapper.execute({ data: { code: 'UA' } }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninitMapper.execute({ data: { code: 'UA' } })).rejects.toThrow(
+        'not been initialized',
+      );
     });
 
     it('reports unhealthy when not initialized', async () => {

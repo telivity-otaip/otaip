@@ -243,13 +243,23 @@ export function findConnections(
   destination: string,
   date: string,
   includeCodeshares: boolean,
-): { firstLeg: ScheduledFlight; secondLeg: ScheduledFlight; connectionAirport: string; connectionMinutes: number }[] {
+): {
+  firstLeg: ScheduledFlight;
+  secondLeg: ScheduledFlight;
+  connectionAirport: string;
+  connectionMinutes: number;
+}[] {
   // Find all flights from origin
   const fromOrigin = SCHEDULE_DB.filter(
     (f) => f.origin === origin && f.destination !== destination,
   );
 
-  const connections: { firstLeg: ScheduledFlight; secondLeg: ScheduledFlight; connectionAirport: string; connectionMinutes: number }[] = [];
+  const connections: {
+    firstLeg: ScheduledFlight;
+    secondLeg: ScheduledFlight;
+    connectionAirport: string;
+    connectionMinutes: number;
+  }[] = [];
 
   for (const leg1 of fromOrigin) {
     if (!includeCodeshares && leg1.is_codeshare) continue;
@@ -259,9 +269,7 @@ export function findConnections(
     const hub = leg1.destination;
 
     // Find flights from hub to destination
-    const fromHub = SCHEDULE_DB.filter(
-      (f) => f.origin === hub && f.destination === destination,
-    );
+    const fromHub = SCHEDULE_DB.filter((f) => f.origin === hub && f.destination === destination);
 
     for (const leg2 of fromHub) {
       if (!includeCodeshares && leg2.is_codeshare) continue;

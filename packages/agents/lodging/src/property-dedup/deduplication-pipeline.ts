@@ -89,8 +89,10 @@ export function runDeduplicationPipeline(
       name: jaroWinkler(normA.name, normB.name),
       address: levenshteinSimilarity(normA.address, normB.address),
       coordinates: haversineScore(
-        propA.coordinates.latitude, propA.coordinates.longitude,
-        propB.coordinates.latitude, propB.coordinates.longitude,
+        propA.coordinates.latitude,
+        propA.coordinates.longitude,
+        propB.coordinates.latitude,
+        propB.coordinates.longitude,
       ),
       chainCode: chainCodeScore(propA.chainCode, propB.chainCode),
       starRating: starRatingScore(propA.starRating, propB.starRating),
@@ -105,9 +107,12 @@ export function runDeduplicationPipeline(
         `${propB.source.sourceId}:${propB.source.sourcePropertyId}`,
       ],
       score: breakdown.weighted,
-      decision: breakdown.weighted >= t.autoMerge ? 'auto_merge'
-        : breakdown.weighted >= t.review ? 'review'
-        : 'separate',
+      decision:
+        breakdown.weighted >= t.autoMerge
+          ? 'auto_merge'
+          : breakdown.weighted >= t.review
+            ? 'review'
+            : 'separate',
       scoreBreakdown: breakdown,
     };
 
@@ -177,8 +182,11 @@ export function runDeduplicationPipeline(
           if (breakdown && breakdown.weighted > bestScore) {
             bestScore = breakdown.weighted;
             bestDecision = mergeLog.find(
-              (d) => d.score === breakdown.weighted &&
-                d.propertyIds.includes(`${properties[i]!.source.sourceId}:${properties[i]!.source.sourcePropertyId}`),
+              (d) =>
+                d.score === breakdown.weighted &&
+                d.propertyIds.includes(
+                  `${properties[i]!.source.sourceId}:${properties[i]!.source.sourcePropertyId}`,
+                ),
             );
           }
         }
@@ -194,10 +202,19 @@ export function runDeduplicationPipeline(
       } else {
         // Fallback: shouldn't happen, but create canonical anyway
         const fallbackDecision: MergeDecision = {
-          propertyIds: groupProperties.map((p) => `${p.source.sourceId}:${p.source.sourcePropertyId}`),
+          propertyIds: groupProperties.map(
+            (p) => `${p.source.sourceId}:${p.source.sourcePropertyId}`,
+          ),
           score: 0,
           decision: 'review',
-          scoreBreakdown: { name: 0, address: 0, coordinates: 0, chainCode: 0, starRating: 0, weighted: 0 },
+          scoreBreakdown: {
+            name: 0,
+            address: 0,
+            coordinates: 0,
+            chainCode: 0,
+            starRating: 0,
+            weighted: 0,
+          },
         };
         canonical.push(mergeProperties(groupProperties, fallbackDecision));
         reviewFlagged++;

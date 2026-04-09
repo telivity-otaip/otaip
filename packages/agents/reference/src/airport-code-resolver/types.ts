@@ -7,7 +7,13 @@
 
 export type CodeType = 'iata' | 'icao' | 'city' | 'name' | 'auto';
 
-export type AirportType = 'large_airport' | 'medium_airport' | 'small_airport' | 'closed' | 'heliport' | 'seaplane_base';
+export type AirportType =
+  | 'large_airport'
+  | 'medium_airport'
+  | 'small_airport'
+  | 'closed'
+  | 'heliport'
+  | 'seaplane_base';
 
 export type AirportStatus = 'active' | 'decommissioned';
 
@@ -129,4 +135,3 @@ export interface DecommissionedAirport {
   reason: string | null;
   replaced_by: string | null;
 }
-

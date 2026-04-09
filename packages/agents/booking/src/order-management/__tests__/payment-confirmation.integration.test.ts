@@ -45,17 +45,23 @@ describe('Test 9: Audit trail completeness', () => {
   it('every state transition is recorded in the audit trail', () => {
     sm.initializeOrder('ORD-009', 'PAX-009');
     sm.capturePayment('ORD-009', 'CAP-009');
-    sm.initiateConfirmation('ORD-009', makeConfirmationRequest({
-      idempotency_key: 'k1',
-      attempt_number: 1,
-      max_attempts: 3,
-    }));
+    sm.initiateConfirmation(
+      'ORD-009',
+      makeConfirmationRequest({
+        idempotency_key: 'k1',
+        attempt_number: 1,
+        max_attempts: 3,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-009');
-    sm.retryConfirmation('ORD-009', makeConfirmationRequest({
-      idempotency_key: 'k2',
-      attempt_number: 2,
-      max_attempts: 3,
-    }));
+    sm.retryConfirmation(
+      'ORD-009',
+      makeConfirmationRequest({
+        idempotency_key: 'k2',
+        attempt_number: 2,
+        max_attempts: 3,
+      }),
+    );
     sm.handleConfirmationSuccess('ORD-009', 'TKT-009');
 
     const trail = sm.getAuditTrail('ORD-009');
@@ -122,9 +128,12 @@ describe('Test 9: Audit trail completeness', () => {
   it('audit entries include idempotency key when applicable', () => {
     sm.initializeOrder('ORD-009e', 'PAX-009e');
     sm.capturePayment('ORD-009e', 'CAP-009e');
-    sm.initiateConfirmation('ORD-009e', makeConfirmationRequest({
-      idempotency_key: 'idem-test-key',
-    }));
+    sm.initiateConfirmation(
+      'ORD-009e',
+      makeConfirmationRequest({
+        idempotency_key: 'idem-test-key',
+      }),
+    );
 
     const trail = sm.getAuditTrail('ORD-009e');
     // capturePayment has no idempotency key
@@ -136,11 +145,14 @@ describe('Test 9: Audit trail completeness', () => {
   it('state can be reconstructed from audit trail', () => {
     sm.initializeOrder('ORD-009f', 'PAX-009f');
     sm.capturePayment('ORD-009f', 'CAP-009f');
-    sm.initiateConfirmation('ORD-009f', makeConfirmationRequest({
-      idempotency_key: 'kf1',
-      attempt_number: 1,
-      max_attempts: 1,
-    }));
+    sm.initiateConfirmation(
+      'ORD-009f',
+      makeConfirmationRequest({
+        idempotency_key: 'kf1',
+        attempt_number: 1,
+        max_attempts: 1,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-009f');
     sm.failConfirmation('ORD-009f');
     sm.initiateRefund('ORD-009f', 'REF-009f');
@@ -174,11 +186,14 @@ describe('Integration: late confirmation during refund', () => {
     // Setup: order goes through failed confirmation → refund
     sm.initializeOrder('ORD-INT-1', 'PAX-INT-1');
     sm.capturePayment('ORD-INT-1', 'CAP-INT-1');
-    sm.initiateConfirmation('ORD-INT-1', makeConfirmationRequest({
-      idempotency_key: 'ki1',
-      attempt_number: 1,
-      max_attempts: 1,
-    }));
+    sm.initiateConfirmation(
+      'ORD-INT-1',
+      makeConfirmationRequest({
+        idempotency_key: 'ki1',
+        attempt_number: 1,
+        max_attempts: 1,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-INT-1');
     sm.failConfirmation('ORD-INT-1');
     sm.initiateRefund('ORD-INT-1', 'REF-INT-1');
@@ -206,11 +221,14 @@ describe('Integration: late confirmation during refund', () => {
   it('detects conflict and resolves via BSP-based logic (Path A: keep refund)', async () => {
     sm.initializeOrder('ORD-INT-2', 'PAX-INT-2');
     sm.capturePayment('ORD-INT-2', 'CAP-INT-2');
-    sm.initiateConfirmation('ORD-INT-2', makeConfirmationRequest({
-      idempotency_key: 'ki2',
-      attempt_number: 1,
-      max_attempts: 1,
-    }));
+    sm.initiateConfirmation(
+      'ORD-INT-2',
+      makeConfirmationRequest({
+        idempotency_key: 'ki2',
+        attempt_number: 1,
+        max_attempts: 1,
+      }),
+    );
     sm.handleConfirmationTimeout('ORD-INT-2');
     sm.failConfirmation('ORD-INT-2');
     sm.initiateRefund('ORD-INT-2', 'REF-INT-2');
@@ -241,7 +259,9 @@ describe('Integration: late confirmation during refund', () => {
     sm.handleConfirmationSuccess('ORD-INT-3', 'TKT-INT-3');
 
     // No refund in progress — late confirmation makes no sense
-    expect(() => sm.handleLateConfirmation('ORD-INT-3', 'TKT-LATE-3')).toThrow(InvalidStateTransitionError);
+    expect(() => sm.handleLateConfirmation('ORD-INT-3', 'TKT-LATE-3')).toThrow(
+      InvalidStateTransitionError,
+    );
   });
 });
 
@@ -253,14 +273,18 @@ describe('Integration: full happy path with audit events', () => {
   it('emits no conflict or failure events on happy path', () => {
     sm.initializeOrder('ORD-HAPPY', 'PAX-HAPPY');
     sm.capturePayment('ORD-HAPPY', 'CAP-HAPPY');
-    sm.initiateConfirmation('ORD-HAPPY', makeConfirmationRequest({
-      idempotency_key: 'kh1',
-    }));
+    sm.initiateConfirmation(
+      'ORD-HAPPY',
+      makeConfirmationRequest({
+        idempotency_key: 'kh1',
+      }),
+    );
     sm.handleConfirmationSuccess('ORD-HAPPY', 'TKT-HAPPY');
 
     // No failure or conflict events should have been emitted
     const failEvents = audit.events.filter(
-      e => e.event_type === 'ORDER_CONFIRMATION_FAILED' || e.event_type === 'ORDER_CONFLICT_DETECTED',
+      (e) =>
+        e.event_type === 'ORDER_CONFIRMATION_FAILED' || e.event_type === 'ORDER_CONFLICT_DETECTED',
     );
     expect(failEvents).toHaveLength(0);
   });

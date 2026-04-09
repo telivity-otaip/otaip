@@ -4,13 +4,16 @@
  * Tracks agent health, API latency, error rates, SLA compliance.
  */
 
-import type {
-  Agent, AgentInput, AgentOutput, AgentHealthStatus,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type {
-  MonitoringInput, MonitoringOutput,
-  MetricEntry, AgentHealth, Alert, SlaReport, AgentStatus,
+  MonitoringInput,
+  MonitoringOutput,
+  MetricEntry,
+  AgentHealth,
+  Alert,
+  SlaReport,
+  AgentStatus,
 } from './types.js';
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
@@ -21,9 +24,7 @@ function percentile(sorted: number[], p: number): number {
   return sorted[Math.max(0, idx)] ?? 0;
 }
 
-export class MonitoringAgent
-  implements Agent<MonitoringInput, MonitoringOutput>
-{
+export class MonitoringAgent implements Agent<MonitoringInput, MonitoringOutput> {
   readonly id = '9.3';
   readonly name = 'Monitoring & Alerting';
   readonly version = '0.1.0';
@@ -33,21 +34,26 @@ export class MonitoringAgent
   private alerts = new Map<string, Alert>();
   private nextAlertId = 1;
 
-  async initialize(): Promise<void> { this.initialized = true; }
+  async initialize(): Promise<void> {
+    this.initialized = true;
+  }
 
-  async execute(
-    input: AgentInput<MonitoringInput>,
-  ): Promise<AgentOutput<MonitoringOutput>> {
+  async execute(input: AgentInput<MonitoringInput>): Promise<AgentOutput<MonitoringOutput>> {
     if (!this.initialized) throw new AgentNotInitializedError(this.id);
 
     const d = input.data;
 
     switch (d.operation) {
-      case 'record_metric': return this.handleRecord(d);
-      case 'get_health': return this.handleGetHealth(d);
-      case 'list_alerts': return this.handleListAlerts();
-      case 'acknowledge_alert': return this.handleAcknowledge(d);
-      case 'get_sla_report': return this.handleSlaReport(d);
+      case 'record_metric':
+        return this.handleRecord(d);
+      case 'get_health':
+        return this.handleGetHealth(d);
+      case 'list_alerts':
+        return this.handleListAlerts();
+      case 'acknowledge_alert':
+        return this.handleAcknowledge(d);
+      case 'get_sla_report':
+        return this.handleSlaReport(d);
       default:
         throw new AgentInputValidationError(this.id, 'operation', 'Invalid operation.');
     }
@@ -201,7 +207,10 @@ export class MonitoringAgent
       const timeouts = metrics.filter((m) => m.metric_type === 'timeout').length;
       const total = successes + errors + timeouts;
       const availability = total > 0 ? (successes / total) * 100 : 100;
-      const latencies = metrics.filter((m) => m.metric_type === 'latency_ms' && m.value != null).map((m) => m.value!).sort((a, b) => a - b);
+      const latencies = metrics
+        .filter((m) => m.metric_type === 'latency_ms' && m.value != null)
+        .map((m) => m.value!)
+        .sort((a, b) => a - b);
 
       report.push({
         agent_id: agentId,
@@ -221,7 +230,14 @@ export class MonitoringAgent
 }
 
 export type {
-  MonitoringInput, MonitoringOutput,
-  MetricEntry, AgentHealth, Alert, SlaReport,
-  MonitoringOperation, MetricType, AgentStatus, AlertSeverity,
+  MonitoringInput,
+  MonitoringOutput,
+  MetricEntry,
+  AgentHealth,
+  Alert,
+  SlaReport,
+  MonitoringOperation,
+  MetricType,
+  AgentStatus,
+  AlertSeverity,
 } from './types.js';

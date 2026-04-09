@@ -26,9 +26,15 @@ function makeInput(overrides: Partial<TicketIssuanceInput> = {}): TicketIssuance
     passenger_name: 'SMITH/JOHN',
     segments: [
       {
-        carrier: 'BA', flight_number: '115', origin: 'LHR', destination: 'JFK',
-        departure_date: '2026-06-15', departure_time: '09:00', booking_class: 'Y',
-        fare_basis: 'YOWUS', baggage_allowance: '2PC',
+        carrier: 'BA',
+        flight_number: '115',
+        origin: 'LHR',
+        destination: 'JFK',
+        departure_date: '2026-06-15',
+        departure_time: '09:00',
+        booking_class: 'Y',
+        fare_basis: 'YOWUS',
+        baggage_allowance: '2PC',
       },
     ],
     base_fare: '450.00',
@@ -39,7 +45,13 @@ function makeInput(overrides: Partial<TicketIssuanceInput> = {}): TicketIssuance
       { code: 'YQ', amount: '150.00', currency: 'GBP' },
     ],
     fare_calculation: 'LON BA NYC 450.00 NUC450.00 END ROE1.00',
-    form_of_payment: { type: 'CREDIT_CARD', card_code: 'VI', card_last_four: '4242', amount: '705.00', currency: 'GBP' },
+    form_of_payment: {
+      type: 'CREDIT_CARD',
+      card_code: 'VI',
+      card_last_four: '4242',
+      amount: '705.00',
+      currency: 'GBP',
+    },
     issue_date: '2026-04-01',
     ...overrides,
   };
@@ -143,8 +155,13 @@ describe('Ticket Issuance', () => {
   describe('Conjunction tickets', () => {
     it('generates conjunction for 5 segments', async () => {
       const segs = Array.from({ length: 5 }, (_, i) => ({
-        carrier: 'BA', flight_number: String(100 + i), origin: 'LHR', destination: 'JFK',
-        departure_date: '2026-06-15', booking_class: 'Y', fare_basis: 'YOWUS',
+        carrier: 'BA',
+        flight_number: String(100 + i),
+        origin: 'LHR',
+        destination: 'JFK',
+        departure_date: '2026-06-15',
+        booking_class: 'Y',
+        fare_basis: 'YOWUS',
       }));
       const result = await agent.execute({ data: makeInput({ segments: segs }) });
       expect(result.data.tickets).toHaveLength(2);
@@ -154,8 +171,13 @@ describe('Ticket Issuance', () => {
 
     it('sets conjunction suffix /1 and /2', async () => {
       const segs = Array.from({ length: 5 }, (_, i) => ({
-        carrier: 'BA', flight_number: String(100 + i), origin: 'LHR', destination: 'JFK',
-        departure_date: '2026-06-15', booking_class: 'Y', fare_basis: 'YOWUS',
+        carrier: 'BA',
+        flight_number: String(100 + i),
+        origin: 'LHR',
+        destination: 'JFK',
+        departure_date: '2026-06-15',
+        booking_class: 'Y',
+        fare_basis: 'YOWUS',
       }));
       const result = await agent.execute({ data: makeInput({ segments: segs }) });
       expect(result.data.tickets[0]!.conjunction_suffix).toBe('/1');
@@ -164,8 +186,13 @@ describe('Ticket Issuance', () => {
 
     it('first ticket has 4 coupons, second has 1', async () => {
       const segs = Array.from({ length: 5 }, (_, i) => ({
-        carrier: 'BA', flight_number: String(100 + i), origin: 'LHR', destination: 'JFK',
-        departure_date: '2026-06-15', booking_class: 'Y', fare_basis: 'YOWUS',
+        carrier: 'BA',
+        flight_number: String(100 + i),
+        origin: 'LHR',
+        destination: 'JFK',
+        departure_date: '2026-06-15',
+        booking_class: 'Y',
+        fare_basis: 'YOWUS',
       }));
       const result = await agent.execute({ data: makeInput({ segments: segs }) });
       expect(result.data.tickets[0]!.coupons).toHaveLength(4);
@@ -174,18 +201,30 @@ describe('Ticket Issuance', () => {
 
     it('generates 3 tickets for 9 segments', async () => {
       const segs = Array.from({ length: 9 }, (_, i) => ({
-        carrier: 'LH', flight_number: String(400 + i), origin: 'FRA', destination: 'MUC',
-        departure_date: '2026-06-15', booking_class: 'Y', fare_basis: 'YOWEU',
+        carrier: 'LH',
+        flight_number: String(400 + i),
+        origin: 'FRA',
+        destination: 'MUC',
+        departure_date: '2026-06-15',
+        booking_class: 'Y',
+        fare_basis: 'YOWEU',
       }));
-      const result = await agent.execute({ data: makeInput({ segments: segs, issuing_carrier: 'LH' }) });
+      const result = await agent.execute({
+        data: makeInput({ segments: segs, issuing_carrier: 'LH' }),
+      });
       expect(result.data.tickets).toHaveLength(3);
       expect(result.data.tickets[2]!.conjunction_suffix).toBe('/3');
     });
 
     it('no conjunction suffix for 4 or fewer segments', async () => {
       const segs = Array.from({ length: 4 }, (_, i) => ({
-        carrier: 'BA', flight_number: String(100 + i), origin: 'LHR', destination: 'JFK',
-        departure_date: '2026-06-15', booking_class: 'Y', fare_basis: 'YOWUS',
+        carrier: 'BA',
+        flight_number: String(100 + i),
+        origin: 'LHR',
+        destination: 'JFK',
+        departure_date: '2026-06-15',
+        booking_class: 'Y',
+        fare_basis: 'YOWUS',
       }));
       const result = await agent.execute({ data: makeInput({ segments: segs }) });
       expect(result.data.tickets).toHaveLength(1);
@@ -194,8 +233,13 @@ describe('Ticket Issuance', () => {
 
     it('warns about conjunction tickets', async () => {
       const segs = Array.from({ length: 5 }, (_, i) => ({
-        carrier: 'BA', flight_number: String(100 + i), origin: 'LHR', destination: 'JFK',
-        departure_date: '2026-06-15', booking_class: 'Y', fare_basis: 'YOWUS',
+        carrier: 'BA',
+        flight_number: String(100 + i),
+        origin: 'LHR',
+        destination: 'JFK',
+        departure_date: '2026-06-15',
+        booking_class: 'Y',
+        fare_basis: 'YOWUS',
       }));
       const result = await agent.execute({ data: makeInput({ segments: segs }) });
       expect(result.warnings).toBeDefined();
@@ -234,8 +278,13 @@ describe('Ticket Issuance', () => {
   describe('Coupon details', () => {
     it('sets coupon number sequentially', async () => {
       const segs = Array.from({ length: 3 }, (_, i) => ({
-        carrier: 'BA', flight_number: String(100 + i), origin: 'LHR', destination: 'JFK',
-        departure_date: '2026-06-15', booking_class: 'Y', fare_basis: 'YOWUS',
+        carrier: 'BA',
+        flight_number: String(100 + i),
+        origin: 'LHR',
+        destination: 'JFK',
+        departure_date: '2026-06-15',
+        booking_class: 'Y',
+        fare_basis: 'YOWUS',
       }));
       const result = await agent.execute({ data: makeInput({ segments: segs }) });
       expect(result.data.tickets[0]!.coupons[0]!.coupon_number).toBe(1);
@@ -256,23 +305,33 @@ describe('Ticket Issuance', () => {
 
   describe('Input validation', () => {
     it('rejects invalid record locator', async () => {
-      await expect(agent.execute({ data: makeInput({ record_locator: 'bad' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ record_locator: 'bad' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid carrier', async () => {
-      await expect(agent.execute({ data: makeInput({ issuing_carrier: 'X' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ issuing_carrier: 'X' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid passenger name', async () => {
-      await expect(agent.execute({ data: makeInput({ passenger_name: 'john smith' }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeInput({ passenger_name: 'john smith' }) }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects empty segments', async () => {
-      await expect(agent.execute({ data: makeInput({ segments: [] }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ segments: [] }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid base fare', async () => {
-      await expect(agent.execute({ data: makeInput({ base_fare: 'abc' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ base_fare: 'abc' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
   });
 

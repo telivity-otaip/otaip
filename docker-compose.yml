@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  otaip:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - DUFFEL_API_KEY=${DUFFEL_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - SABRE_CLIENT_ID=${SABRE_CLIENT_ID:-}
+      - SABRE_CLIENT_SECRET=${SABRE_CLIENT_SECRET:-}
+      - SABRE_ENVIRONMENT=${SABRE_ENVIRONMENT:-cert}
+    volumes:
+      - ./data:/app/data

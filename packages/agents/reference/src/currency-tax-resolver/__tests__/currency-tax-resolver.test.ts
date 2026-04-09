@@ -161,15 +161,13 @@ describe('Currency & Tax Code Resolver', () => {
 
   describe('Input validation', () => {
     it('rejects empty code', async () => {
-      await expect(
-        resolver.execute({ data: { code: '' } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(resolver.execute({ data: { code: '' } })).rejects.toThrow('Invalid input');
     });
 
     it('rejects code longer than 10 characters', async () => {
-      await expect(
-        resolver.execute({ data: { code: 'A'.repeat(11) } }),
-      ).rejects.toThrow('Invalid input');
+      await expect(resolver.execute({ data: { code: 'A'.repeat(11) } })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid code_type', async () => {
@@ -201,9 +199,9 @@ describe('Currency & Tax Code Resolver', () => {
 
     it('throws when not initialized', async () => {
       const uninitResolver = new CurrencyTaxResolver();
-      await expect(
-        uninitResolver.execute({ data: { code: 'USD' } }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninitResolver.execute({ data: { code: 'USD' } })).rejects.toThrow(
+        'not been initialized',
+      );
     });
   });
 

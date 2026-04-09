@@ -29,9 +29,7 @@ const BOOKING_CLASS_PATTERN = /^[A-Z]$/;
  * 2. IATA default fallback (confidence 0.7)
  * 3. Unknown (confidence 0, mapping null)
  */
-export function mapClassOfService(
-  input: ClassOfServiceMapperInput,
-): ClassOfServiceMapperOutput {
+export function mapClassOfService(input: ClassOfServiceMapperInput): ClassOfServiceMapperOutput {
   const bookingClass = input.booking_class.toUpperCase().trim();
   const carrier = input.carrier.toUpperCase().trim();
   const includeLoyalty = input.include_loyalty ?? false;

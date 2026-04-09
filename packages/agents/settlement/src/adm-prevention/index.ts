@@ -7,16 +7,8 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { ADMPreventionInput, ADMPreventionOutput } from './types.js';
 import { runAudit } from './audit-engine.js';
 
@@ -24,9 +16,7 @@ const RECORD_LOCATOR_RE = /^[A-Z0-9]{6}$/;
 const PASSENGER_NAME_RE = /^[A-Z][A-Z' -]+\/[A-Z][A-Z' -]+$/;
 const CLASS_RE = /^[A-Z]$/;
 
-export class ADMPrevention
-  implements Agent<ADMPreventionInput, ADMPreventionOutput>
-{
+export class ADMPrevention implements Agent<ADMPreventionInput, ADMPreventionOutput> {
   readonly id = '6.2';
   readonly name = 'ADM Prevention';
   readonly version = '0.1.0';
@@ -37,9 +27,7 @@ export class ADMPrevention
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<ADMPreventionInput>,
-  ): Promise<AgentOutput<ADMPreventionOutput>> {
+  async execute(input: AgentInput<ADMPreventionInput>): Promise<AgentOutput<ADMPreventionOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -50,7 +38,9 @@ export class ADMPrevention
 
     const warnings: string[] = [];
     if (result.result.blocking_count > 0) {
-      warnings.push(`${result.result.blocking_count} blocking issue(s) — ticket MUST NOT be issued.`);
+      warnings.push(
+        `${result.result.blocking_count} blocking issue(s) — ticket MUST NOT be issued.`,
+      );
     }
     if (result.result.warning_count > 0) {
       warnings.push(`${result.result.warning_count} warning(s) — review before ticketing.`);
@@ -88,10 +78,18 @@ export class ADMPrevention
       throw new AgentInputValidationError(this.id, 'booking', 'Booking record required.');
     }
     if (!data.booking.record_locator || !RECORD_LOCATOR_RE.test(data.booking.record_locator)) {
-      throw new AgentInputValidationError(this.id, 'record_locator', 'Must be a 6-character alphanumeric PNR locator.');
+      throw new AgentInputValidationError(
+        this.id,
+        'record_locator',
+        'Must be a 6-character alphanumeric PNR locator.',
+      );
     }
     if (!data.booking.passenger_name || !PASSENGER_NAME_RE.test(data.booking.passenger_name)) {
-      throw new AgentInputValidationError(this.id, 'passenger_name', 'Must be in LAST/FIRST format.');
+      throw new AgentInputValidationError(
+        this.id,
+        'passenger_name',
+        'Must be in LAST/FIRST format.',
+      );
     }
     if (!data.booking.segments || data.booking.segments.length === 0) {
       throw new AgentInputValidationError(this.id, 'segments', 'At least one segment required.');
@@ -100,7 +98,11 @@ export class ADMPrevention
       throw new AgentInputValidationError(this.id, 'fare_basis', 'Fare basis code required.');
     }
     if (!data.booked_class || !CLASS_RE.test(data.booked_class)) {
-      throw new AgentInputValidationError(this.id, 'booked_class', 'Must be a single uppercase letter.');
+      throw new AgentInputValidationError(
+        this.id,
+        'booked_class',
+        'Must be a single uppercase letter.',
+      );
     }
   }
 }

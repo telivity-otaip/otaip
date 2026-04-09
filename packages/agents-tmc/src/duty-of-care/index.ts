@@ -4,13 +4,15 @@
  * Locates travelers in active itineraries during disruptions.
  */
 
-import type {
-  Agent, AgentInput, AgentOutput, AgentHealthStatus,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type {
-  DutyCareInput, DutyCareOutput,
-  TravelerItinerary, LocatedTraveler, DestinationRisk, RiskLevel,
+  DutyCareInput,
+  DutyCareOutput,
+  TravelerItinerary,
+  LocatedTraveler,
+  DestinationRisk,
+  RiskLevel,
 } from './types.js';
 
 const AIRPORT_RE = /^[A-Z]{3}$/;
@@ -26,9 +28,17 @@ const RISK_DATA: Record<string, { name: string; level: RiskLevel; note: string }
   SG: { name: 'Singapore', level: 'low', note: 'Very safe for travelers.' },
   AU: { name: 'Australia', level: 'low', note: 'Generally safe for travelers.' },
   CA: { name: 'Canada', level: 'low', note: 'Generally safe for travelers.' },
-  AE: { name: 'United Arab Emirates', level: 'low', note: 'Generally safe. Observe local customs.' },
+  AE: {
+    name: 'United Arab Emirates',
+    level: 'low',
+    note: 'Generally safe. Observe local customs.',
+  },
   MX: { name: 'Mexico', level: 'medium', note: 'Exercise increased caution in certain regions.' },
-  BR: { name: 'Brazil', level: 'medium', note: 'Exercise increased caution, especially in urban areas.' },
+  BR: {
+    name: 'Brazil',
+    level: 'medium',
+    note: 'Exercise increased caution, especially in urban areas.',
+  },
   IN: { name: 'India', level: 'medium', note: 'Exercise increased caution.' },
   ZA: { name: 'South Africa', level: 'medium', note: 'Exercise increased caution due to crime.' },
   TR: { name: 'Turkey', level: 'medium', note: 'Exercise increased caution.' },
@@ -36,13 +46,15 @@ const RISK_DATA: Record<string, { name: string; level: RiskLevel; note: string }
   NG: { name: 'Nigeria', level: 'high', note: 'Reconsider travel. Risk of terrorism and crime.' },
   PK: { name: 'Pakistan', level: 'high', note: 'Reconsider travel. Risk of terrorism.' },
   IQ: { name: 'Iraq', level: 'critical', note: 'Do not travel. Armed conflict and terrorism.' },
-  AF: { name: 'Afghanistan', level: 'critical', note: 'Do not travel. Armed conflict and terrorism.' },
+  AF: {
+    name: 'Afghanistan',
+    level: 'critical',
+    note: 'Do not travel. Armed conflict and terrorism.',
+  },
   SY: { name: 'Syria', level: 'critical', note: 'Do not travel. Civil war and terrorism.' },
 };
 
-export class DutyCareAgent
-  implements Agent<DutyCareInput, DutyCareOutput>
-{
+export class DutyCareAgent implements Agent<DutyCareInput, DutyCareOutput> {
   readonly id = '8.5';
   readonly name = 'Duty of Care';
   readonly version = '0.1.0';
@@ -51,22 +63,28 @@ export class DutyCareAgent
   private itineraries = new Map<string, TravelerItinerary>();
   private accountedFor = new Map<string, Set<string>>(); // incident_id → Set<traveler_id>
 
-  getItineraryStore(): Map<string, TravelerItinerary> { return this.itineraries; }
+  getItineraryStore(): Map<string, TravelerItinerary> {
+    return this.itineraries;
+  }
 
-  async initialize(): Promise<void> { this.initialized = true; }
+  async initialize(): Promise<void> {
+    this.initialized = true;
+  }
 
-  async execute(
-    input: AgentInput<DutyCareInput>,
-  ): Promise<AgentOutput<DutyCareOutput>> {
+  async execute(input: AgentInput<DutyCareInput>): Promise<AgentOutput<DutyCareOutput>> {
     if (!this.initialized) throw new AgentNotInitializedError(this.id);
 
     const d = input.data;
 
     switch (d.operation) {
-      case 'locate_travelers': return this.handleLocate(d);
-      case 'get_traveler_itinerary': return this.handleGetItinerary(d);
-      case 'assess_destination_risk': return this.handleRisk(d);
-      case 'mark_accounted_for': return this.handleAccountedFor(d);
+      case 'locate_travelers':
+        return this.handleLocate(d);
+      case 'get_traveler_itinerary':
+        return this.handleGetItinerary(d);
+      case 'assess_destination_risk':
+        return this.handleRisk(d);
+      case 'mark_accounted_for':
+        return this.handleAccountedFor(d);
       default:
         throw new AgentInputValidationError(this.id, 'operation', 'Invalid operation.');
     }
@@ -84,7 +102,8 @@ export class DutyCareAgent
   }
 
   private handleLocate(d: DutyCareInput): AgentOutput<DutyCareOutput> {
-    if (!d.date) throw new AgentInputValidationError(this.id, 'date', 'Required for locate_travelers.');
+    if (!d.date)
+      throw new AgentInputValidationError(this.id, 'date', 'Required for locate_travelers.');
     if (d.airport_code && !AIRPORT_RE.test(d.airport_code)) {
       throw new AgentInputValidationError(this.id, 'airport_code', 'INVALID_AIRPORT_CODE');
     }
@@ -165,17 +184,32 @@ export class DutyCareAgent
 
   private handleRisk(d: DutyCareInput): AgentOutput<DutyCareOutput> {
     if (!d.destination_country || !COUNTRY_RE.test(d.destination_country)) {
-      throw new AgentInputValidationError(this.id, 'destination_country', 'Must be ISO 2-letter code.');
+      throw new AgentInputValidationError(
+        this.id,
+        'destination_country',
+        'Must be ISO 2-letter code.',
+      );
     }
 
     const data = RISK_DATA[d.destination_country];
     const risk: DestinationRisk = data
-      ? { country_code: d.destination_country, country_name: data.name, risk_level: data.level, note: data.note }
-      : { country_code: d.destination_country, country_name: 'Unknown', risk_level: 'medium', note: 'No specific risk data available. Exercise normal caution. Live threat intelligence is out of scope.' };
+      ? {
+          country_code: d.destination_country,
+          country_name: data.name,
+          risk_level: data.level,
+          note: data.note,
+        }
+      : {
+          country_code: d.destination_country,
+          country_name: 'Unknown',
+          risk_level: 'medium',
+          note: 'No specific risk data available. Exercise normal caution. Live threat intelligence is out of scope.',
+        };
 
-    const warnings = risk.risk_level === 'high' || risk.risk_level === 'critical'
-      ? [`${risk.country_name}: ${risk.risk_level} risk — ${risk.note}`]
-      : undefined;
+    const warnings =
+      risk.risk_level === 'high' || risk.risk_level === 'critical'
+        ? [`${risk.country_name}: ${risk.risk_level} risk — ${risk.note}`]
+        : undefined;
 
     return { data: { risk }, confidence: 1.0, warnings, metadata: { agent_id: this.id } };
   }
@@ -189,7 +223,10 @@ export class DutyCareAgent
     this.accountedFor.set(d.incident_id, set);
 
     return {
-      data: { accounted_for: true, message: `Traveler ${d.traveler_id} marked accounted for incident ${d.incident_id}.` },
+      data: {
+        accounted_for: true,
+        message: `Traveler ${d.traveler_id} marked accounted for incident ${d.incident_id}.`,
+      },
       confidence: 1.0,
       metadata: { agent_id: this.id },
     };
@@ -202,7 +239,12 @@ export class DutyCareAgent
 }
 
 export type {
-  DutyCareInput, DutyCareOutput,
-  TravelerItinerary, LocatedTraveler, DestinationRisk,
-  RiskLevel, TravelerStatus, DutyCareOperation,
+  DutyCareInput,
+  DutyCareOutput,
+  TravelerItinerary,
+  LocatedTraveler,
+  DestinationRisk,
+  RiskLevel,
+  TravelerStatus,
+  DutyCareOperation,
 } from './types.js';

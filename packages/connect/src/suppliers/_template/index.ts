@@ -29,10 +29,7 @@ export class TemplateAdapter implements ConnectAdapter {
     throw new Error('Not implemented — replace with supplier API call');
   }
 
-  async priceItinerary(
-    _offerId: string,
-    _passengers: PassengerCount,
-  ): Promise<PricedItinerary> {
+  async priceItinerary(_offerId: string, _passengers: PassengerCount): Promise<PricedItinerary> {
     throw new Error('Not implemented');
   }
 
@@ -40,9 +37,7 @@ export class TemplateAdapter implements ConnectAdapter {
     throw new Error('Not implemented');
   }
 
-  async getBookingStatus(
-    _bookingId: string,
-  ): Promise<BookingStatusResult> {
+  async getBookingStatus(_bookingId: string): Promise<BookingStatusResult> {
     throw new Error('Not implemented');
   }
 

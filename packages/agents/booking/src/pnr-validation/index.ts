@@ -6,24 +6,14 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { PnrValidationInput, PnrValidationOutput } from './types.js';
 import { validatePnr } from './validation-engine.js';
 
 const RECORD_LOCATOR_RE = /^[A-Z0-9]{6}$/;
 
-export class PnrValidation
-  implements Agent<PnrValidationInput, PnrValidationOutput>
-{
+export class PnrValidation implements Agent<PnrValidationInput, PnrValidationOutput> {
   readonly id = '3.3';
   readonly name = 'PNR Validation';
   readonly version = '0.1.0';
@@ -34,9 +24,7 @@ export class PnrValidation
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<PnrValidationInput>,
-  ): Promise<AgentOutput<PnrValidationOutput>> {
+  async execute(input: AgentInput<PnrValidationInput>): Promise<AgentOutput<PnrValidationOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -82,10 +70,18 @@ export class PnrValidation
 
   private validateInput(data: PnrValidationInput): void {
     if (!data.record_locator || !RECORD_LOCATOR_RE.test(data.record_locator)) {
-      throw new AgentInputValidationError(this.id, 'record_locator', 'Must be a 6-character alphanumeric PNR locator.');
+      throw new AgentInputValidationError(
+        this.id,
+        'record_locator',
+        'Must be a 6-character alphanumeric PNR locator.',
+      );
     }
     if (!data.passengers || data.passengers.length === 0) {
-      throw new AgentInputValidationError(this.id, 'passengers', 'At least one passenger required.');
+      throw new AgentInputValidationError(
+        this.id,
+        'passengers',
+        'At least one passenger required.',
+      );
     }
     if (!data.segments || data.segments.length === 0) {
       throw new AgentInputValidationError(this.id, 'segments', 'At least one segment required.');
