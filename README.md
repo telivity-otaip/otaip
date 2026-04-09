@@ -1,30 +1,18 @@
 # OTAIP — Open Travel AI Platform
 
-**70 production agents for airline distribution, hotel booking, GDS/NDC, and settlement — typed, tested, composable.**
+The full airline and hotel booking lifecycle — search, pricing, booking, ticketing, exchange, refund, and BSP/ARC settlement — modeled as typed, testable agents. Built by airline distribution veterans, not general-purpose AI developers.
 
-```typescript
-import { AirportCodeResolver } from '@otaip/agents-reference';
-import { PropertyDeduplicationAgent } from '@otaip/agents-lodging';
+**70 agents across 11 domains. 6 supplier adapters. 2,737 tests. TypeScript strict. One interface.**
 
-// Resolve a multi-airport city in one call
-const resolver = new AirportCodeResolver();
-await resolver.initialize();
-const airports = await resolver.execute({ data: { code: 'NYC' } });
-// → JFK (primary), LGA, EWR — with confidence scores, metro awareness, timezone data
+OTAIP agents encode real industry logic: ATPCO fare rules (Categories 1-33), NUC/ROE fare construction with HIP/BHC/CTM checks, BSP HOT file reconciliation, ADM prevention (9 pre-ticketing checks), NDC/EDIFACT normalization, IRROPS rebooking with EU261 and US DOT compliance, void window enforcement, married segment integrity, and payment-to-ticketing state machines with BSP finality rules.
 
-// Deduplicate the same hotel from 4 different sources
-const dedup = new PropertyDeduplicationAgent();
-await dedup.initialize();
-const hotels = await dedup.execute({
-  data: {
-    properties: rawHotelResults,
-    thresholds: { auto_merge: 0.85, review: 0.65 },
-  },
-});
-// → Canonical properties with merged content, best photos, unified amenities
+Adapters connect to Amadeus, Sabre, Navitaire, TripPro/Mondee, Duffel, and HAIP. You bring your own credentials.
+
+```bash
+pnpm add @otaip/core @otaip/agents-booking @otaip/connect
 ```
 
-Every agent implements one interface. Every output includes confidence scores. No LLM required — this is deterministic domain logic.
+Every agent implements `Agent<TInput, TOutput>`. Typed inputs, typed outputs, confidence scores. No framework lock-in, no LLM required — deterministic domain logic that composes in pipelines.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
