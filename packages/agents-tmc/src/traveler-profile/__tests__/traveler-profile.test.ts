@@ -13,19 +13,31 @@ beforeAll(async () => {
   await agent.initialize();
 });
 
-afterAll(() => { agent.destroy(); });
-beforeEach(() => { agent.getStore().clear(); });
+afterAll(() => {
+  agent.destroy();
+});
+beforeEach(() => {
+  agent.getStore().clear();
+});
 
 function createProfile(): TravelerProfileInput {
   return {
     operation: 'create',
     profile_data: {
-      given_name: 'JOHN', surname: 'SMITH', date_of_birth: '1985-01-12',
-      nationality: 'US', passport_number: 'A12345678', passport_expiry: '2029-06-15',
-      passport_issuing_country: 'US', loyalty_numbers: { BA: 'BA123456', AA: 'AA789012' },
-      seat_preference: 'AISLE', meal_preference: 'VGML',
-      contact_email: 'john@example.com', contact_phone: '+14155551234',
-      corporate_id: 'CORP001', department: 'Engineering',
+      given_name: 'JOHN',
+      surname: 'SMITH',
+      date_of_birth: '1985-01-12',
+      nationality: 'US',
+      passport_number: 'A12345678',
+      passport_expiry: '2029-06-15',
+      passport_issuing_country: 'US',
+      loyalty_numbers: { BA: 'BA123456', AA: 'AA789012' },
+      seat_preference: 'AISLE',
+      meal_preference: 'VGML',
+      contact_email: 'john@example.com',
+      contact_phone: '+14155551234',
+      corporate_id: 'CORP001',
+      department: 'Engineering',
     },
     current_date: '2026-04-01T12:00:00Z',
   };
@@ -68,7 +80,9 @@ describe('Traveler Profile', () => {
     });
 
     it('throws TRAVELER_NOT_FOUND', async () => {
-      await expect(agent.execute({ data: { operation: 'get', traveler_id: 'NONEXISTENT' } })).rejects.toThrow('TRAVELER_NOT_FOUND');
+      await expect(
+        agent.execute({ data: { operation: 'get', traveler_id: 'NONEXISTENT' } }),
+      ).rejects.toThrow('TRAVELER_NOT_FOUND');
     });
   });
 
@@ -76,14 +90,29 @@ describe('Traveler Profile', () => {
     it('updates profile fields', async () => {
       const created = await agent.execute({ data: createProfile() });
       const id = created.data.profile!.traveler_id;
-      const result = await agent.execute({ data: { operation: 'update', traveler_id: id, profile_data: { department: 'Sales' }, current_date: '2026-04-02T00:00:00Z' } });
+      const result = await agent.execute({
+        data: {
+          operation: 'update',
+          traveler_id: id,
+          profile_data: { department: 'Sales' },
+          current_date: '2026-04-02T00:00:00Z',
+        },
+      });
       expect(result.data.profile!.department).toBe('Sales');
     });
 
     it('rejects invalid meal on update', async () => {
       const created = await agent.execute({ data: createProfile() });
       const id = created.data.profile!.traveler_id;
-      await expect(agent.execute({ data: { operation: 'update', traveler_id: id, profile_data: { meal_preference: 'BAD' as 'VGML' } } })).rejects.toThrow('INVALID_MEAL_CODE');
+      await expect(
+        agent.execute({
+          data: {
+            operation: 'update',
+            traveler_id: id,
+            profile_data: { meal_preference: 'BAD' as 'VGML' },
+          },
+        }),
+      ).rejects.toThrow('INVALID_MEAL_CODE');
     });
   });
 
@@ -104,10 +133,22 @@ describe('Traveler Profile', () => {
     it('injects SSR DOCS for international', async () => {
       const created = await agent.execute({ data: createProfile() });
       const id = created.data.profile!.traveler_id;
-      const result = await agent.execute({ data: {
-        operation: 'apply_to_pnr', traveler_id: id,
-        pnr_segments: [{ carrier: 'BA', flight_number: '115', origin: 'LHR', destination: 'JFK', departure_date: '2026-06-15', is_international: true }],
-      } });
+      const result = await agent.execute({
+        data: {
+          operation: 'apply_to_pnr',
+          traveler_id: id,
+          pnr_segments: [
+            {
+              carrier: 'BA',
+              flight_number: '115',
+              origin: 'LHR',
+              destination: 'JFK',
+              departure_date: '2026-06-15',
+              is_international: true,
+            },
+          ],
+        },
+      });
       const docs = result.data.ssr_injections!.find((s) => s.ssr_type === 'DOCS');
       expect(docs).toBeDefined();
       expect(docs!.injected).toBe(true);
@@ -116,12 +157,28 @@ describe('Traveler Profile', () => {
     it('injects FQTV only for airlines in PNR', async () => {
       const created = await agent.execute({ data: createProfile() });
       const id = created.data.profile!.traveler_id;
-      const result = await agent.execute({ data: {
-        operation: 'apply_to_pnr', traveler_id: id,
-        pnr_segments: [{ carrier: 'BA', flight_number: '115', origin: 'LHR', destination: 'JFK', departure_date: '2026-06-15', is_international: true }],
-      } });
-      const baFqtv = result.data.ssr_injections!.find((s) => s.ssr_type === 'FQTV' && s.content.includes('BA'));
-      const aaFqtv = result.data.ssr_injections!.find((s) => s.ssr_type === 'FQTV' && s.content.includes('AA'));
+      const result = await agent.execute({
+        data: {
+          operation: 'apply_to_pnr',
+          traveler_id: id,
+          pnr_segments: [
+            {
+              carrier: 'BA',
+              flight_number: '115',
+              origin: 'LHR',
+              destination: 'JFK',
+              departure_date: '2026-06-15',
+              is_international: true,
+            },
+          ],
+        },
+      });
+      const baFqtv = result.data.ssr_injections!.find(
+        (s) => s.ssr_type === 'FQTV' && s.content.includes('BA'),
+      );
+      const aaFqtv = result.data.ssr_injections!.find(
+        (s) => s.ssr_type === 'FQTV' && s.content.includes('AA'),
+      );
       expect(baFqtv!.injected).toBe(true);
       expect(aaFqtv!.injected).toBe(false);
       expect(aaFqtv!.skipped_reason).toContain('not in PNR');
@@ -130,10 +187,22 @@ describe('Traveler Profile', () => {
     it('injects SSR MEAL', async () => {
       const created = await agent.execute({ data: createProfile() });
       const id = created.data.profile!.traveler_id;
-      const result = await agent.execute({ data: {
-        operation: 'apply_to_pnr', traveler_id: id,
-        pnr_segments: [{ carrier: 'BA', flight_number: '115', origin: 'LHR', destination: 'JFK', departure_date: '2026-06-15', is_international: true }],
-      } });
+      const result = await agent.execute({
+        data: {
+          operation: 'apply_to_pnr',
+          traveler_id: id,
+          pnr_segments: [
+            {
+              carrier: 'BA',
+              flight_number: '115',
+              origin: 'LHR',
+              destination: 'JFK',
+              departure_date: '2026-06-15',
+              is_international: true,
+            },
+          ],
+        },
+      });
       const meal = result.data.ssr_injections!.find((s) => s.ssr_type === 'MEAL');
       expect(meal!.injected).toBe(true);
       expect(meal!.content).toBe('VGML');
@@ -142,10 +211,22 @@ describe('Traveler Profile', () => {
     it('injects SSR SEAT', async () => {
       const created = await agent.execute({ data: createProfile() });
       const id = created.data.profile!.traveler_id;
-      const result = await agent.execute({ data: {
-        operation: 'apply_to_pnr', traveler_id: id,
-        pnr_segments: [{ carrier: 'BA', flight_number: '115', origin: 'LHR', destination: 'JFK', departure_date: '2026-06-15', is_international: true }],
-      } });
+      const result = await agent.execute({
+        data: {
+          operation: 'apply_to_pnr',
+          traveler_id: id,
+          pnr_segments: [
+            {
+              carrier: 'BA',
+              flight_number: '115',
+              origin: 'LHR',
+              destination: 'JFK',
+              departure_date: '2026-06-15',
+              is_international: true,
+            },
+          ],
+        },
+      });
       const seat = result.data.ssr_injections!.find((s) => s.ssr_type === 'SEAT');
       expect(seat!.injected).toBe(true);
     });

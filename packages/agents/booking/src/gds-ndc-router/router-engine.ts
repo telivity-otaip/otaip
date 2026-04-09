@@ -52,9 +52,12 @@ function resolveRoutingCarrier(segment: RoutingSegment): { carrier: string; code
 
 function getBookingFormat(channel: DistributionChannel): 'GDS_PNR' | 'NDC_ORDER' | 'DIRECT_API' {
   switch (channel) {
-    case 'GDS': return 'GDS_PNR';
-    case 'NDC': return 'NDC_ORDER';
-    case 'DIRECT': return 'DIRECT_API';
+    case 'GDS':
+      return 'GDS_PNR';
+    case 'NDC':
+      return 'NDC_ORDER';
+    case 'DIRECT':
+      return 'DIRECT_API';
   }
 }
 
@@ -131,7 +134,7 @@ export function routeSegments(input: GdsNdcRouterInput): GdsNdcRouterOutput {
   // Determine unified channel
   const primaryChannels = new Set(routings.map((r) => r.primary_channel));
   const unifiedChannel = primaryChannels.size === 1;
-  const recommendedChannel = unifiedChannel ? routings[0]?.primary_channel ?? null : null;
+  const recommendedChannel = unifiedChannel ? (routings[0]?.primary_channel ?? null) : null;
 
   // Build format stubs
   const gdsFormat = buildGdsFormatStub(input.segments, routings);
@@ -150,7 +153,10 @@ export function routeSegments(input: GdsNdcRouterInput): GdsNdcRouterOutput {
 // Format translation stubs
 // ---------------------------------------------------------------------------
 
-function buildGdsFormatStub(segments: RoutingSegment[], routings: ChannelRouting[]): GdsPnrFormat | null {
+function buildGdsFormatStub(
+  segments: RoutingSegment[],
+  routings: ChannelRouting[],
+): GdsPnrFormat | null {
   const gdsRoutings = routings.filter((r) => r.primary_channel === 'GDS');
   if (gdsRoutings.length === 0) return null;
 
@@ -174,7 +180,10 @@ function buildGdsFormatStub(segments: RoutingSegment[], routings: ChannelRouting
   };
 }
 
-function buildNdcFormatStub(segments: RoutingSegment[], routings: ChannelRouting[]): NdcOrderFormat | null {
+function buildNdcFormatStub(
+  segments: RoutingSegment[],
+  routings: ChannelRouting[],
+): NdcOrderFormat | null {
   const ndcRoutings = routings.filter((r) => r.primary_channel === 'NDC');
   if (ndcRoutings.length === 0) return null;
 

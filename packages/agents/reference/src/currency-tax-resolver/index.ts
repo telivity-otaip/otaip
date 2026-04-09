@@ -7,29 +7,19 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
-import type {
-  CurrencyTaxResolverInput,
-  CurrencyTaxResolverOutput,
-} from './types.js';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
+import type { CurrencyTaxResolverInput, CurrencyTaxResolverOutput } from './types.js';
 import { CURRENCIES, TAX_CODES } from './data.js';
 import { buildIndexes, resolve } from './resolver.js';
 import type { CurrencyTaxIndexes } from './resolver.js';
 
 const VALID_CODE_TYPES = new Set(['currency', 'tax', 'auto']);
 
-export class CurrencyTaxResolver
-  implements Agent<CurrencyTaxResolverInput, CurrencyTaxResolverOutput>
-{
+export class CurrencyTaxResolver implements Agent<
+  CurrencyTaxResolverInput,
+  CurrencyTaxResolverOutput
+> {
   readonly id = '0.6';
   readonly name = 'Currency & Tax Code Resolver';
   readonly version = '0.1.0';

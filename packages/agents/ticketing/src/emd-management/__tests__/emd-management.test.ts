@@ -107,10 +107,15 @@ describe('EMD Management', () => {
 
     it('rejects EMD-A with invalid ticket number format', async () => {
       const input = makeEmdAInput({
-        services: [{
-          rfic: 'C', description: 'Baggage', amount: '50.00', currency: 'GBP',
-          associated_ticket_number: 'INVALID',
-        }],
+        services: [
+          {
+            rfic: 'C',
+            description: 'Baggage',
+            amount: '50.00',
+            currency: 'GBP',
+            associated_ticket_number: 'INVALID',
+          },
+        ],
       });
       await expect(agent.execute({ data: input })).rejects.toThrow('Invalid input');
     });
@@ -160,9 +165,14 @@ describe('EMD Management', () => {
 
     it('rejects more than 4 coupons', async () => {
       const services = Array.from({ length: 5 }, (_, i) => ({
-        rfic: 'F' as const, description: `Item ${i}`, amount: '10.00', currency: 'EUR',
+        rfic: 'F' as const,
+        description: `Item ${i}`,
+        amount: '10.00',
+        currency: 'EUR',
       }));
-      await expect(agent.execute({ data: makeEmdSInput({ services }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeEmdSInput({ services }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('numbers coupons sequentially', async () => {
@@ -180,7 +190,15 @@ describe('EMD Management', () => {
 
   describe('RFIC codes', () => {
     it('accepts all valid RFIC codes A-G', async () => {
-      const codes: Array<'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'> = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+      const codes: Array<'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'> = [
+        'A',
+        'B',
+        'C',
+        'D',
+        'E',
+        'F',
+        'G',
+      ];
       for (const rfic of codes) {
         const input = makeEmdSInput({
           services: [{ rfic, description: `Test ${rfic}`, amount: '10.00', currency: 'EUR' }],
@@ -206,23 +224,33 @@ describe('EMD Management', () => {
 
   describe('Input validation', () => {
     it('rejects invalid record locator', async () => {
-      await expect(agent.execute({ data: makeEmdSInput({ record_locator: 'bad' }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeEmdSInput({ record_locator: 'bad' }) }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects invalid carrier', async () => {
-      await expect(agent.execute({ data: makeEmdSInput({ issuing_carrier: 'X' }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeEmdSInput({ issuing_carrier: 'X' }) }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects invalid passenger name', async () => {
-      await expect(agent.execute({ data: makeEmdSInput({ passenger_name: 'john' }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeEmdSInput({ passenger_name: 'john' }) }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects empty services', async () => {
-      await expect(agent.execute({ data: makeEmdSInput({ services: [] }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeEmdSInput({ services: [] }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid EMD type', async () => {
-      await expect(agent.execute({ data: makeEmdSInput({ emd_type: 'EMD-X' as 'EMD-A' }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeEmdSInput({ emd_type: 'EMD-X' as 'EMD-A' }) }),
+      ).rejects.toThrow('Invalid input');
     });
   });
 
@@ -245,7 +273,9 @@ describe('EMD Management', () => {
 
     it('throws when not initialized', async () => {
       const uninit = new EmdManagement();
-      await expect(uninit.execute({ data: makeEmdAInput() })).rejects.toThrow('not been initialized');
+      await expect(uninit.execute({ data: makeEmdAInput() })).rejects.toThrow(
+        'not been initialized',
+      );
     });
   });
 });

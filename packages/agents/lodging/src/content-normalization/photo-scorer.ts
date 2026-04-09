@@ -60,9 +60,11 @@ function scoreQuality(photo: HotelPhoto): number {
   // Higher resolution = better quality
   if (photo.width && photo.height) {
     const pixels = photo.width * photo.height;
-    if (pixels >= 2_000_000) score += 0.3;       // 2MP+
-    else if (pixels >= 1_000_000) score += 0.2;   // 1MP+
-    else if (pixels >= 500_000) score += 0.1;     // 500K+
+    if (pixels >= 2_000_000)
+      score += 0.3; // 2MP+
+    else if (pixels >= 1_000_000)
+      score += 0.2; // 1MP+
+    else if (pixels >= 500_000) score += 0.1; // 500K+
   }
 
   // Has caption = better metadata

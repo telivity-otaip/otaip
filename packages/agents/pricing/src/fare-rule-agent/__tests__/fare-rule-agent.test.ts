@@ -148,7 +148,13 @@ describe('Fare Rule Agent', () => {
   describe('Peak season with blackout (DL M21NR JFK-LHR)', () => {
     it('finds peak season fare', async () => {
       const result = await agent.execute({
-        data: { fare_basis: 'M21NR', carrier: 'DL', origin: 'JFK', destination: 'LHR', travel_date: '2025-08-01' },
+        data: {
+          fare_basis: 'M21NR',
+          carrier: 'DL',
+          origin: 'JFK',
+          destination: 'LHR',
+          travel_date: '2025-08-01',
+        },
       });
 
       expect(result.data.total_rules).toBe(1);
@@ -158,7 +164,13 @@ describe('Fare Rule Agent', () => {
 
     it('detects blackout period', async () => {
       const result = await agent.execute({
-        data: { fare_basis: 'M21NR', carrier: 'DL', origin: 'JFK', destination: 'LHR', travel_date: '2025-07-03' },
+        data: {
+          fare_basis: 'M21NR',
+          carrier: 'DL',
+          origin: 'JFK',
+          destination: 'LHR',
+          travel_date: '2025-07-03',
+        },
       });
 
       expect(result.data.in_blackout).toBe(true);
@@ -168,7 +180,13 @@ describe('Fare Rule Agent', () => {
 
     it('returns valid_for_date=true during peak season', async () => {
       const result = await agent.execute({
-        data: { fare_basis: 'M21NR', carrier: 'DL', origin: 'JFK', destination: 'LHR', travel_date: '2025-08-15' },
+        data: {
+          fare_basis: 'M21NR',
+          carrier: 'DL',
+          origin: 'JFK',
+          destination: 'LHR',
+          travel_date: '2025-08-15',
+        },
       });
 
       expect(result.data.valid_for_date).toBe(true);
@@ -177,7 +195,13 @@ describe('Fare Rule Agent', () => {
 
     it('requires 21-day advance purchase', async () => {
       const result = await agent.execute({
-        data: { fare_basis: 'M21NR', carrier: 'DL', origin: 'JFK', destination: 'LHR', travel_date: '2025-08-01' },
+        data: {
+          fare_basis: 'M21NR',
+          carrier: 'DL',
+          origin: 'JFK',
+          destination: 'LHR',
+          travel_date: '2025-08-01',
+        },
       });
 
       expect(result.data.rules[0]!.advance_purchase!.min_days).toBe(21);
@@ -217,7 +241,13 @@ describe('Fare Rule Agent', () => {
   describe('Category filtering', () => {
     it('returns only requested categories', async () => {
       const result = await agent.execute({
-        data: { fare_basis: 'V14NR', carrier: 'UA', origin: 'JFK', destination: 'LHR', categories: [5, 16] },
+        data: {
+          fare_basis: 'V14NR',
+          carrier: 'UA',
+          origin: 'JFK',
+          destination: 'LHR',
+          categories: [5, 16],
+        },
       });
 
       const catNums = result.data.rules[0]!.categories.map((c) => c.category_number);
@@ -249,7 +279,13 @@ describe('Fare Rule Agent', () => {
   describe('Date filtering', () => {
     it('excludes rules outside effective range', async () => {
       const result = await agent.execute({
-        data: { fare_basis: 'M21NR', carrier: 'DL', origin: 'JFK', destination: 'LHR', travel_date: '2026-01-15' },
+        data: {
+          fare_basis: 'M21NR',
+          carrier: 'DL',
+          origin: 'JFK',
+          destination: 'LHR',
+          travel_date: '2026-01-15',
+        },
       });
 
       // DL peak fare ends 2025-09-15
@@ -260,25 +296,39 @@ describe('Fare Rule Agent', () => {
   describe('Input validation', () => {
     it('rejects empty fare_basis', async () => {
       await expect(
-        agent.execute({ data: { fare_basis: '', carrier: 'UA', origin: 'JFK', destination: 'LHR' } }),
+        agent.execute({
+          data: { fare_basis: '', carrier: 'UA', origin: 'JFK', destination: 'LHR' },
+        }),
       ).rejects.toThrow('Invalid input');
     });
 
     it('rejects invalid carrier code', async () => {
       await expect(
-        agent.execute({ data: { fare_basis: 'Y', carrier: '123', origin: 'JFK', destination: 'LHR' } }),
+        agent.execute({
+          data: { fare_basis: 'Y', carrier: '123', origin: 'JFK', destination: 'LHR' },
+        }),
       ).rejects.toThrow('Invalid input');
     });
 
     it('rejects invalid origin', async () => {
       await expect(
-        agent.execute({ data: { fare_basis: 'Y', carrier: 'UA', origin: '1', destination: 'LHR' } }),
+        agent.execute({
+          data: { fare_basis: 'Y', carrier: 'UA', origin: '1', destination: 'LHR' },
+        }),
       ).rejects.toThrow('Invalid input');
     });
 
     it('rejects invalid date format', async () => {
       await expect(
-        agent.execute({ data: { fare_basis: 'Y', carrier: 'UA', origin: 'JFK', destination: 'LHR', travel_date: 'bad' } }),
+        agent.execute({
+          data: {
+            fare_basis: 'Y',
+            carrier: 'UA',
+            origin: 'JFK',
+            destination: 'LHR',
+            travel_date: 'bad',
+          },
+        }),
       ).rejects.toThrow('Invalid input');
     });
   });
@@ -305,7 +355,9 @@ describe('Fare Rule Agent', () => {
     it('throws when not initialized', async () => {
       const uninit = new FareRuleAgent();
       await expect(
-        uninit.execute({ data: { fare_basis: 'Y', carrier: 'UA', origin: 'JFK', destination: 'LHR' } }),
+        uninit.execute({
+          data: { fare_basis: 'Y', carrier: 'UA', origin: 'JFK', destination: 'LHR' },
+        }),
       ).rejects.toThrow('not been initialized');
     });
   });

@@ -22,22 +22,52 @@ import type { SearchOffer, PassengerCount } from '@otaip/core';
 
 /** Primary code to cabin class */
 const CABIN_MAP: Record<string, string> = {
-  F: 'first', P: 'first', A: 'first',
-  J: 'business', C: 'business', D: 'business', I: 'business', Z: 'business',
-  W: 'premium_economy', R: 'premium_economy',
-  Y: 'economy', B: 'economy', M: 'economy', H: 'economy',
-  Q: 'economy', V: 'economy', K: 'economy', L: 'economy',
-  S: 'economy', N: 'economy', T: 'economy',
+  F: 'first',
+  P: 'first',
+  A: 'first',
+  J: 'business',
+  C: 'business',
+  D: 'business',
+  I: 'business',
+  Z: 'business',
+  W: 'premium_economy',
+  R: 'premium_economy',
+  Y: 'economy',
+  B: 'economy',
+  M: 'economy',
+  H: 'economy',
+  Q: 'economy',
+  V: 'economy',
+  K: 'economy',
+  L: 'economy',
+  S: 'economy',
+  N: 'economy',
+  T: 'economy',
 };
 
 /** Booking class to fare tier */
 const TIER_MAP: Record<string, string> = {
-  F: 'full', P: 'premium', A: 'discount-first',
-  J: 'full', C: 'full', D: 'discount', I: 'deep-discount', Z: 'deep-discount',
-  W: 'full', R: 'discount',
-  Y: 'full', B: 'standard', M: 'standard', H: 'discount',
-  Q: 'discount', V: 'deep-discount', K: 'deep-discount', L: 'deep-discount',
-  S: 'deep-discount', N: 'deep-discount', T: 'deep-discount',
+  F: 'full',
+  P: 'premium',
+  A: 'discount-first',
+  J: 'full',
+  C: 'full',
+  D: 'discount',
+  I: 'deep-discount',
+  Z: 'deep-discount',
+  W: 'full',
+  R: 'discount',
+  Y: 'full',
+  B: 'standard',
+  M: 'standard',
+  H: 'discount',
+  Q: 'discount',
+  V: 'deep-discount',
+  K: 'deep-discount',
+  L: 'deep-discount',
+  S: 'deep-discount',
+  N: 'deep-discount',
+  T: 'deep-discount',
 };
 
 /**
@@ -69,7 +99,8 @@ export function classifyFareFamily(fareBasis: string, bookingClass?: string): Fa
 
   // Deep discount booking classes
   const deepDiscount = new Set(['V', 'K', 'L', 'N', 'S', 'T']);
-  const isDeepDiscount = deepDiscount.has(primary) || (bookingClass && deepDiscount.has(bookingClass));
+  const isDeepDiscount =
+    deepDiscount.has(primary) || (bookingClass && deepDiscount.has(bookingClass));
 
   if (isDeepDiscount || (hasNR && hasAP)) return 'basic';
   if (hasNR) return 'standard';
@@ -120,7 +151,7 @@ export function mapClassOfService(bookingClass: string): ClassOfServiceInfo {
 // ---------------------------------------------------------------------------
 
 const CHILD_DISCOUNT = 0.75;
-const INFANT_DISCOUNT = 0.10;
+const INFANT_DISCOUNT = 0.1;
 
 export function calculatePassengerPricing(
   offer: SearchOffer,

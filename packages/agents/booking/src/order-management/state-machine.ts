@@ -193,7 +193,10 @@ export class PaymentConfirmationStateMachine {
     const order = this.getOrder(orderId);
 
     // Valid from AWAITING or RETRY
-    if (order.state.confirmation_status !== 'AWAITING' && order.state.confirmation_status !== 'RETRY') {
+    if (
+      order.state.confirmation_status !== 'AWAITING' &&
+      order.state.confirmation_status !== 'RETRY'
+    ) {
       throw new InvalidStateTransitionError(
         AGENT_ID,
         'confirmation_status',
@@ -210,7 +213,10 @@ export class PaymentConfirmationStateMachine {
     const order = this.getOrder(orderId);
 
     // Valid from AWAITING or RETRY
-    if (order.state.confirmation_status !== 'AWAITING' && order.state.confirmation_status !== 'RETRY') {
+    if (
+      order.state.confirmation_status !== 'AWAITING' &&
+      order.state.confirmation_status !== 'RETRY'
+    ) {
       throw new InvalidStateTransitionError(
         AGENT_ID,
         'confirmation_status',
@@ -273,7 +279,10 @@ export class PaymentConfirmationStateMachine {
     const order = this.getOrder(orderId);
 
     // Guard: must be in TIMEOUT or RETRY (all retries exhausted)
-    if (order.state.confirmation_status !== 'TIMEOUT' && order.state.confirmation_status !== 'RETRY') {
+    if (
+      order.state.confirmation_status !== 'TIMEOUT' &&
+      order.state.confirmation_status !== 'RETRY'
+    ) {
       throw new InvalidStateTransitionError(
         AGENT_ID,
         'confirmation_status',

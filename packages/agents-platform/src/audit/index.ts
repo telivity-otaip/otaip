@@ -4,13 +4,15 @@
  * Audit trail, PII redaction, GDPR/PCI/IATA compliance.
  */
 
-import type {
-  Agent, AgentInput, AgentOutput, AgentHealthStatus,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type {
-  AuditInput, AuditOutput,
-  AuditLogEntry, ComplianceIssue, ComplianceReport, ComplianceSeverity,
+  AuditInput,
+  AuditOutput,
+  AuditLogEntry,
+  ComplianceIssue,
+  ComplianceReport,
+  ComplianceSeverity,
 } from './types.js';
 
 const PII_FIELDS = new Set(['passport_number', 'date_of_birth', 'credit_card', 'phone', 'email']);
@@ -47,9 +49,7 @@ function redactPayload(payload: Record<string, unknown>): Record<string, unknown
   return redacted;
 }
 
-export class AuditAgent
-  implements Agent<AuditInput, AuditOutput>
-{
+export class AuditAgent implements Agent<AuditInput, AuditOutput> {
   readonly id = '9.4';
   readonly name = 'Audit & Compliance';
   readonly version = '0.1.0';
@@ -60,21 +60,26 @@ export class AuditAgent
   private nextEventId = 1;
   private nextIssueId = 1;
 
-  async initialize(): Promise<void> { this.initialized = true; }
+  async initialize(): Promise<void> {
+    this.initialized = true;
+  }
 
-  async execute(
-    input: AgentInput<AuditInput>,
-  ): Promise<AgentOutput<AuditOutput>> {
+  async execute(input: AgentInput<AuditInput>): Promise<AgentOutput<AuditOutput>> {
     if (!this.initialized) throw new AgentNotInitializedError(this.id);
 
     const d = input.data;
 
     switch (d.operation) {
-      case 'log_event': return this.handleLogEvent(d);
-      case 'query_audit_log': return this.handleQuery(d);
-      case 'flag_compliance_issue': return this.handleFlag(d);
-      case 'get_compliance_report': return this.handleReport();
-      case 'redact_pii': return this.handleRedact(d);
+      case 'log_event':
+        return this.handleLogEvent(d);
+      case 'query_audit_log':
+        return this.handleQuery(d);
+      case 'flag_compliance_issue':
+        return this.handleFlag(d);
+      case 'get_compliance_report':
+        return this.handleReport();
+      case 'redact_pii':
+        return this.handleRedact(d);
       default:
         throw new AgentInputValidationError(this.id, 'operation', 'Invalid operation.');
     }
@@ -172,7 +177,12 @@ export class AuditAgent
     const eventsWithPii = this.log.filter((e) => e.pii_redacted).length;
     const openIssues = [...this.issues.values()].filter((i) => !i.resolved).length;
 
-    const issuesBySeverity: Record<ComplianceSeverity, number> = { low: 0, medium: 0, high: 0, critical: 0 };
+    const issuesBySeverity: Record<ComplianceSeverity, number> = {
+      low: 0,
+      medium: 0,
+      high: 0,
+      critical: 0,
+    };
     for (const issue of this.issues.values()) {
       if (!issue.resolved) issuesBySeverity[issue.severity]++;
     }
@@ -207,7 +217,13 @@ export class AuditAgent
 }
 
 export type {
-  AuditInput, AuditOutput,
-  AuditLogEntry, ComplianceIssue, ComplianceReport,
-  AuditOperation, EventType, ComplianceIssueType, ComplianceSeverity,
+  AuditInput,
+  AuditOutput,
+  AuditLogEntry,
+  ComplianceIssue,
+  ComplianceReport,
+  AuditOperation,
+  EventType,
+  ComplianceIssueType,
+  ComplianceSeverity,
 } from './types.js';

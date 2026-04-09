@@ -48,9 +48,7 @@ export class NavitaireSessionManager {
    * Execute a multi-step stateful flow within a single session lock.
    * All steps share the same token and run sequentially.
    */
-  async withStatefulFlow<T>(
-    flow: (token: string) => Promise<T>,
-  ): Promise<T> {
+  async withStatefulFlow<T>(flow: (token: string) => Promise<T>): Promise<T> {
     return this.withSession(async (token) => {
       this.hasBookingInState = true;
       try {

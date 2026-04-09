@@ -21,11 +21,26 @@ import type {
 // Data loading
 // ---------------------------------------------------------------------------
 
-interface CityPair { origin: string; destination: string; tpm: number; mph: number }
-interface MileageData { city_pairs: CityPair[] }
-interface RoeData { rates: Record<string, string> }
-interface RoundingRule { unit: string; direction: string }
-interface RoundingData { rules: Record<string, RoundingRule>; default: RoundingRule }
+interface CityPair {
+  origin: string;
+  destination: string;
+  tpm: number;
+  mph: number;
+}
+interface MileageData {
+  city_pairs: CityPair[];
+}
+interface RoeData {
+  rates: Record<string, string>;
+}
+interface RoundingRule {
+  unit: string;
+  direction: string;
+}
+interface RoundingData {
+  rules: Record<string, RoundingRule>;
+  default: RoundingRule;
+}
 
 const require = createRequire(import.meta.url);
 const mileageData = require('./data/mileage-data.json') as MileageData;
@@ -77,18 +92,24 @@ export function constructFare(input: FareConstructionInput): FareConstructionOut
   }
 
   // Step 1: Validate components
-  addStep('Validate Components', `${input.components.length} fare component(s), journey type ${input.journey_type}`,
+  addStep(
+    'Validate Components',
+    `${input.components.length} fare component(s), journey type ${input.journey_type}`,
     JSON.stringify(input.components.map((c) => `${c.origin}-${c.destination}`)),
-    'valid');
+    'valid',
+  );
 
   // Step 2: Sum NUC amounts
   let totalNuc = new Decimal(0);
   for (const comp of input.components) {
     totalNuc = totalNuc.plus(new Decimal(comp.nuc_amount));
   }
-  addStep('Sum NUC', 'Sum all fare component NUC amounts',
+  addStep(
+    'Sum NUC',
+    'Sum all fare component NUC amounts',
     input.components.map((c) => c.nuc_amount).join(' + '),
-    totalNuc.toFixed(2));
+    totalNuc.toFixed(2),
+  );
 
   // Step 3: Mileage validation
   const mileageChecks: MileageCheck[] = [];
@@ -118,19 +139,24 @@ export function constructFare(input: FareConstructionInput): FareConstructionOut
     }
   }
 
-  addStep('Mileage Validation', `TPM total: ${totalTpm}, MPM total: ${totalMph}`,
+  addStep(
+    'Mileage Validation',
+    `TPM total: ${totalTpm}, MPM total: ${totalMph}`,
     `${mileageChecks.length} segments`,
-    `TPM=${totalTpm} MPM=${totalMph}`);
+    `TPM=${totalTpm} MPM=${totalMph}`,
+  );
 
   // Step 4: Check mileage exceeded
   const mileageExceeded = totalMph > 0 && totalTpm > totalMph;
-  const excessPct = totalMph > 0
-    ? new Decimal(totalTpm).minus(totalMph).div(totalMph).mul(100).toNumber()
-    : 0;
+  const excessPct =
+    totalMph > 0 ? new Decimal(totalTpm).minus(totalMph).div(totalMph).mul(100).toNumber() : 0;
 
-  addStep('Mileage Excess Check', `Excess: ${excessPct.toFixed(1)}%`,
+  addStep(
+    'Mileage Excess Check',
+    `Excess: ${excessPct.toFixed(1)}%`,
     `TPM=${totalTpm} vs MPM=${totalMph}`,
-    mileageExceeded ? `exceeded by ${excessPct.toFixed(1)}%` : 'within MPM');
+    mileageExceeded ? `exceeded by ${excessPct.toFixed(1)}%` : 'within MPM',
+  );
 
   // Step 5: Mileage surcharge
   let surchargePercentage = 0;
@@ -147,18 +173,22 @@ export function constructFare(input: FareConstructionInput): FareConstructionOut
     applies: surchargePercentage > 0,
     percentage: surchargePercentage,
     surcharge_nuc: surchargeNuc.toFixed(2),
-    description: surchargePercentage > 0
-      ? `${surchargePercentage}% mileage surcharge applied (excess ${excessPct.toFixed(1)}%)`
-      : 'No mileage surcharge',
+    description:
+      surchargePercentage > 0
+        ? `${surchargePercentage}% mileage surcharge applied (excess ${excessPct.toFixed(1)}%)`
+        : 'No mileage surcharge',
   };
 
   if (surchargePercentage > 0) {
     totalNuc = totalNuc.plus(surchargeNuc);
   }
 
-  addStep('Mileage Surcharge', mileageSurcharge.description,
+  addStep(
+    'Mileage Surcharge',
+    mileageSurcharge.description,
     `base NUC=${totalNuc.minus(surchargeNuc).toFixed(2)}`,
-    `total NUC=${totalNuc.toFixed(2)}`);
+    `total NUC=${totalNuc.toFixed(2)}`,
+  );
 
   // Step 6: HIP check (Higher Intermediate Point)
   // TODO: [NEEDS DOMAIN INPUT] Real HIP detection requires intermediate point fare comparison
@@ -189,7 +219,12 @@ export function constructFare(input: FareConstructionInput): FareConstructionOut
     }
   }
 
-  addStep('HIP Check', hipCheck.description, 'fare components', hipCheck.detected ? 'HIP detected' : 'no HIP');
+  addStep(
+    'HIP Check',
+    hipCheck.description,
+    'fare components',
+    hipCheck.detected ? 'HIP detected' : 'no HIP',
+  );
 
   // Step 7: BHC check (Backhaul Check)
   // TODO: [NEEDS DOMAIN INPUT] Real BHC detection requires geographic direction analysis
@@ -212,7 +247,12 @@ export function constructFare(input: FareConstructionInput): FareConstructionOut
     }
   }
 
-  addStep('BHC Check', bhcCheck.description, 'routing', bhcCheck.detected ? 'BHC detected' : 'no BHC');
+  addStep(
+    'BHC Check',
+    bhcCheck.description,
+    'routing',
+    bhcCheck.detected ? 'BHC detected' : 'no BHC',
+  );
 
   // Step 8: CTM check (Circle Trip Minimum)
   const ctmCheck: CtmCheck = {
@@ -229,39 +269,61 @@ export function constructFare(input: FareConstructionInput): FareConstructionOut
     ctmCheck.description = 'Circle Trip Minimum applies';
   }
 
-  addStep('CTM Check', ctmCheck.description, input.journey_type, ctmCheck.applies ? `CTM NUC=${ctmCheck.ctm_nuc}` : 'N/A');
+  addStep(
+    'CTM Check',
+    ctmCheck.description,
+    input.journey_type,
+    ctmCheck.applies ? `CTM NUC=${ctmCheck.ctm_nuc}` : 'N/A',
+  );
 
   // Step 9: Get ROE
   const roe = getRoe(input.selling_currency);
   if (!roe) {
     // Fallback to USD ROE of 1.0
-    addStep('ROE Lookup', `No ROE found for ${input.selling_currency}, using 1.0`,
-      input.selling_currency, '1.000000');
+    addStep(
+      'ROE Lookup',
+      `No ROE found for ${input.selling_currency}, using 1.0`,
+      input.selling_currency,
+      '1.000000',
+    );
   } else {
-    addStep('ROE Lookup', `ROE for ${input.selling_currency}`,
-      input.selling_currency, roe.toFixed(6));
+    addStep(
+      'ROE Lookup',
+      `ROE for ${input.selling_currency}`,
+      input.selling_currency,
+      roe.toFixed(6),
+    );
   }
 
   const effectiveRoe = roe ?? new Decimal(1);
 
   // Step 10: NUC × ROE = local currency
   const localRaw = totalNuc.mul(effectiveRoe);
-  addStep('NUC × ROE', `${totalNuc.toFixed(2)} × ${effectiveRoe.toFixed(6)}`,
+  addStep(
+    'NUC × ROE',
+    `${totalNuc.toFixed(2)} × ${effectiveRoe.toFixed(6)}`,
     `NUC ${totalNuc.toFixed(2)}`,
-    `${input.selling_currency} ${localRaw.toFixed(6)}`);
+    `${input.selling_currency} ${localRaw.toFixed(6)}`,
+  );
 
   // Step 11: IATA rounding
   const roundingRule = getRoundingRule(input.selling_currency);
   const localRounded = iataRound(localRaw, roundingRule.unit);
 
-  addStep('IATA Rounding', `Round UP to nearest ${roundingRule.unit}`,
+  addStep(
+    'IATA Rounding',
+    `Round UP to nearest ${roundingRule.unit}`,
     localRaw.toFixed(6),
-    localRounded.toString());
+    localRounded.toString(),
+  );
 
   // Step 12: Final result
-  addStep('Final Fare', `Constructed fare in ${input.selling_currency}`,
+  addStep(
+    'Final Fare',
+    `Constructed fare in ${input.selling_currency}`,
     `NUC ${totalNuc.toFixed(2)} × ROE ${effectiveRoe.toFixed(6)}`,
-    `${input.selling_currency} ${localRounded.toString()}`);
+    `${input.selling_currency} ${localRounded.toString()}`,
+  );
 
   return {
     total_nuc: totalNuc.toFixed(2),

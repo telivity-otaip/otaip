@@ -33,19 +33,37 @@ export async function aggregateSearch(
     return { properties: [], adapterResults: [], partialResults: false };
   }
 
-  const adapterPromises = adapters.map(async (adapter): Promise<{ adapter: HotelSourceAdapter; results: RawHotelResult[]; error?: string; timedOut: boolean; durationMs: number }> => {
-    const start = Date.now();
-    try {
-      const results = await adapter.searchHotels(params);
-      return { adapter, results, timedOut: false, durationMs: Date.now() - start };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      return { adapter, results: [], error: message, timedOut: false, durationMs: Date.now() - start };
-    }
-  });
+  const adapterPromises = adapters.map(
+    async (
+      adapter,
+    ): Promise<{
+      adapter: HotelSourceAdapter;
+      results: RawHotelResult[];
+      error?: string;
+      timedOut: boolean;
+      durationMs: number;
+    }> => {
+      const start = Date.now();
+      try {
+        const results = await adapter.searchHotels(params);
+        return { adapter, results, timedOut: false, durationMs: Date.now() - start };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        return {
+          adapter,
+          results: [],
+          error: message,
+          timedOut: false,
+          durationMs: Date.now() - start,
+        };
+      }
+    },
+  );
 
   // Race all adapters against a timeout
-  const timeoutPromise = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), timeoutMs));
+  const timeoutPromise = new Promise<'timeout'>((resolve) =>
+    setTimeout(() => resolve('timeout'), timeoutMs),
+  );
 
   const settledResults: Array<{
     adapter: HotelSourceAdapter;

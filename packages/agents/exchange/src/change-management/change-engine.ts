@@ -88,7 +88,7 @@ export function assessChange(input: ChangeManagementInput): ChangeManagementOutp
   const hasWaiver = !!input.waiver_code;
 
   // Effective change fee
-  const effectiveChangeFee = (isFreeChange || hasWaiver) ? new Decimal('0.00') : changeFeeAmount;
+  const effectiveChangeFee = isFreeChange || hasWaiver ? new Decimal('0.00') : changeFeeAmount;
 
   // Fare difference
   const originalFare = new Decimal(orig.base_fare);
@@ -133,9 +133,12 @@ export function assessChange(input: ChangeManagementInput): ChangeManagementOutp
   const summaryParts: string[] = [];
   if (isFreeChange) summaryParts.push('Free change (within booking window).');
   if (hasWaiver) summaryParts.push(`Waiver code ${input.waiver_code!} applied — penalty waived.`);
-  if (effectiveChangeFee.greaterThan(0)) summaryParts.push(`Change fee: ${currency} ${effectiveChangeFee.toFixed(2)}.`);
-  if (additionalCollection.greaterThan(0)) summaryParts.push(`Fare increase: ${currency} ${additionalCollection.toFixed(2)}.`);
-  if (forfeitedAmount.greaterThan(0)) summaryParts.push(`Forfeited on downgrade: ${currency} ${forfeitedAmount.toFixed(2)}.`);
+  if (effectiveChangeFee.greaterThan(0))
+    summaryParts.push(`Change fee: ${currency} ${effectiveChangeFee.toFixed(2)}.`);
+  if (additionalCollection.greaterThan(0))
+    summaryParts.push(`Fare increase: ${currency} ${additionalCollection.toFixed(2)}.`);
+  if (forfeitedAmount.greaterThan(0))
+    summaryParts.push(`Forfeited on downgrade: ${currency} ${forfeitedAmount.toFixed(2)}.`);
   if (taxDue.greaterThan(0)) summaryParts.push(`Tax adjustment: ${currency} ${taxDue.toFixed(2)}.`);
   summaryParts.push(`Total due: ${currency} ${totalDue.toFixed(2)}.`);
 

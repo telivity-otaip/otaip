@@ -58,9 +58,7 @@ const AIRPORT_MCT: Record<string, AirportMctConfig> = {
     default_international: 90,
     terminal_change_domestic: 90,
     terminal_change_international: 120,
-    carrier_rules: [
-      { arriving: 'UA', departing: 'UA', connection_type: 'domestic', minutes: 50 },
-    ],
+    carrier_rules: [{ arriving: 'UA', departing: 'UA', connection_type: 'domestic', minutes: 50 }],
   },
   ATL: {
     default_domestic: 45,
@@ -189,9 +187,7 @@ export function resolveMct(
   // Level 3: Airport + connection type
   if (config) {
     const minutes =
-      connectionType === 'domestic'
-        ? config.default_domestic
-        : config.default_international;
+      connectionType === 'domestic' ? config.default_domestic : config.default_international;
     return {
       minutes,
       rule: `airport default: ${airport} ${connectionType}`,
@@ -211,21 +207,45 @@ export function resolveMct(
 
 const ALLIANCE_MAP: Record<string, string> = {
   // Star Alliance
-  UA: 'star_alliance', LH: 'star_alliance', AC: 'star_alliance',
-  NH: 'star_alliance', SK: 'star_alliance', OS: 'star_alliance',
-  SN: 'star_alliance', LO: 'star_alliance', OU: 'star_alliance',
-  TK: 'star_alliance', SQ: 'star_alliance', NZ: 'star_alliance',
-  ET: 'star_alliance', SA: 'star_alliance', AI: 'star_alliance',
+  UA: 'star_alliance',
+  LH: 'star_alliance',
+  AC: 'star_alliance',
+  NH: 'star_alliance',
+  SK: 'star_alliance',
+  OS: 'star_alliance',
+  SN: 'star_alliance',
+  LO: 'star_alliance',
+  OU: 'star_alliance',
+  TK: 'star_alliance',
+  SQ: 'star_alliance',
+  NZ: 'star_alliance',
+  ET: 'star_alliance',
+  SA: 'star_alliance',
+  AI: 'star_alliance',
   // oneworld
-  AA: 'oneworld', BA: 'oneworld', QF: 'oneworld',
-  CX: 'oneworld', JL: 'oneworld', IB: 'oneworld',
-  AY: 'oneworld', QR: 'oneworld', MH: 'oneworld',
-  RJ: 'oneworld', AT: 'oneworld',
+  AA: 'oneworld',
+  BA: 'oneworld',
+  QF: 'oneworld',
+  CX: 'oneworld',
+  JL: 'oneworld',
+  IB: 'oneworld',
+  AY: 'oneworld',
+  QR: 'oneworld',
+  MH: 'oneworld',
+  RJ: 'oneworld',
+  AT: 'oneworld',
   // SkyTeam
-  DL: 'skyteam', AF: 'skyteam', KL: 'skyteam',
-  KE: 'skyteam', AM: 'skyteam', SU: 'skyteam',
-  CI: 'skyteam', MU: 'skyteam', GA: 'skyteam',
-  SV: 'skyteam', VN: 'skyteam',
+  DL: 'skyteam',
+  AF: 'skyteam',
+  KL: 'skyteam',
+  KE: 'skyteam',
+  AM: 'skyteam',
+  SU: 'skyteam',
+  CI: 'skyteam',
+  MU: 'skyteam',
+  GA: 'skyteam',
+  SV: 'skyteam',
+  VN: 'skyteam',
 };
 
 export function checkInterline(

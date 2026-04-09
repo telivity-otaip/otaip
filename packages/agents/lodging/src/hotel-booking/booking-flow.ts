@@ -104,7 +104,10 @@ export function getBooking(bookingId: string): BookingRecord | undefined {
 /**
  * Update a booking record in the store.
  */
-export function updateBooking(bookingId: string, updates: Partial<BookingRecord>): BookingRecord | undefined {
+export function updateBooking(
+  bookingId: string,
+  updates: Partial<BookingRecord>,
+): BookingRecord | undefined {
   const existing = bookingStore.get(bookingId);
   if (!existing) return undefined;
 

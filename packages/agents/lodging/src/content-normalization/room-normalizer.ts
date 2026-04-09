@@ -10,7 +10,12 @@
  */
 
 import type { RawRoomType } from '../types/hotel-common.js';
-import type { NormalizedRoomType, BedType, RoomCategory, ViewType } from '../types/room-taxonomy.js';
+import type {
+  NormalizedRoomType,
+  BedType,
+  RoomCategory,
+  ViewType,
+} from '../types/room-taxonomy.js';
 import { GDS_ROOM_CODE_HINTS } from '../types/room-taxonomy.js';
 
 let roomIdCounter = 0;
@@ -60,10 +65,7 @@ const VIEW_PATTERNS: Array<{ pattern: RegExp; viewType: ViewType }> = [
 /**
  * Normalize a single raw room type to OTAIP taxonomy.
  */
-export function normalizeRoomType(
-  raw: RawRoomType,
-  sourceId: string,
-): NormalizedRoomType | null {
+export function normalizeRoomType(raw: RawRoomType, sourceId: string): NormalizedRoomType | null {
   const text = `${raw.code ?? ''} ${raw.description} ${raw.bedTypeRaw ?? ''}`;
 
   // Try GDS code hint first

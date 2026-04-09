@@ -13,7 +13,11 @@ const EDI_SEGMENT_TERMINATOR = '~';
 function detectFormat(content: string): HOTFileFormat {
   const firstLine = content.split('\n')[0] ?? '';
   // EDI X12 files typically start with ISA or ST segment
-  if (firstLine.includes(EDI_SEGMENT_TERMINATOR) || firstLine.startsWith('ISA') || firstLine.startsWith('ST')) {
+  if (
+    firstLine.includes(EDI_SEGMENT_TERMINATOR) ||
+    firstLine.startsWith('ISA') ||
+    firstLine.startsWith('ST')
+  ) {
     return 'EDI_X12';
   }
   return 'FIXED_WIDTH';
@@ -21,18 +25,32 @@ function detectFormat(content: string): HOTFileFormat {
 
 function parseTransactionType(code: string): 'SALE' | 'REFUND' | 'ADM' | 'ACM' {
   switch (code.trim().toUpperCase()) {
-    case 'SALE': case 'S': case 'TKTT': return 'SALE';
-    case 'REFUND': case 'R': case 'RFND': return 'REFUND';
-    case 'ADM': case 'D': return 'ADM';
-    case 'ACM': case 'C': return 'ACM';
-    default: return 'SALE';
+    case 'SALE':
+    case 'S':
+    case 'TKTT':
+      return 'SALE';
+    case 'REFUND':
+    case 'R':
+    case 'RFND':
+      return 'REFUND';
+    case 'ADM':
+    case 'D':
+      return 'ADM';
+    case 'ACM':
+    case 'C':
+      return 'ACM';
+    default:
+      return 'SALE';
   }
 }
 
 function parseEdiX12(content: string): HOTFileRecord[] {
   const records: HOTFileRecord[] = [];
   // Split by segment terminator, filter to transaction segments
-  const segments = content.split(EDI_SEGMENT_TERMINATOR).map((s) => s.trim()).filter(Boolean);
+  const segments = content
+    .split(EDI_SEGMENT_TERMINATOR)
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   for (const segment of segments) {
     const fields = segment.split(EDI_DELIMITER);

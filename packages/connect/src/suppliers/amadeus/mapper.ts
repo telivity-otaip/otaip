@@ -175,9 +175,7 @@ function enrichSegmentWithFareDetails(
   };
 }
 
-function extractBaggageAllowance(
-  travelerPricings: AmadeusTravelerPricing[],
-): string | undefined {
+function extractBaggageAllowance(travelerPricings: AmadeusTravelerPricing[]): string | undefined {
   const firstPricing = travelerPricings[0];
   if (!firstPricing) return undefined;
 
@@ -203,12 +201,16 @@ function extractCabinFromOffer(offer: AmadeusFlightOffer): CabinClass {
   return 'economy';
 }
 
-function mapTravelerPricingsToFares(
-  travelerPricings: AmadeusTravelerPricing[],
-): FareBreakdown[] {
+function mapTravelerPricingsToFares(travelerPricings: AmadeusTravelerPricing[]): FareBreakdown[] {
   const fareMap = new Map<
     string,
-    { type: 'adult' | 'child' | 'infant'; base: Decimal; total: Decimal; currency: string; count: number }
+    {
+      type: 'adult' | 'child' | 'infant';
+      base: Decimal;
+      total: Decimal;
+      currency: string;
+      count: number;
+    }
   >();
 
   for (const tp of travelerPricings) {
@@ -398,14 +400,10 @@ function mapAmadeusOrderSegments(order: AmadeusFlightOrder): FlightSegment[][] {
   const firstOffer = order.flightOffers?.[0];
   if (!firstOffer) return [];
 
-  return firstOffer.itineraries.map((itin) =>
-    itin.segments.map((seg) => mapAmadeusSegment(seg)),
-  );
+  return firstOffer.itineraries.map((itin) => itin.segments.map((seg) => mapAmadeusSegment(seg)));
 }
 
-function mapAmadeusTravelersToPassengers(
-  travelers: AmadeusTraveler[],
-): PassengerDetail[] {
+function mapAmadeusTravelersToPassengers(travelers: AmadeusTraveler[]): PassengerDetail[] {
   return travelers.map((t) => {
     const doc = t.documents?.[0];
     const travelerType = findTravelerType(t.id);
@@ -435,9 +433,7 @@ function deriveBookingStatus(order: AmadeusFlightOrder): BookingStatus {
   return 'confirmed';
 }
 
-export function mapCreateBookingResponse(
-  order: AmadeusFlightOrder,
-): BookingResult {
+export function mapCreateBookingResponse(order: AmadeusFlightOrder): BookingResult {
   const pnr = order.associatedRecords?.[0]?.reference;
   const offer = order.flightOffers[0];
 
@@ -480,9 +476,11 @@ export function mapGetBookingResponse(
 // PASSENGER COUNT HELPER
 // ============================================================
 
-export function mapPassengerCount(
-  passengers: PassengerCount,
-): { adults: number; children: number; infants: number } {
+export function mapPassengerCount(passengers: PassengerCount): {
+  adults: number;
+  children: number;
+  infants: number;
+} {
   return {
     adults: passengers.adults,
     children: passengers.children ?? 0,

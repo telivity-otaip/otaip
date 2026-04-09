@@ -14,7 +14,11 @@ import type { RequestHandler, ApiRequest, ApiResponse, ProviderConfig } from '..
 // ---------------------------------------------------------------------------
 
 function mockSuccessHandler(): RequestHandler {
-  return (_provider: ProviderConfig, request: ApiRequest, _timeout: number): Promise<ApiResponse> => {
+  return (
+    _provider: ProviderConfig,
+    request: ApiRequest,
+    _timeout: number,
+  ): Promise<ApiResponse> => {
     return Promise.resolve({
       status: 200,
       headers: { 'content-type': 'application/json' },
@@ -435,7 +439,9 @@ describe('API Abstraction', () => {
 
     it('normalizes ProviderError instances', () => {
       const client = new ApiClient(mockSuccessHandler());
-      const provErr = new ProviderError('Rate limited', 'RATE_LIMITED', '429', true, { retry_after: 30 });
+      const provErr = new ProviderError('Rate limited', 'RATE_LIMITED', '429', true, {
+        retry_after: 30,
+      });
       const err = client.normalizeError('AMADEUS', provErr);
       expect(err.category).toBe('RATE_LIMITED');
       expect(err.retryable).toBe(true);
@@ -496,7 +502,10 @@ describe('API Abstraction', () => {
       // Make enough failures to open the circuit (AMADEUS threshold = 5)
       for (let i = 0; i < 5; i++) {
         await agent.execute({
-          data: { request: { provider_id: 'AMADEUS', method: 'GET', path: '/test' }, max_retries: 0 },
+          data: {
+            request: { provider_id: 'AMADEUS', method: 'GET', path: '/test' },
+            max_retries: 0,
+          },
         });
       }
 

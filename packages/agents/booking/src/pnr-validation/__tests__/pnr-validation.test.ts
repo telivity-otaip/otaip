@@ -127,9 +127,15 @@ describe('PNR Validation', () => {
     it('passes with continuous routing', async () => {
       const pnr = makeValidPnr();
       pnr.segments.push({
-        segment_number: 2, carrier: 'AA', flight_number: '100',
-        origin: 'JFK', destination: 'LAX', departure_date: '2026-06-16',
-        booking_class: 'Y', status: 'HK', is_international: false,
+        segment_number: 2,
+        carrier: 'AA',
+        flight_number: '100',
+        origin: 'JFK',
+        destination: 'LAX',
+        departure_date: '2026-06-16',
+        booking_class: 'Y',
+        status: 'HK',
+        is_international: false,
       });
       const result = await agent.execute({ data: pnr });
       const check = result.data.checks.find((c) => c.check_id === 4)!;
@@ -139,9 +145,15 @@ describe('PNR Validation', () => {
     it('fails with routing gap', async () => {
       const pnr = makeValidPnr();
       pnr.segments.push({
-        segment_number: 2, carrier: 'AA', flight_number: '200',
-        origin: 'LAX', destination: 'SFO', departure_date: '2026-06-17',
-        booking_class: 'Y', status: 'HK', is_international: false,
+        segment_number: 2,
+        carrier: 'AA',
+        flight_number: '200',
+        origin: 'LAX',
+        destination: 'SFO',
+        departure_date: '2026-06-17',
+        booking_class: 'Y',
+        status: 'HK',
+        is_international: false,
       });
       const result = await agent.execute({ data: pnr });
       const check = result.data.checks.find((c) => c.check_id === 4)!;
@@ -186,8 +198,11 @@ describe('PNR Validation', () => {
     it('passes when infant correctly linked', async () => {
       const pnr = makeValidPnr();
       pnr.passengers.push({
-        pax_number: 2, last_name: 'Smith', first_name: 'Baby',
-        passenger_type: 'INF', infant_linked_to: 1,
+        pax_number: 2,
+        last_name: 'Smith',
+        first_name: 'Baby',
+        passenger_type: 'INF',
+        infant_linked_to: 1,
       });
       const result = await agent.execute({ data: pnr });
       const check = result.data.checks.find((c) => c.check_id === 6)!;
@@ -197,7 +212,9 @@ describe('PNR Validation', () => {
     it('fails when infant not linked', async () => {
       const pnr = makeValidPnr();
       pnr.passengers.push({
-        pax_number: 2, last_name: 'Smith', first_name: 'Baby',
+        pax_number: 2,
+        last_name: 'Smith',
+        first_name: 'Baby',
         passenger_type: 'INF',
       });
       const result = await agent.execute({ data: pnr });
@@ -234,9 +251,16 @@ describe('PNR Validation', () => {
       pnr.segments = [
         { ...pnr.segments[0]!, married_group: 'A', status: 'HK' },
         {
-          segment_number: 2, carrier: 'BA', flight_number: '116',
-          origin: 'JFK', destination: 'LHR', departure_date: '2026-06-20',
-          booking_class: 'Y', status: 'UN', is_international: true, married_group: 'A',
+          segment_number: 2,
+          carrier: 'BA',
+          flight_number: '116',
+          origin: 'JFK',
+          destination: 'LHR',
+          departure_date: '2026-06-20',
+          booking_class: 'Y',
+          status: 'UN',
+          is_international: true,
+          married_group: 'A',
         },
       ];
       const result = await agent.execute({ data: pnr });
@@ -256,9 +280,15 @@ describe('PNR Validation', () => {
     it('fails when segment not covered by fare', async () => {
       const pnr = makeValidPnr();
       pnr.segments.push({
-        segment_number: 2, carrier: 'AA', flight_number: '100',
-        origin: 'JFK', destination: 'LAX', departure_date: '2026-06-16',
-        booking_class: 'Y', status: 'HK', is_international: false,
+        segment_number: 2,
+        carrier: 'AA',
+        flight_number: '100',
+        origin: 'JFK',
+        destination: 'LAX',
+        departure_date: '2026-06-16',
+        booking_class: 'Y',
+        status: 'HK',
+        is_international: false,
       });
       // fare only covers segment 0
       const result = await agent.execute({ data: pnr });
@@ -397,7 +427,9 @@ describe('PNR Validation', () => {
 
     it('throws when not initialized', async () => {
       const uninit = new PnrValidation();
-      await expect(uninit.execute({ data: makeValidPnr() })).rejects.toThrow('not been initialized');
+      await expect(uninit.execute({ data: makeValidPnr() })).rejects.toThrow(
+        'not been initialized',
+      );
     });
   });
 });

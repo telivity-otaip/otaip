@@ -35,10 +35,7 @@ function directAnswerModel(content: string): ModelCallFn {
  * Model that issues tool calls on the first call,
  * then returns a final answer on subsequent calls.
  */
-function toolThenAnswerModel(
-  toolCalls: ToolCall[],
-  finalContent: string,
-): ModelCallFn {
+function toolThenAnswerModel(toolCalls: ToolCall[], finalContent: string): ModelCallFn {
   let callCount = 0;
   return async () => {
     callCount++;
@@ -71,10 +68,7 @@ describe('AgentLoop', () => {
     const tool = makeTool();
     registry.register(tool);
 
-    const model = toolThenAnswerModel(
-      [toolCall('add', { a: 2, b: 3 })],
-      'The sum is 5',
-    );
+    const model = toolThenAnswerModel([toolCall('add', { a: 2, b: 3 })], 'The sum is 5');
     const loop = new AgentLoop(registry, model);
 
     const state = await loop.run([{ role: 'user', content: 'What is 2+3?' }]);
@@ -125,10 +119,7 @@ describe('AgentLoop', () => {
       }),
     );
 
-    const model = toolThenAnswerModel(
-      [toolCall('add', { a: 1, b: 2 })],
-      'Done',
-    );
+    const model = toolThenAnswerModel([toolCall('add', { a: 1, b: 2 })], 'Done');
     const loop = new AgentLoop(registry, model);
 
     const state = await loop.run([{ role: 'user', content: 'test' }]);
@@ -144,10 +135,7 @@ describe('AgentLoop', () => {
 
   it('returns error for unknown tool', async () => {
     const registry = new ToolRegistry();
-    const model = toolThenAnswerModel(
-      [toolCall('nonexistent', {})],
-      'Handled',
-    );
+    const model = toolThenAnswerModel([toolCall('nonexistent', {})], 'Handled');
     const loop = new AgentLoop(registry, model);
 
     const state = await loop.run([{ role: 'user', content: 'test' }]);
@@ -161,10 +149,7 @@ describe('AgentLoop', () => {
     const registry = new ToolRegistry();
     registry.register(makeTool({ isEnabled: () => false }));
 
-    const model = toolThenAnswerModel(
-      [toolCall('add', { a: 1, b: 2 })],
-      'Handled',
-    );
+    const model = toolThenAnswerModel([toolCall('add', { a: 1, b: 2 })], 'Handled');
     const loop = new AgentLoop(registry, model);
 
     const state = await loop.run([{ role: 'user', content: 'test' }]);
@@ -186,10 +171,7 @@ describe('AgentLoop', () => {
       }),
     );
 
-    const model = toolThenAnswerModel(
-      [toolCall('add', { a: 1, b: 2 })],
-      'Done',
-    );
+    const model = toolThenAnswerModel([toolCall('add', { a: 1, b: 2 })], 'Done');
     const loop = new AgentLoop(registry, model);
 
     const state = await loop.run([{ role: 'user', content: 'test' }]);
@@ -208,10 +190,7 @@ describe('AgentLoop', () => {
     registry.register(makeTool());
 
     const model = toolThenAnswerModel(
-      [
-        toolCall('add', { a: 1, b: 2 }, 'tc-1'),
-        toolCall('add', { a: 3, b: 4 }, 'tc-2'),
-      ],
+      [toolCall('add', { a: 1, b: 2 }, 'tc-1'), toolCall('add', { a: 3, b: 4 }, 'tc-2')],
       'Done',
     );
     const loop = new AgentLoop(registry, model);
@@ -236,7 +215,11 @@ describe('AgentLoop', () => {
     let callCount = 0;
     const infiniteModel: ModelCallFn = async () => {
       callCount++;
-      return { role: 'assistant', content: '', toolCalls: [toolCall('add', { a: 1, b: 1 }, `tc-${callCount}`)] };
+      return {
+        role: 'assistant',
+        content: '',
+        toolCalls: [toolCall('add', { a: 1, b: 1 }, `tc-${callCount}`)],
+      };
     };
 
     const loop = new AgentLoop(registry, infiniteModel, { maxIterations: 3 });
@@ -257,7 +240,11 @@ describe('AgentLoop', () => {
     let callCount = 0;
     const model: ModelCallFn = async () => {
       callCount++;
-      return { role: 'assistant', content: '', toolCalls: [toolCall('add', { a: 1, b: 1 }, `tc-${callCount}`)] };
+      return {
+        role: 'assistant',
+        content: '',
+        toolCalls: [toolCall('add', { a: 1, b: 1 }, `tc-${callCount}`)],
+      };
     };
 
     const stopAfter2: (state: { iteration: number }) => boolean = (s) => s.iteration >= 2;
@@ -295,10 +282,7 @@ describe('AgentLoop', () => {
     const registry = new ToolRegistry();
     registry.register(makeTool());
 
-    const model = toolThenAnswerModel(
-      [toolCall('add', { a: 1, b: 2 })],
-      'Done',
-    );
+    const model = toolThenAnswerModel([toolCall('add', { a: 1, b: 2 })], 'Done');
 
     const events: LoopEvent[] = [];
     const loop = new AgentLoop(registry, model, {
@@ -324,10 +308,7 @@ describe('AgentLoop', () => {
     const registry = new ToolRegistry();
     registry.register(makeTool());
 
-    const model = toolThenAnswerModel(
-      [toolCall('add', { a: 1, b: 2 })],
-      'Done',
-    );
+    const model = toolThenAnswerModel([toolCall('add', { a: 1, b: 2 })], 'Done');
 
     const phases: string[] = [];
     const loop = new AgentLoop(registry, model, {

@@ -3,7 +3,12 @@
  * Full implementation wired with Agent 1.9 in a separate build.
  */
 
-import type { ConnectAdapter, SearchFlightsInput, BookingResult, CreateBookingInput } from '../types.js';
+import type {
+  ConnectAdapter,
+  SearchFlightsInput,
+  BookingResult,
+  CreateBookingInput,
+} from '../types.js';
 
 export interface BookingPipelineConfig {
   adapter: ConnectAdapter;
@@ -11,12 +16,7 @@ export interface BookingPipelineConfig {
   paymentTimeoutMs: number;
 }
 
-export type BookingPipelineStep =
-  | 'search'
-  | 'evaluate'
-  | 'price'
-  | 'book'
-  | 'confirm';
+export type BookingPipelineStep = 'search' | 'evaluate' | 'price' | 'book' | 'confirm';
 
 export class BookingPipeline {
   constructor(private _config: BookingPipelineConfig) {}

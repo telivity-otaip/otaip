@@ -51,14 +51,55 @@ export type {
 } from './fare-shopping/index.js';
 
 export { AncillaryShoppingAgent } from './ancillary-shopping/index.js';
-export type { AncillaryShoppingInput, AncillaryShoppingOutput, AncillaryOffer, AncillaryCategory, RficCode, AncillarySegment, AncillaryPassenger, AncillaryPrice, PassengerType } from './ancillary-shopping/index.js';
+export type {
+  AncillaryShoppingInput,
+  AncillaryShoppingOutput,
+  AncillaryOffer,
+  AncillaryCategory,
+  RficCode,
+  AncillarySegment,
+  AncillaryPassenger,
+  AncillaryPrice,
+  PassengerType,
+} from './ancillary-shopping/index.js';
 export type { AncillaryAdapter } from './ancillary-shopping/index.js';
 
 export { MultiSourceAggregatorAgent } from './multi-source-aggregator/index.js';
-export type { MultiSourceInput, MultiSourceOutput, NormalizedFlight, SearchResult, AdapterSearchResult, AdapterSummary, DeduplicationStrategy, RankBy } from './multi-source-aggregator/index.js';
+export type {
+  MultiSourceInput,
+  MultiSourceOutput,
+  NormalizedFlight,
+  SearchResult,
+  AdapterSearchResult,
+  AdapterSummary,
+  DeduplicationStrategy,
+  RankBy,
+} from './multi-source-aggregator/index.js';
 
 export { HotelCarSearchAgent } from './hotel-car-search/index.js';
-export type { HotelCarSearchInput, HotelCarSearchOutput, HotelSearchInput, HotelSearchOutput, HotelOffer, HotelAdapter, CarSearchInput, CarSearchOutput, CarOffer, CarAdapter, CarCategory, HotelCarOperation } from './hotel-car-search/index.js';
+export type {
+  HotelCarSearchInput,
+  HotelCarSearchOutput,
+  HotelSearchInput,
+  HotelSearchOutput,
+  HotelOffer,
+  HotelAdapter,
+  CarSearchInput,
+  CarSearchOutput,
+  CarOffer,
+  CarAdapter,
+  CarCategory,
+  HotelCarOperation,
+} from './hotel-car-search/index.js';
 
-// Coming soon — Tier 4
-export { AITravelAdvisorAgent } from './ai-travel-advisor/index.js';
+export { AITravelAdvisorAgent, MockLLMProvider } from './ai-travel-advisor/index.js';
+export type {
+  TravelAdvisorInput,
+  TravelAdvisorOutput,
+  LLMProvider,
+  LLMOptions,
+  TravelerContext,
+  ExtractedSearchParameters,
+  TravelIntent,
+  AITravelAdvisorConfig,
+} from './ai-travel-advisor/index.js';

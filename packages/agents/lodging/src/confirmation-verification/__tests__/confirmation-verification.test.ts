@@ -95,7 +95,7 @@ describe('Agent 20.7 — Confirmation Verification', () => {
       expect(result.escalationRequired).toBe(true);
       expect(result.escalationReasons).toContain('date_mismatch');
 
-      const dateMismatch = result.discrepancies.find(d => d.field === 'check_in');
+      const dateMismatch = result.discrepancies.find((d) => d.field === 'check_in');
       expect(dateMismatch).toBeDefined();
       expect(dateMismatch!.severity).toBe('critical');
       expect(dateMismatch!.crsValue).toBe('2025-08-01');
@@ -125,7 +125,7 @@ describe('Agent 20.7 — Confirmation Verification', () => {
       expect(result.escalationRequired).toBe(true);
       expect(result.escalationReasons).toContain('rate_mismatch');
 
-      const rateMismatch = result.discrepancies.find(d => d.field === 'nightly_rate');
+      const rateMismatch = result.discrepancies.find((d) => d.field === 'nightly_rate');
       expect(rateMismatch).toBeDefined();
       expect(rateMismatch!.severity).toBe('critical');
     });
@@ -176,7 +176,7 @@ describe('Agent 20.7 — Confirmation Verification', () => {
       expect(result.verified).toBe(false);
       expect(result.escalationReasons).toContain('guest_name_mismatch');
 
-      const nameMismatch = result.discrepancies.find(d => d.field === 'guest_name');
+      const nameMismatch = result.discrepancies.find((d) => d.field === 'guest_name');
       expect(nameMismatch).toBeDefined();
       expect(nameMismatch!.severity).toBe('warning');
     });
@@ -189,7 +189,7 @@ describe('Agent 20.7 — Confirmation Verification', () => {
       });
 
       // After normalization, these should match
-      expect(result.discrepancies.find(d => d.field === 'guest_name')).toBeUndefined();
+      expect(result.discrepancies.find((d) => d.field === 'guest_name')).toBeUndefined();
     });
   });
 
@@ -203,7 +203,7 @@ describe('Agent 20.7 — Confirmation Verification', () => {
       expect(result.escalationRequired).toBe(true);
       expect(result.escalationReasons).toContain('waitlist_status');
 
-      const statusDisc = result.discrepancies.find(d => d.field === 'status');
+      const statusDisc = result.discrepancies.find((d) => d.field === 'status');
       expect(statusDisc).toBeDefined();
       expect(statusDisc!.severity).toBe('critical');
     });
@@ -313,9 +313,7 @@ describe('Agent 20.7 — Confirmation Verification', () => {
 
     it('throws when not initialized', async () => {
       const uninit = new ConfirmationVerificationAgent();
-      await expect(
-        uninit.execute({ data: baseInput }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninit.execute({ data: baseInput })).rejects.toThrow('not been initialized');
     });
 
     it('reports healthy status', async () => {

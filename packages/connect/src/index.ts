@@ -34,11 +34,7 @@ export { validateConfig, baseAdapterConfigSchema } from './config.js';
 export type { BaseAdapterConfig } from './config.js';
 
 // Supplier registry
-export {
-  registerSupplier,
-  createAdapter,
-  listSuppliers,
-} from './suppliers/index.js';
+export { registerSupplier, createAdapter, listSuppliers } from './suppliers/index.js';
 
 // TripPro adapter
 export { TripProAdapter } from './suppliers/trippro/index.js';

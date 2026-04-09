@@ -8,16 +8,8 @@
  * Downstream: Feeds Agent 20.5 (Hotel Booking) with best rate selection
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { RateCompInput, RateCompOutput } from './types.js';
 import { comparePropertyRates } from './rate-comparator.js';
 
@@ -25,9 +17,7 @@ import { comparePropertyRates } from './rate-comparator.js';
 const DEFAULT_NIGHTS = 1;
 const DEFAULT_GUESTS = 2;
 
-export class RateComparisonAgent
-  implements Agent<RateCompInput, RateCompOutput>
-{
+export class RateComparisonAgent implements Agent<RateCompInput, RateCompOutput> {
   readonly id = '20.4';
   readonly name = 'Hotel Rate Comparison';
   readonly version = '0.1.0';
@@ -38,9 +28,7 @@ export class RateComparisonAgent
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<RateCompInput>,
-  ): Promise<AgentOutput<RateCompOutput>> {
+  async execute(input: AgentInput<RateCompInput>): Promise<AgentOutput<RateCompOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -99,6 +87,10 @@ export class RateComparisonAgent
 }
 
 export type {
-  RateCompInput, RateCompOutput, ComparedRate,
-  TotalCostBreakdown, ParityResult, PropertyRateComparison,
+  RateCompInput,
+  RateCompOutput,
+  ComparedRate,
+  TotalCostBreakdown,
+  ParityResult,
+  PropertyRateComparison,
 } from './types.js';

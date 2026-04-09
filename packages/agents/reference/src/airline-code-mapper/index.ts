@@ -7,29 +7,21 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
+import type { AirlineCodeMapperInput, AirlineCodeMapperOutput } from './types.js';
 import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
-import type {
-  AirlineCodeMapperInput,
-  AirlineCodeMapperOutput,
-} from './types.js';
-import { AIRLINES, CODESHARE_MAPPINGS, initAirlineFuseIndex, resetAirlineFuseIndex } from './data.js';
+  AIRLINES,
+  CODESHARE_MAPPINGS,
+  initAirlineFuseIndex,
+  resetAirlineFuseIndex,
+} from './data.js';
 import { buildIndexes, resolve } from './resolver.js';
 import type { AirlineIndexes } from './resolver.js';
 
 const VALID_CODE_TYPES = new Set(['iata', 'icao', 'name', 'auto']);
 
-export class AirlineCodeMapper
-  implements Agent<AirlineCodeMapperInput, AirlineCodeMapperOutput>
-{
+export class AirlineCodeMapper implements Agent<AirlineCodeMapperInput, AirlineCodeMapperOutput> {
   readonly id = '0.2';
   readonly name = 'Airline Code & Alliance Mapper';
   readonly version = '0.1.0';
@@ -80,7 +72,11 @@ export class AirlineCodeMapper
 
   private validateInput(data: AirlineCodeMapperInput): void {
     if (!data.code || typeof data.code !== 'string') {
-      throw new AgentInputValidationError(this.id, 'code', 'Required string field. Provide an IATA, ICAO code, or airline name.');
+      throw new AgentInputValidationError(
+        this.id,
+        'code',
+        'Required string field. Provide an IATA, ICAO code, or airline name.',
+      );
     }
 
     const trimmed = data.code.trim();

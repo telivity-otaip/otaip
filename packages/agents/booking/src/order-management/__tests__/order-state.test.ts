@@ -68,11 +68,19 @@ describe('Payment status transitions', () => {
   ];
 
   it.each(invalidPaths)('%s → %s throws InvalidStateTransitionError', (from, to) => {
-    expect(() => validatePaymentTransition(from, to, AGENT_ID)).toThrow(InvalidStateTransitionError);
+    expect(() => validatePaymentTransition(from, to, AGENT_ID)).toThrow(
+      InvalidStateTransitionError,
+    );
   });
 
   it('self-transitions are invalid', () => {
-    const statuses: PaymentStatus[] = ['PENDING', 'CAPTURED', 'REFUND_INITIATED', 'REFUNDED', 'REFUND_REVERSED'];
+    const statuses: PaymentStatus[] = [
+      'PENDING',
+      'CAPTURED',
+      'REFUND_INITIATED',
+      'REFUNDED',
+      'REFUND_REVERSED',
+    ];
     for (const s of statuses) {
       expect(() => validatePaymentTransition(s, s, AGENT_ID)).toThrow(InvalidStateTransitionError);
     }
@@ -112,14 +120,27 @@ describe('Confirmation status transitions', () => {
   ];
 
   it.each(invalidPaths)('%s → %s throws InvalidStateTransitionError', (from, to) => {
-    expect(() => validateConfirmationTransition(from, to, AGENT_ID)).toThrow(InvalidStateTransitionError);
+    expect(() => validateConfirmationTransition(from, to, AGENT_ID)).toThrow(
+      InvalidStateTransitionError,
+    );
   });
 
   it('CONFIRMED and FAILED are terminal states', () => {
-    const allStatuses: ConfirmationStatus[] = ['PENDING', 'AWAITING', 'CONFIRMED', 'TIMEOUT', 'RETRY', 'FAILED'];
+    const allStatuses: ConfirmationStatus[] = [
+      'PENDING',
+      'AWAITING',
+      'CONFIRMED',
+      'TIMEOUT',
+      'RETRY',
+      'FAILED',
+    ];
     for (const to of allStatuses) {
-      expect(() => validateConfirmationTransition('CONFIRMED', to, AGENT_ID)).toThrow(InvalidStateTransitionError);
-      expect(() => validateConfirmationTransition('FAILED', to, AGENT_ID)).toThrow(InvalidStateTransitionError);
+      expect(() => validateConfirmationTransition('CONFIRMED', to, AGENT_ID)).toThrow(
+        InvalidStateTransitionError,
+      );
+      expect(() => validateConfirmationTransition('FAILED', to, AGENT_ID)).toThrow(
+        InvalidStateTransitionError,
+      );
     }
   });
 });
@@ -140,12 +161,16 @@ describe('Reconciliation status transitions', () => {
   it('RESOLVED is terminal', () => {
     const all: ReconciliationStatus[] = ['CLEAN', 'CONFLICT', 'RESOLVED'];
     for (const to of all) {
-      expect(() => validateReconciliationTransition('RESOLVED', to, AGENT_ID)).toThrow(InvalidStateTransitionError);
+      expect(() => validateReconciliationTransition('RESOLVED', to, AGENT_ID)).toThrow(
+        InvalidStateTransitionError,
+      );
     }
   });
 
   it('CLEAN → RESOLVED is invalid (must go through CONFLICT)', () => {
-    expect(() => validateReconciliationTransition('CLEAN', 'RESOLVED', AGENT_ID)).toThrow(InvalidStateTransitionError);
+    expect(() => validateReconciliationTransition('CLEAN', 'RESOLVED', AGENT_ID)).toThrow(
+      InvalidStateTransitionError,
+    );
   });
 });
 
@@ -178,14 +203,27 @@ describe('InvalidStateTransitionError', () => {
 
 describe('Transition map completeness', () => {
   it('every PaymentStatus has a transition entry', () => {
-    const allStatuses: PaymentStatus[] = ['PENDING', 'CAPTURED', 'REFUND_INITIATED', 'REFUNDED', 'REFUND_REVERSED'];
+    const allStatuses: PaymentStatus[] = [
+      'PENDING',
+      'CAPTURED',
+      'REFUND_INITIATED',
+      'REFUNDED',
+      'REFUND_REVERSED',
+    ];
     for (const s of allStatuses) {
       expect(VALID_PAYMENT_TRANSITIONS[s]).toBeDefined();
     }
   });
 
   it('every ConfirmationStatus has a transition entry', () => {
-    const allStatuses: ConfirmationStatus[] = ['PENDING', 'AWAITING', 'CONFIRMED', 'TIMEOUT', 'RETRY', 'FAILED'];
+    const allStatuses: ConfirmationStatus[] = [
+      'PENDING',
+      'AWAITING',
+      'CONFIRMED',
+      'TIMEOUT',
+      'RETRY',
+      'FAILED',
+    ];
     for (const s of allStatuses) {
       expect(VALID_CONFIRMATION_TRANSITIONS[s]).toBeDefined();
     }

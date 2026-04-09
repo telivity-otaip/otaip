@@ -103,7 +103,8 @@ export function generateOpenAPISpec(
     post: {
       operationId: 'createBooking',
       summary: 'Create a flight booking',
-      description: 'Create a booking with passenger details and contact information. The booking is placed on HOLD — payment is not charged immediately.',
+      description:
+        'Create a booking with passenger details and contact information. The booking is placed on HOLD — payment is not charged immediately.',
       requestBody: {
         required: true,
         content: {
@@ -370,8 +371,15 @@ function buildSchemas(): Record<string, Record<string, unknown>> {
         },
       },
       required: [
-        'origin', 'destination', 'marketingCarrier', 'flightNumber',
-        'departure', 'arrival', 'cabinClass', 'bookingClass', 'stops',
+        'origin',
+        'destination',
+        'marketingCarrier',
+        'flightNumber',
+        'departure',
+        'arrival',
+        'cabinClass',
+        'bookingClass',
+        'stops',
       ],
     },
 
@@ -443,8 +451,16 @@ function buildSchemas(): Record<string, Record<string, unknown>> {
         expiresAt: { type: 'string', description: 'Offer expiration datetime (ISO 8601)' },
       },
       required: [
-        'offerId', 'supplier', 'validatingCarrier', 'segments', 'fares',
-        'totalPrice', 'fareType', 'cabinClass', 'refundable', 'changeable',
+        'offerId',
+        'supplier',
+        'validatingCarrier',
+        'segments',
+        'fares',
+        'totalPrice',
+        'fareType',
+        'cabinClass',
+        'refundable',
+        'changeable',
       ],
     },
 
@@ -462,7 +478,15 @@ function buildSchemas(): Record<string, Record<string, unknown>> {
         priceChanged: { type: 'boolean', description: 'Whether the price changed since search' },
         available: { type: 'boolean', description: 'Whether the itinerary is still available' },
       },
-      required: ['offerId', 'supplier', 'totalPrice', 'fares', 'fareRules', 'priceChanged', 'available'],
+      required: [
+        'offerId',
+        'supplier',
+        'totalPrice',
+        'fares',
+        'fareRules',
+        'priceChanged',
+        'available',
+      ],
     },
 
     BookingStatus: {

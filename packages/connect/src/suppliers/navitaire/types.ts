@@ -93,7 +93,7 @@ export interface JourneyDesignator {
   origin: string;
   destination: string;
   departure: string; // ISO datetime
-  arrival: string;   // ISO datetime
+  arrival: string; // ISO datetime
 }
 
 export interface AvailabilitySegment {
@@ -110,18 +110,18 @@ export interface SegmentDesignator {
   origin: string;
   destination: string;
   departure: string; // ISO datetime
-  arrival: string;   // ISO datetime
+  arrival: string; // ISO datetime
 }
 
 export interface SegmentIdentifier {
-  identifier: string;       // flight number
-  carrierCode: string;      // marketing carrier
+  identifier: string; // flight number
+  carrierCode: string; // marketing carrier
   opSuffix?: string;
 }
 
 export interface ExternalIdentifier {
-  identifier?: string;      // operating flight number
-  carrierCode?: string;     // operating carrier
+  identifier?: string; // operating flight number
+  carrierCode?: string; // operating carrier
 }
 
 export interface SegmentLeg {

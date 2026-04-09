@@ -7,25 +7,15 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { FareRuleInput, FareRuleOutput } from './types.js';
 import { lookupFareRules } from './rule-parser.js';
 
 const IATA_CODE_RE = /^[A-Z]{2,3}$/i;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export class FareRuleAgent
-  implements Agent<FareRuleInput, FareRuleOutput>
-{
+export class FareRuleAgent implements Agent<FareRuleInput, FareRuleOutput> {
   readonly id = '2.1';
   readonly name = 'Fare Rule Agent';
   readonly version = '0.1.0';
@@ -36,9 +26,7 @@ export class FareRuleAgent
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<FareRuleInput>,
-  ): Promise<AgentOutput<FareRuleOutput>> {
+  async execute(input: AgentInput<FareRuleInput>): Promise<AgentOutput<FareRuleOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -87,7 +75,11 @@ export class FareRuleAgent
   }
 
   private validateInput(data: FareRuleInput): void {
-    if (!data.fare_basis || typeof data.fare_basis !== 'string' || data.fare_basis.trim().length === 0) {
+    if (
+      !data.fare_basis ||
+      typeof data.fare_basis !== 'string' ||
+      data.fare_basis.trim().length === 0
+    ) {
       throw new AgentInputValidationError(this.id, 'fare_basis', 'Required non-empty string.');
     }
 
@@ -104,11 +96,19 @@ export class FareRuleAgent
     }
 
     if (!data.destination || !IATA_CODE_RE.test(data.destination.trim())) {
-      throw new AgentInputValidationError(this.id, 'destination', 'Must be a 2-3 letter IATA code.');
+      throw new AgentInputValidationError(
+        this.id,
+        'destination',
+        'Must be a 2-3 letter IATA code.',
+      );
     }
 
     if (data.travel_date !== undefined && !ISO_DATE_RE.test(data.travel_date)) {
-      throw new AgentInputValidationError(this.id, 'travel_date', 'Must be ISO 8601 date (YYYY-MM-DD).');
+      throw new AgentInputValidationError(
+        this.id,
+        'travel_date',
+        'Must be ISO 8601 date (YYYY-MM-DD).',
+      );
     }
 
     if (data.categories !== undefined) {
@@ -117,7 +117,11 @@ export class FareRuleAgent
       }
       for (const cat of data.categories) {
         if (typeof cat !== 'number' || cat < 1 || cat > 50) {
-          throw new AgentInputValidationError(this.id, 'categories', 'Each category must be a number 1-50.');
+          throw new AgentInputValidationError(
+            this.id,
+            'categories',
+            'Each category must be a number 1-50.',
+          );
         }
       }
     }

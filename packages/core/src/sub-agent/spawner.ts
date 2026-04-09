@@ -21,11 +21,7 @@ export class SubAgentSpawner {
    * @param parentHooks — the parent's hook registry (propagated if SpawnOptions.propagateHooks)
    * @param depth — current nesting depth (0 = top-level parent). Max depth is 1.
    */
-  constructor(
-    parentToolRegistry: ToolRegistry,
-    parentHooks?: HookRegistry,
-    depth: number = 0,
-  ) {
+  constructor(parentToolRegistry: ToolRegistry, parentHooks?: HookRegistry, depth: number = 0) {
     this.parentToolRegistry = parentToolRegistry;
     this.parentHooks = parentHooks;
     this.depth = depth;
@@ -56,15 +52,11 @@ export class SubAgentSpawner {
     // Optionally propagate parent hooks
     const hooks = options.propagateHooks ? this.parentHooks : undefined;
 
-    const loop = new AgentLoop(
-      scopedRegistry,
-      options.modelCall,
-      {
-        maxIterations: options.maxIterations ?? DEFAULT_MAX_ITERATIONS,
-        stopConditions: [],
-        hooks,
-      },
-    );
+    const loop = new AgentLoop(scopedRegistry, options.modelCall, {
+      maxIterations: options.maxIterations ?? DEFAULT_MAX_ITERATIONS,
+      stopConditions: [],
+      hooks,
+    });
 
     const messages: LoopMessage[] = [...options.contextMessages];
 
@@ -93,11 +85,7 @@ export class SubAgentSpawner {
   }
 }
 
-async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  name: string,
-): Promise<T> {
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, name: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout>;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(

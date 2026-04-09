@@ -38,9 +38,8 @@ export function detectParity(rates: ComparedRate[]): ParityResult | null {
   const lowest = amounts[0]!;
   const highest = amounts[amounts.length - 1]!;
 
-  const spreadPercent = lowest.total > 0
-    ? ((highest.total - lowest.total) / lowest.total) * 100
-    : 0;
+  const spreadPercent =
+    lowest.total > 0 ? ((highest.total - lowest.total) / lowest.total) * 100 : 0;
 
   return {
     isAtParity: spreadPercent <= PARITY_THRESHOLD_PERCENT,

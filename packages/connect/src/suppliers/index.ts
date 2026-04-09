@@ -8,22 +8,13 @@ import { NavitaireAdapter } from './navitaire/index.js';
 import { SabreAdapter } from './sabre/index.js';
 import { TripProAdapter } from './trippro/index.js';
 
-const SUPPLIER_FACTORIES: Record<
-  string,
-  (config: unknown) => ConnectAdapter
-> = {};
+const SUPPLIER_FACTORIES: Record<string, (config: unknown) => ConnectAdapter> = {};
 
-export function registerSupplier(
-  id: string,
-  factory: (config: unknown) => ConnectAdapter,
-): void {
+export function registerSupplier(id: string, factory: (config: unknown) => ConnectAdapter): void {
   SUPPLIER_FACTORIES[id] = factory;
 }
 
-export function createAdapter(
-  supplierId: string,
-  config: unknown,
-): ConnectAdapter {
+export function createAdapter(supplierId: string, config: unknown): ConnectAdapter {
   const factory = SUPPLIER_FACTORIES[supplierId];
   if (!factory) {
     throw new Error(

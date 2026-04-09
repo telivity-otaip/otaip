@@ -7,24 +7,14 @@
  * Downstream: Feeds Agent 20.4 (Rate Comparison) with normalized content
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { ContentNormInput, ContentNormOutput, NormalizedPropertyContent } from './types.js';
 import { normalizeRoomType } from './room-normalizer.js';
 import { mergeAmenities } from './amenity-normalizer.js';
 import { scorePhotos } from './photo-scorer.js';
 
-export class ContentNormalizationAgent
-  implements Agent<ContentNormInput, ContentNormOutput>
-{
+export class ContentNormalizationAgent implements Agent<ContentNormInput, ContentNormOutput> {
   readonly id = '20.3';
   readonly name = 'Hotel Content Normalization';
   readonly version = '0.1.0';
@@ -35,9 +25,7 @@ export class ContentNormalizationAgent
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<ContentNormInput>,
-  ): Promise<AgentOutput<ContentNormOutput>> {
+  async execute(input: AgentInput<ContentNormInput>): Promise<AgentOutput<ContentNormOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -93,7 +81,9 @@ export class ContentNormalizationAgent
       warnings.push(`${totalRoomTypesUnmapped} room type(s) could not be mapped to OTAIP taxonomy`);
     }
     if (totalAmenitiesUnmapped > 0) {
-      warnings.push(`${totalAmenitiesUnmapped} amenity string(s) could not be mapped to OTAIP taxonomy`);
+      warnings.push(
+        `${totalAmenitiesUnmapped} amenity string(s) could not be mapped to OTAIP taxonomy`,
+      );
     }
 
     return {
@@ -134,4 +124,10 @@ export class ContentNormalizationAgent
   }
 }
 
-export type { ContentNormInput, ContentNormOutput, NormalizedPropertyContent, ScoredPhoto, PhotoCategory } from './types.js';
+export type {
+  ContentNormInput,
+  ContentNormOutput,
+  NormalizedPropertyContent,
+  ScoredPhoto,
+  PhotoCategory,
+} from './types.js';

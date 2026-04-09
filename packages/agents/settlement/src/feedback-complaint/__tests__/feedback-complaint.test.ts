@@ -51,9 +51,9 @@ describe('Feedback & Complaint Agent', () => {
 
     it('throws when not initialized', async () => {
       const uninit = new FeedbackComplaintAgent();
-      await expect(
-        uninit.execute({ data: { operation: 'listCases' } }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninit.execute({ data: { operation: 'listCases' } })).rejects.toThrow(
+        'not been initialized',
+      );
     });
 
     it('returns metadata in output', async () => {
@@ -699,15 +699,11 @@ describe('Feedback & Complaint Agent', () => {
     });
 
     it('rejects submitComplaint without passengerName', async () => {
-      await expect(
-        submitTestComplaint({ passengerName: '' }),
-      ).rejects.toThrow('Invalid input');
+      await expect(submitTestComplaint({ passengerName: '' })).rejects.toThrow('Invalid input');
     });
 
     it('rejects submitComplaint with invalid airline', async () => {
-      await expect(
-        submitTestComplaint({ airline: 'TOOLONG' }),
-      ).rejects.toThrow('Invalid input');
+      await expect(submitTestComplaint({ airline: 'TOOLONG' })).rejects.toThrow('Invalid input');
     });
 
     it('rejects updateStatus without caseId', async () => {

@@ -8,22 +8,12 @@
  * Three confirmation layers: CRS (immediate), PMS (may be async), Channel.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { VerificationInput, VerificationOutput } from './types.js';
 import { verifyBooking } from './verification-workflow.js';
 
-export class ConfirmationVerificationAgent
-  implements Agent<VerificationInput, VerificationOutput>
-{
+export class ConfirmationVerificationAgent implements Agent<VerificationInput, VerificationOutput> {
   readonly id = '20.7';
   readonly name = 'Confirmation Verification';
   readonly version = '0.1.0';
@@ -34,9 +24,7 @@ export class ConfirmationVerificationAgent
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<VerificationInput>,
-  ): Promise<AgentOutput<VerificationOutput>> {
+  async execute(input: AgentInput<VerificationInput>): Promise<AgentOutput<VerificationOutput>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -85,7 +73,11 @@ export class ConfirmationVerificationAgent
       throw new AgentInputValidationError(this.id, 'bookingId', 'Booking ID is required');
     }
     if (!data.confirmation) {
-      throw new AgentInputValidationError(this.id, 'confirmation', 'Confirmation codes are required');
+      throw new AgentInputValidationError(
+        this.id,
+        'confirmation',
+        'Confirmation codes are required',
+      );
     }
     if (!data.crsData) {
       throw new AgentInputValidationError(this.id, 'crsData', 'CRS booking data is required');
@@ -94,7 +86,13 @@ export class ConfirmationVerificationAgent
 }
 
 export type {
-  VerificationInput, VerificationOutput, CrsBookingData, PmsBookingData,
-  Discrepancy, DiscrepancySeverity, DiscrepancyField, EscalationReason,
+  VerificationInput,
+  VerificationOutput,
+  CrsBookingData,
+  PmsBookingData,
+  Discrepancy,
+  DiscrepancySeverity,
+  DiscrepancyField,
+  EscalationReason,
   VerificationOperation,
 } from './types.js';

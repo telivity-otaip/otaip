@@ -25,11 +25,7 @@ export type {
   StructuredExplanation,
 } from './agents/shopping/index.js';
 
-export type {
-  ToolDefinition,
-  ValidationIssue,
-  ValidationResult,
-} from './tool-interface/index.js';
+export type { ToolDefinition, ValidationIssue, ValidationResult } from './tool-interface/index.js';
 export { validateToolInput, validateToolOutput } from './tool-interface/index.js';
 export { ToolRegistry } from './tool-interface/index.js';
 
@@ -54,6 +50,8 @@ export type {
   HookContext,
   BeforeToolCallResult,
   HookHandler,
+  HookErrorPolicy,
+  HookRegistryConfig,
 } from './lifecycle/index.js';
 export { HookRegistry } from './lifecycle/index.js';
 
@@ -68,6 +66,15 @@ export type {
 } from './context/index.js';
 export { ContextBudgetManager, CharTokenCounter } from './context/index.js';
 export { TruncateOldestStrategy, DropLargeToolOutputsStrategy } from './context/index.js';
+
+export type { TelemetryProvider, TelemetrySpan } from './telemetry/index.js';
+export { NoopTelemetryProvider, traceAgentExecution } from './telemetry/index.js';
+
+export type { PersistenceAdapter } from './persistence/index.js';
+export { InMemoryPersistenceAdapter } from './persistence/index.js';
+
+export type { RateLimiterConfig } from './rate-limiter/index.js';
+export { RateLimiter } from './rate-limiter/index.js';
 
 export type {
   PassengerType,
@@ -84,4 +91,3 @@ export type {
   PriceResponse,
   DistributionAdapter,
 } from './types/distribution.js';
-

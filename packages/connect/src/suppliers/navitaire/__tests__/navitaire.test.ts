@@ -84,7 +84,9 @@ function makeBookingInput(overrides: Partial<CreateBookingInput> = {}): CreateBo
   };
 }
 
-function makeAvailabilityResponse(overrides: Partial<AvailabilityResponse> = {}): AvailabilityResponse {
+function makeAvailabilityResponse(
+  overrides: Partial<AvailabilityResponse> = {},
+): AvailabilityResponse {
   return {
     trips: [
       {
@@ -139,7 +141,7 @@ function makeAvailabilityResponse(overrides: Partial<AvailabilityResponse> = {})
                     fareAmount: 500,
                     serviceCharges: [
                       { amount: 80, code: 'TAX1', type: 'Tax', currencyCode: 'USD' },
-                      { amount: 30.50, code: 'TAX2', type: 'Tax', currencyCode: 'USD' },
+                      { amount: 30.5, code: 'TAX2', type: 'Tax', currencyCode: 'USD' },
                     ],
                   },
                 ],
@@ -217,11 +219,11 @@ function makeBookingData(overrides: Partial<BookingData> = {}): BookingData {
       },
     },
     breakdown: {
-      totalAmount: 610.50,
-      balanceDue: 610.50,
+      totalAmount: 610.5,
+      balanceDue: 610.5,
       passengerTotals: {
         P0: {
-          services: { total: 610.50, taxes: 110.50, charges: 0 },
+          services: { total: 610.5, taxes: 110.5, charges: 0 },
         },
       },
     },
@@ -246,21 +248,21 @@ describe('NavitaireConfig', () => {
   });
 
   it('rejects missing baseUrl', () => {
-    expect(() =>
-      validateNavitaireConfig(makeNavitaireConfig({ baseUrl: undefined })),
-    ).toThrow('Invalid Navitaire config');
+    expect(() => validateNavitaireConfig(makeNavitaireConfig({ baseUrl: undefined }))).toThrow(
+      'Invalid Navitaire config',
+    );
   });
 
   it('rejects invalid baseUrl', () => {
-    expect(() =>
-      validateNavitaireConfig(makeNavitaireConfig({ baseUrl: 'not-a-url' })),
-    ).toThrow('Invalid Navitaire config');
+    expect(() => validateNavitaireConfig(makeNavitaireConfig({ baseUrl: 'not-a-url' }))).toThrow(
+      'Invalid Navitaire config',
+    );
   });
 
   it('rejects missing credentials', () => {
-    expect(() =>
-      validateNavitaireConfig(makeNavitaireConfig({ credentials: undefined })),
-    ).toThrow('Invalid Navitaire config');
+    expect(() => validateNavitaireConfig(makeNavitaireConfig({ credentials: undefined }))).toThrow(
+      'Invalid Navitaire config',
+    );
   });
 
   it('rejects empty username', () => {
@@ -293,9 +295,9 @@ describe('NavitaireConfig', () => {
   });
 
   it('rejects invalid environment', () => {
-    expect(() =>
-      validateNavitaireConfig(makeNavitaireConfig({ environment: 'staging' })),
-    ).toThrow('Invalid Navitaire config');
+    expect(() => validateNavitaireConfig(makeNavitaireConfig({ environment: 'staging' }))).toThrow(
+      'Invalid Navitaire config',
+    );
   });
 
   it('rejects invalid currency code length', () => {
@@ -323,7 +325,9 @@ describe('NavitaireAuth', () => {
   it('creates a token on first call', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValueOnce(
-      new Response(JSON.stringify({ token: 'jwt-token-123', idleTimeoutInMinutes: 20 }), { status: 200 }),
+      new Response(JSON.stringify({ token: 'jwt-token-123', idleTimeoutInMinutes: 20 }), {
+        status: 200,
+      }),
     );
 
     const auth = new NavitaireAuth(mockConfig);
@@ -339,7 +343,9 @@ describe('NavitaireAuth', () => {
   it('returns cached token on subsequent calls', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValueOnce(
-      new Response(JSON.stringify({ token: 'jwt-token-123', idleTimeoutInMinutes: 20 }), { status: 200 }),
+      new Response(JSON.stringify({ token: 'jwt-token-123', idleTimeoutInMinutes: 20 }), {
+        status: 200,
+      }),
     );
 
     const auth = new NavitaireAuth(mockConfig);
@@ -354,7 +360,9 @@ describe('NavitaireAuth', () => {
   it('sends correct credentials in request body', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValueOnce(
-      new Response(JSON.stringify({ token: 'jwt-token-123', idleTimeoutInMinutes: 20 }), { status: 200 }),
+      new Response(JSON.stringify({ token: 'jwt-token-123', idleTimeoutInMinutes: 20 }), {
+        status: 200,
+      }),
     );
 
     const auth = new NavitaireAuth(mockConfig);
@@ -369,9 +377,7 @@ describe('NavitaireAuth', () => {
 
   it('throws on auth failure', async () => {
     const mockFetch = vi.mocked(fetch);
-    mockFetch.mockResolvedValueOnce(
-      new Response('Unauthorized', { status: 401 }),
-    );
+    mockFetch.mockResolvedValueOnce(new Response('Unauthorized', { status: 401 }));
 
     const auth = new NavitaireAuth(mockConfig);
     await expect(auth.getToken()).rejects.toThrow('Navitaire auth failed: 401');
@@ -381,10 +387,14 @@ describe('NavitaireAuth', () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'token-1', idleTimeoutInMinutes: 20 }), { status: 200 }),
+        new Response(JSON.stringify({ token: 'token-1', idleTimeoutInMinutes: 20 }), {
+          status: 200,
+        }),
       )
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'token-2', idleTimeoutInMinutes: 20 }), { status: 200 }),
+        new Response(JSON.stringify({ token: 'token-2', idleTimeoutInMinutes: 20 }), {
+          status: 200,
+        }),
       );
 
     const auth = new NavitaireAuth(mockConfig);
@@ -401,10 +411,14 @@ describe('NavitaireAuth', () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'token-1', idleTimeoutInMinutes: 0.5 }), { status: 200 }),
+        new Response(JSON.stringify({ token: 'token-1', idleTimeoutInMinutes: 0.5 }), {
+          status: 200,
+        }),
       )
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'token-refreshed', idleTimeoutInMinutes: 20 }), { status: 200 }),
+        new Response(JSON.stringify({ token: 'token-refreshed', idleTimeoutInMinutes: 20 }), {
+          status: 200,
+        }),
       );
 
     const auth = new NavitaireAuth(mockConfig);
@@ -437,7 +451,9 @@ describe('NavitaireSessionManager', () => {
   it('provides token to operation', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValueOnce(
-      new Response(JSON.stringify({ token: 'session-token', idleTimeoutInMinutes: 20 }), { status: 200 }),
+      new Response(JSON.stringify({ token: 'session-token', idleTimeoutInMinutes: 20 }), {
+        status: 200,
+      }),
     );
 
     const config = validateNavitaireConfig(makeNavitaireConfig());
@@ -454,7 +470,9 @@ describe('NavitaireSessionManager', () => {
   it('enforces sequential execution', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValue(
-      new Response(JSON.stringify({ token: 'session-token', idleTimeoutInMinutes: 20 }), { status: 200 }),
+      new Response(JSON.stringify({ token: 'session-token', idleTimeoutInMinutes: 20 }), {
+        status: 200,
+      }),
     );
 
     const config = validateNavitaireConfig(makeNavitaireConfig());
@@ -481,7 +499,9 @@ describe('NavitaireSessionManager', () => {
   it('tracks booking state during stateful flow', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValue(
-      new Response(JSON.stringify({ token: 'session-token', idleTimeoutInMinutes: 20 }), { status: 200 }),
+      new Response(JSON.stringify({ token: 'session-token', idleTimeoutInMinutes: 20 }), {
+        status: 200,
+      }),
     );
 
     const config = validateNavitaireConfig(makeNavitaireConfig());
@@ -503,7 +523,9 @@ describe('NavitaireSessionManager', () => {
   it('clears booking state on error', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValue(
-      new Response(JSON.stringify({ token: 'session-token', idleTimeoutInMinutes: 20 }), { status: 200 }),
+      new Response(JSON.stringify({ token: 'session-token', idleTimeoutInMinutes: 20 }), {
+        status: 200,
+      }),
     );
 
     const config = validateNavitaireConfig(makeNavitaireConfig());
@@ -524,7 +546,9 @@ describe('NavitaireSessionManager', () => {
   it('releases lock on error so next operation proceeds', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValue(
-      new Response(JSON.stringify({ token: 'session-token', idleTimeoutInMinutes: 20 }), { status: 200 }),
+      new Response(JSON.stringify({ token: 'session-token', idleTimeoutInMinutes: 20 }), {
+        status: 200,
+      }),
     );
 
     const config = validateNavitaireConfig(makeNavitaireConfig());
@@ -582,7 +606,7 @@ describe('Mapper — mapCabinClass', () => {
 
 describe('Mapper — toMoney', () => {
   it('converts number to money', () => {
-    const m = toMoney(610.50, 'USD');
+    const m = toMoney(610.5, 'USD');
     expect(m.amount).toBe('610.5');
     expect(m.currency).toBe('USD');
   });
@@ -618,10 +642,7 @@ describe('Mapper — mapSearchRequest', () => {
   });
 
   it('builds round-trip search request', () => {
-    const req = mapSearchRequest(
-      makeSearchInput({ returnDate: '2026-06-25' }),
-      config,
-    );
+    const req = mapSearchRequest(makeSearchInput({ returnDate: '2026-06-25' }), config);
     expect(req.criteria).toHaveLength(2);
     expect(req.criteria[1]?.originStationCode).toBe('LHR');
     expect(req.criteria[1]?.destinationStationCode).toBe('JFK');
@@ -656,10 +677,7 @@ describe('Mapper — mapSearchRequest', () => {
   });
 
   it('sets carrier filter for preferred airlines', () => {
-    const req = mapSearchRequest(
-      makeSearchInput({ preferredAirlines: ['BA'] }),
-      config,
-    );
+    const req = mapSearchRequest(makeSearchInput({ preferredAirlines: ['BA'] }), config);
     expect(req.criteria[0]?.filters?.carrierCode).toBe('BA');
   });
 });
@@ -723,14 +741,18 @@ describe('Mapper — mapSearchResponse', () => {
 
   it('maps journeys from dates array', () => {
     const response: AvailabilityResponse = {
-      trips: [{
-        originStationCode: 'JFK',
-        destinationStationCode: 'LHR',
-        dates: [{
-          date: '2026-06-15',
-          journeys: makeAvailabilityResponse().trips![0]!.journeysAvailable,
-        }],
-      }],
+      trips: [
+        {
+          originStationCode: 'JFK',
+          destinationStationCode: 'LHR',
+          dates: [
+            {
+              date: '2026-06-15',
+              journeys: makeAvailabilityResponse().trips![0]!.journeysAvailable,
+            },
+          ],
+        },
+      ],
     };
     const offers = mapSearchResponse(response, 'USD');
     expect(offers).toHaveLength(1);
@@ -799,9 +821,7 @@ describe('Mapper — mapPassengersRequest', () => {
 
   it('maps child passenger type', () => {
     const input = makeBookingInput({
-      passengers: [
-        { ...makeBookingInput().passengers[0]!, type: 'child' },
-      ],
+      passengers: [{ ...makeBookingInput().passengers[0]!, type: 'child' }],
     });
     const req = mapPassengersRequest(input.passengers, ['P0']);
     expect(req.P0?.passengerTypeCode).toBe('CHD');
@@ -828,8 +848,8 @@ describe('Mapper — mapPrimaryContactRequest', () => {
 
 describe('Mapper — mapPaymentRequest', () => {
   it('creates payment request with amount and currency', () => {
-    const req = mapPaymentRequest(610.50, 'USD');
-    expect(req.amount).toBe(610.50);
+    const req = mapPaymentRequest(610.5, 'USD');
+    expect(req.amount).toBe(610.5);
     expect(req.currencyCode).toBe('USD');
     expect(req.paymentMethodCode).toBe('AG');
   });
@@ -1004,12 +1024,7 @@ describe('Mapper — mapCancelResponse', () => {
 
 describe('Mapper — mapTicketingResponse', () => {
   it('maps ticketed response with ticket numbers', () => {
-    const result = mapTicketingResponse(
-      makeBookingData(),
-      'ABC123',
-      ['0741234567890'],
-      'USD',
-    );
+    const result = mapTicketingResponse(makeBookingData(), 'ABC123', ['0741234567890'], 'USD');
     expect(result.status).toBe('ticketed');
     expect(result.ticketNumbers).toEqual(['0741234567890']);
   });
@@ -1066,16 +1081,18 @@ describe('NavitaireAdapter', () => {
   function mockAuthThenApi(apiResponse: unknown, apiStatus = 200) {
     mockFetch
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), { status: 200 }),
+        new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), {
+          status: 200,
+        }),
       )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify(apiResponse), { status: apiStatus }),
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify(apiResponse), { status: apiStatus }));
   }
 
   function mockAuthThenMultipleApis(...responses: Array<{ body: unknown; status?: number }>) {
     mockFetch.mockResolvedValueOnce(
-      new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), { status: 200 }),
+      new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), {
+        status: 200,
+      }),
     );
     for (const r of responses) {
       mockFetch.mockResolvedValueOnce(
@@ -1118,11 +1135,15 @@ describe('NavitaireAdapter', () => {
   it('searchFlights retries on 401 with fresh token', async () => {
     mockFetch
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'token-1', idleTimeoutInMinutes: 20 }), { status: 200 }),
+        new Response(JSON.stringify({ token: 'token-1', idleTimeoutInMinutes: 20 }), {
+          status: 200,
+        }),
       )
       .mockResolvedValueOnce(new Response('Unauthorized', { status: 401 }))
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'token-2', idleTimeoutInMinutes: 20 }), { status: 200 }),
+        new Response(JSON.stringify({ token: 'token-2', idleTimeoutInMinutes: 20 }), {
+          status: 200,
+        }),
       )
       .mockResolvedValueOnce(
         new Response(JSON.stringify(makeAvailabilityResponse()), { status: 200 }),
@@ -1137,11 +1158,15 @@ describe('NavitaireAdapter', () => {
   it('searchFlights throws on 400 validation error', async () => {
     mockFetch
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), { status: 200 }),
+        new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), {
+          status: 200,
+        }),
       )
       .mockResolvedValueOnce(
         new Response(
-          JSON.stringify({ errors: [{ code: 'nsk-server:Validation', message: 'Invalid origin' }] }),
+          JSON.stringify({
+            errors: [{ code: 'nsk-server:Validation', message: 'Invalid origin' }],
+          }),
           { status: 400 },
         ),
       );
@@ -1154,8 +1179,8 @@ describe('NavitaireAdapter', () => {
 
   it('priceItinerary calls sell then price', async () => {
     mockAuthThenMultipleApis(
-      { body: { data: makeBookingData() } },  // sell
-      { body: { data: makeBookingData() } },  // price
+      { body: { data: makeBookingData() } }, // sell
+      { body: { data: makeBookingData() } }, // price
     );
 
     const adapter = new NavitaireAdapter(makeNavitaireConfig());
@@ -1169,24 +1194,26 @@ describe('NavitaireAdapter', () => {
 
   it('priceItinerary throws on invalid offer ID', async () => {
     mockFetch.mockResolvedValueOnce(
-      new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), { status: 200 }),
+      new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), {
+        status: 200,
+      }),
     );
 
     const adapter = new NavitaireAdapter(makeNavitaireConfig());
-    await expect(
-      adapter.priceItinerary('invalid-offer', { adults: 1 }),
-    ).rejects.toThrow('Invalid Navitaire offer ID');
+    await expect(adapter.priceItinerary('invalid-offer', { adults: 1 })).rejects.toThrow(
+      'Invalid Navitaire offer ID',
+    );
   });
 
   // --- createBooking ---
 
   it('createBooking executes 5-step stateful flow', async () => {
     mockAuthThenMultipleApis(
-      { body: { data: { passengers: { P0: {} } } } },          // sell
-      { body: {} },                                               // passengers
-      { body: {} },                                               // contact
-      { body: makeBookingData() },                                // get state
-      { body: {} },                                               // payment
+      { body: { data: { passengers: { P0: {} } } } }, // sell
+      { body: {} }, // passengers
+      { body: {} }, // contact
+      { body: makeBookingData() }, // get state
+      { body: {} }, // payment
       { body: { data: { recordLocator: 'XYZ789', booking: makeBookingData() } } }, // commit
     );
 
@@ -1208,13 +1235,13 @@ describe('NavitaireAdapter', () => {
 
   it('createBooking retrieves PNR when not in commit response', async () => {
     mockAuthThenMultipleApis(
-      { body: { data: { passengers: { P0: {} } } } },  // sell
-      { body: {} },                                       // passengers
-      { body: {} },                                       // contact
-      { body: makeBookingData() },                        // get state
-      { body: {} },                                       // payment
-      { body: { data: {} } },                             // commit (no PNR)
-      { body: makeBookingData() },                        // retrieve
+      { body: { data: { passengers: { P0: {} } } } }, // sell
+      { body: {} }, // passengers
+      { body: {} }, // contact
+      { body: makeBookingData() }, // get state
+      { body: {} }, // payment
+      { body: { data: {} } }, // commit (no PNR)
+      { body: makeBookingData() }, // retrieve
     );
 
     const adapter = new NavitaireAdapter(makeNavitaireConfig());
@@ -1242,8 +1269,8 @@ describe('NavitaireAdapter', () => {
 
   it('requestTicketing validates then issues tickets', async () => {
     mockAuthThenMultipleApis(
-      { body: { data: makeBookingData() } },  // retrieve
-      { body: { valid: true } },                // validate
+      { body: { data: makeBookingData() } }, // retrieve
+      { body: { valid: true } }, // validate
       { body: { data: { tickets: [{ ticketNumber: '0741234567890' }] } } }, // issue
     );
 
@@ -1261,18 +1288,16 @@ describe('NavitaireAdapter', () => {
     );
 
     const adapter = new NavitaireAdapter(makeNavitaireConfig());
-    await expect(adapter.requestTicketing('ABC123')).rejects.toThrow(
-      'Ticketing validation failed',
-    );
+    await expect(adapter.requestTicketing('ABC123')).rejects.toThrow('Ticketing validation failed');
   });
 
   // --- cancelBooking ---
 
   it('cancelBooking retrieves, deletes journeys, and commits', async () => {
     mockAuthThenMultipleApis(
-      { body: { data: makeBookingData() } },  // retrieve
-      { body: {} },                             // delete journey
-      { body: { data: {} } },                  // commit
+      { body: { data: makeBookingData() } }, // retrieve
+      { body: {} }, // delete journey
+      { body: { data: {} } }, // commit
     );
 
     const adapter = new NavitaireAdapter(makeNavitaireConfig());
@@ -1319,7 +1344,9 @@ describe('NavitaireAdapter', () => {
   it('handles 500 errors as retryable', async () => {
     mockFetch
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), { status: 200 }),
+        new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), {
+          status: 200,
+        }),
       )
       .mockResolvedValueOnce(new Response('Server Error', { status: 500 }))
       .mockResolvedValueOnce(
@@ -1334,7 +1361,9 @@ describe('NavitaireAdapter', () => {
   it('handles 429 rate limit as retryable', async () => {
     mockFetch
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), { status: 200 }),
+        new Response(JSON.stringify({ token: 'test-jwt', idleTimeoutInMinutes: 20 }), {
+          status: 200,
+        }),
       )
       .mockResolvedValueOnce(new Response('Rate Limited', { status: 429 }))
       .mockResolvedValueOnce(

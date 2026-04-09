@@ -3,12 +3,7 @@
  */
 
 import { createRequire } from 'node:module';
-import type {
-  VoidAgentInput,
-  VoidAgentOutput,
-  CarrierVoidWindow,
-  CouponStatus,
-} from './types.js';
+import type { VoidAgentInput, VoidAgentOutput, CarrierVoidWindow, CouponStatus } from './types.js';
 
 const require = createRequire(import.meta.url);
 const windowData = require('./data/carrier-void-windows.json') as {

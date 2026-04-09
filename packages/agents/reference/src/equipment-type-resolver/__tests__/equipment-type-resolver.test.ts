@@ -2,8 +2,13 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { EquipmentTypeResolver } from '../index.js';
 
 let agent: EquipmentTypeResolver;
-beforeAll(async () => { agent = new EquipmentTypeResolver(); await agent.initialize(); });
-afterAll(() => { agent.destroy(); });
+beforeAll(async () => {
+  agent = new EquipmentTypeResolver();
+  await agent.initialize();
+});
+afterAll(() => {
+  agent.destroy();
+});
 
 describe('EquipmentTypeResolver', () => {
   describe('resolve', () => {
@@ -49,19 +54,27 @@ describe('EquipmentTypeResolver', () => {
 
   describe('getSeatingConfig', () => {
     it('returns Y seats for 320', async () => {
-      const r = await agent.execute({ data: { operation: 'getSeatingConfig', code: '320', cabin: 'Y' } });
+      const r = await agent.execute({
+        data: { operation: 'getSeatingConfig', code: '320', cabin: 'Y' },
+      });
       expect(r.data.seatCount).toBe(138);
     });
     it('returns F seats for 77W', async () => {
-      const r = await agent.execute({ data: { operation: 'getSeatingConfig', code: '77W', cabin: 'F' } });
+      const r = await agent.execute({
+        data: { operation: 'getSeatingConfig', code: '77W', cabin: 'F' },
+      });
       expect(r.data.seatCount).toBe(8);
     });
     it('returns undefined for cabin not available on E90', async () => {
-      const r = await agent.execute({ data: { operation: 'getSeatingConfig', code: 'E90', cabin: 'F' } });
+      const r = await agent.execute({
+        data: { operation: 'getSeatingConfig', code: 'E90', cabin: 'F' },
+      });
       expect(r.data.seatCount).toBeUndefined();
     });
     it('returns undefined for unknown code', async () => {
-      const r = await agent.execute({ data: { operation: 'getSeatingConfig', code: 'ZZZ', cabin: 'Y' } });
+      const r = await agent.execute({
+        data: { operation: 'getSeatingConfig', code: 'ZZZ', cabin: 'Y' },
+      });
       expect(r.data.seatCount).toBeUndefined();
     });
   });
@@ -104,11 +117,18 @@ describe('EquipmentTypeResolver', () => {
   });
 
   describe('agent compliance', () => {
-    it('has correct id/name', () => { expect(agent.id).toBe('0.5'); expect(agent.name).toBe('Equipment Type Resolver'); });
-    it('reports healthy', async () => { expect((await agent.health()).status).toBe('healthy'); });
+    it('has correct id/name', () => {
+      expect(agent.id).toBe('0.5');
+      expect(agent.name).toBe('Equipment Type Resolver');
+    });
+    it('reports healthy', async () => {
+      expect((await agent.health()).status).toBe('healthy');
+    });
     it('throws when not initialized', async () => {
       const u = new EquipmentTypeResolver();
-      await expect(u.execute({ data: { operation: 'resolve', code: '320' } })).rejects.toThrow('not been initialized');
+      await expect(u.execute({ data: { operation: 'resolve', code: '320' } })).rejects.toThrow(
+        'not been initialized',
+      );
     });
   });
 });

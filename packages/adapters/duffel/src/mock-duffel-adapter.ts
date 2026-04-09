@@ -25,15 +25,17 @@ interface MockRoute {
   offers: SearchOffer[];
 }
 
-function makeSegment(partial: Partial<FlightSegment> & {
-  carrier: string;
-  flight_number: string;
-  origin: string;
-  destination: string;
-  departure_time: string;
-  arrival_time: string;
-  duration_minutes: number;
-}): FlightSegment {
+function makeSegment(
+  partial: Partial<FlightSegment> & {
+    carrier: string;
+    flight_number: string;
+    origin: string;
+    destination: string;
+    departure_time: string;
+    arrival_time: string;
+    duration_minutes: number;
+  },
+): FlightSegment {
   return {
     operating_carrier: undefined,
     aircraft: undefined,
@@ -235,7 +237,11 @@ const SFO_NRT_DIRECT: SearchOffer = {
 };
 
 const MOCK_ROUTES: MockRoute[] = [
-  { origin: 'JFK', destination: 'LAX', offers: [JFK_LAX_DIRECT, JFK_LAX_CONNECTING, JFK_LAX_BUSINESS] },
+  {
+    origin: 'JFK',
+    destination: 'LAX',
+    offers: [JFK_LAX_DIRECT, JFK_LAX_CONNECTING, JFK_LAX_BUSINESS],
+  },
   { origin: 'LHR', destination: 'CDG', offers: [LHR_CDG_DIRECT] },
   { origin: 'SFO', destination: 'NRT', offers: [SFO_NRT_DIRECT] },
 ];

@@ -154,7 +154,7 @@ describe('Test 4 Path B (void failure): void window open but void fails', () => 
 
     await resolver.resolveConflict(ORDER_ID, REFUND_ID, PAYMENT_ID);
 
-    const flagCalls = admPrevention.calls.filter(c => c.method === 'flagADMRisk');
+    const flagCalls = admPrevention.calls.filter((c) => c.method === 'flagADMRisk');
     expect(flagCalls).toHaveLength(1);
   });
 });

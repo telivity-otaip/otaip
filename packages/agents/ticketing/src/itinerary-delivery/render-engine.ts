@@ -4,11 +4,7 @@
  * Carrier-neutral templates. No hardcoded airline branding.
  */
 
-import type {
-  ItineraryDeliveryInput,
-  ItineraryDeliveryOutput,
-  RenderedContent,
-} from './types.js';
+import type { ItineraryDeliveryInput, ItineraryDeliveryOutput, RenderedContent } from './types.js';
 
 const SMS_SEGMENT_LENGTH = 160;
 
@@ -69,13 +65,14 @@ function buildPlainText(input: ItineraryDeliveryInput): string {
 // ---------------------------------------------------------------------------
 
 function buildHtml(input: ItineraryDeliveryInput): string {
-  const rows = input.flights.map((f) => {
-    const extras: string[] = [];
-    if (f.terminal) extras.push(`Terminal: ${f.terminal}`);
-    if (f.baggage_allowance) extras.push(`Baggage: ${f.baggage_allowance}`);
-    if (f.seat) extras.push(`Seat: ${f.seat}`);
+  const rows = input.flights
+    .map((f) => {
+      const extras: string[] = [];
+      if (f.terminal) extras.push(`Terminal: ${f.terminal}`);
+      if (f.baggage_allowance) extras.push(`Baggage: ${f.baggage_allowance}`);
+      if (f.seat) extras.push(`Seat: ${f.seat}`);
 
-    return `<tr>
+      return `<tr>
 <td>${f.flight}</td>
 <td>${f.origin} → ${f.destination}</td>
 <td>${f.departure_date}${f.departure_time ? ' ' + f.departure_time : ''}</td>
@@ -83,11 +80,15 @@ function buildHtml(input: ItineraryDeliveryInput): string {
 <td>${f.cabin_class ?? f.booking_class}</td>
 <td>${extras.join(', ')}</td>
 </tr>`;
-  }).join('\n');
+    })
+    .join('\n');
 
-  const paxList = input.passengers.map(
-    (p) => `<li>${p.name} — Ticket: ${p.ticket_number}${p.frequent_flyer ? ` (FF: ${p.frequent_flyer})` : ''}</li>`,
-  ).join('\n');
+  const paxList = input.passengers
+    .map(
+      (p) =>
+        `<li>${p.name} — Ticket: ${p.ticket_number}${p.frequent_flyer ? ` (FF: ${p.frequent_flyer})` : ''}</li>`,
+    )
+    .join('\n');
 
   return `<!DOCTYPE html>
 <html>

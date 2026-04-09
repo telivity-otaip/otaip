@@ -4,13 +4,14 @@
  * Coordinates multi-agent workflows as a single callable pipeline.
  */
 
-import type {
-  Agent, AgentInput, AgentOutput, AgentHealthStatus,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type {
-  OrchestratorInput, OrchestratorOutput,
-  WorkflowStep, StepExecutor, WorkflowName,
+  OrchestratorInput,
+  OrchestratorOutput,
+  WorkflowStep,
+  StepExecutor,
+  WorkflowName,
 } from './types.js';
 
 const WORKFLOW_PIPELINES: Record<WorkflowName, string[]> = {
@@ -25,9 +26,7 @@ const VALID_WORKFLOWS = new Set(Object.keys(WORKFLOW_PIPELINES));
 
 const DEFAULT_TIMEOUT = 30000;
 
-export class OrchestratorAgent
-  implements Agent<OrchestratorInput, OrchestratorOutput>
-{
+export class OrchestratorAgent implements Agent<OrchestratorInput, OrchestratorOutput> {
   readonly id = '9.1';
   readonly name = 'Orchestrator';
   readonly version = '0.1.0';
@@ -37,20 +36,25 @@ export class OrchestratorAgent
 
   constructor(executor?: StepExecutor) {
     // Default executor that throws — tests must inject their own
-    this.executor = executor ?? (async (_agentId: string, _input: Record<string, unknown>): Promise<Record<string, unknown>> => {
-      throw new Error('No step executor configured. Inject one via constructor.');
-    });
+    this.executor =
+      executor ??
+      (async (
+        _agentId: string,
+        _input: Record<string, unknown>,
+      ): Promise<Record<string, unknown>> => {
+        throw new Error('No step executor configured. Inject one via constructor.');
+      });
   }
 
   setExecutor(executor: StepExecutor): void {
     this.executor = executor;
   }
 
-  async initialize(): Promise<void> { this.initialized = true; }
+  async initialize(): Promise<void> {
+    this.initialized = true;
+  }
 
-  async execute(
-    input: AgentInput<OrchestratorInput>,
-  ): Promise<AgentOutput<OrchestratorOutput>> {
+  async execute(input: AgentInput<OrchestratorInput>): Promise<AgentOutput<OrchestratorOutput>> {
     if (!this.initialized) throw new AgentNotInitializedError(this.id);
 
     const d = input.data;
@@ -76,13 +80,23 @@ export class OrchestratorAgent
       const elapsed = Date.now() - startTime;
       if (elapsed >= timeoutMs) {
         timedOut = true;
-        steps.push({ agent_id: agentId, status: 'skipped', duration_ms: 0, error: 'Workflow timeout exceeded.' });
+        steps.push({
+          agent_id: agentId,
+          status: 'skipped',
+          duration_ms: 0,
+          error: 'Workflow timeout exceeded.',
+        });
         overallStatus = 'partial';
         continue;
       }
 
       if (timedOut) {
-        steps.push({ agent_id: agentId, status: 'skipped', duration_ms: 0, error: 'Workflow timeout exceeded.' });
+        steps.push({
+          agent_id: agentId,
+          status: 'skipped',
+          duration_ms: 0,
+          error: 'Workflow timeout exceeded.',
+        });
         continue;
       }
 
@@ -103,7 +117,12 @@ export class OrchestratorAgent
           // Mark remaining as skipped
           const idx = pipeline.indexOf(agentId);
           for (let i = idx + 1; i < pipeline.length; i++) {
-            steps.push({ agent_id: pipeline[i]!, status: 'skipped', duration_ms: 0, error: 'Skipped due to prior failure.' });
+            steps.push({
+              agent_id: pipeline[i]!,
+              status: 'skipped',
+              duration_ms: 0,
+              error: 'Skipped due to prior failure.',
+            });
           }
           break;
         } else {
@@ -123,8 +142,14 @@ export class OrchestratorAgent
         final_output: finalOutput,
       },
       confidence: 1.0,
-      warnings: overallStatus !== 'completed' ? [`Workflow ${d.workflow} ${overallStatus}.`] : undefined,
-      metadata: { agent_id: this.id, agent_version: this.version, workflow: d.workflow, status: overallStatus },
+      warnings:
+        overallStatus !== 'completed' ? [`Workflow ${d.workflow} ${overallStatus}.`] : undefined,
+      metadata: {
+        agent_id: this.id,
+        agent_version: this.version,
+        workflow: d.workflow,
+        status: overallStatus,
+      },
     };
   }
 
@@ -133,10 +158,17 @@ export class OrchestratorAgent
     return { status: 'healthy' };
   }
 
-  destroy(): void { this.initialized = false; }
+  destroy(): void {
+    this.initialized = false;
+  }
 }
 
 export type {
-  OrchestratorInput, OrchestratorOutput,
-  WorkflowStep, StepExecutor, WorkflowName, WorkflowOptions, StepStatus,
+  OrchestratorInput,
+  OrchestratorOutput,
+  WorkflowStep,
+  StepExecutor,
+  WorkflowName,
+  WorkflowOptions,
+  StepStatus,
 } from './types.js';

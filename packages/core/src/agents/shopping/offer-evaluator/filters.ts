@@ -5,7 +5,12 @@
  * Order matters — stop at first match per the spec.
  */
 
-import type { EvaluatorOffer, TravelerConstraints, HardRejectionCode, RejectedOffer } from './types.js';
+import type {
+  EvaluatorOffer,
+  TravelerConstraints,
+  HardRejectionCode,
+  RejectedOffer,
+} from './types.js';
 import { getFinalArrivalTime, getLayoverMinutes } from './scoring.js';
 
 interface FilterResult {
@@ -27,7 +32,8 @@ export function applyHardFilters(
     const rejection = checkHardFilters(offer, constraints, evaluationTime);
     if (rejection) {
       rejected.push(rejection);
-      breakdown[rejection.reason as HardRejectionCode] = (breakdown[rejection.reason as HardRejectionCode] ?? 0) + 1;
+      breakdown[rejection.reason as HardRejectionCode] =
+        (breakdown[rejection.reason as HardRejectionCode] ?? 0) + 1;
     } else {
       eligible.push(offer);
     }
@@ -93,7 +99,10 @@ function checkHardFilters(
   }
 
   // 4. EXCEEDS_MAX_CONNECTIONS
-  if (constraints.max_connections != null && offer.itinerary.connection_count > constraints.max_connections) {
+  if (
+    constraints.max_connections != null &&
+    offer.itinerary.connection_count > constraints.max_connections
+  ) {
     return {
       offer_id: offer.offer_id,
       rejection_type: 'HARD',

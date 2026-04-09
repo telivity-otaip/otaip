@@ -8,25 +8,15 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { BSPReconciliationInput, BSPReconciliationOutput } from './types.js';
 import { matchRecords } from './reconciliation-matcher.js';
 
 const TICKET_NUMBER_RE = /^\d{13}$/;
 const CARRIER_RE = /^[A-Z0-9]{2}$/;
 
-export class BSPReconciliation
-  implements Agent<BSPReconciliationInput, BSPReconciliationOutput>
-{
+export class BSPReconciliation implements Agent<BSPReconciliationInput, BSPReconciliationOutput> {
   readonly id = '7.1';
   readonly name = 'BSP Reconciliation';
   readonly version = '0.1.0';
@@ -50,7 +40,9 @@ export class BSPReconciliation
 
     const warnings: string[] = [];
     if (result.summary.critical_count > 0) {
-      warnings.push(`${result.summary.critical_count} critical discrepancies found — review before remittance.`);
+      warnings.push(
+        `${result.summary.critical_count} critical discrepancies found — review before remittance.`,
+      );
     }
     if (result.summary.patterns.length > 0) {
       warnings.push(`${result.summary.patterns.length} recurring pattern(s) detected.`);
@@ -60,7 +52,9 @@ export class BSPReconciliation
       const deadline = new Date(input.data.remittance_deadline);
       const hoursUntil = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
       if (hoursUntil < 48 && hoursUntil > 0) {
-        warnings.push(`Remittance deadline in ${Math.round(hoursUntil)} hours — resolve discrepancies urgently.`);
+        warnings.push(
+          `Remittance deadline in ${Math.round(hoursUntil)} hours — resolve discrepancies urgently.`,
+        );
       }
     }
 
@@ -94,10 +88,18 @@ export class BSPReconciliation
 
   private validateInput(data: BSPReconciliationInput): void {
     if (!data.agency_records || !Array.isArray(data.agency_records)) {
-      throw new AgentInputValidationError(this.id, 'agency_records', 'Must be an array of agency records.');
+      throw new AgentInputValidationError(
+        this.id,
+        'agency_records',
+        'Must be an array of agency records.',
+      );
     }
     if (!data.hot_records || !Array.isArray(data.hot_records)) {
-      throw new AgentInputValidationError(this.id, 'hot_records', 'Must be an array of HOT file records.');
+      throw new AgentInputValidationError(
+        this.id,
+        'hot_records',
+        'Must be an array of HOT file records.',
+      );
     }
     if (!data.billing_period || data.billing_period.trim().length === 0) {
       throw new AgentInputValidationError(this.id, 'billing_period', 'Billing period required.');
@@ -105,16 +107,28 @@ export class BSPReconciliation
 
     for (const ar of data.agency_records) {
       if (!ar.ticket_number || !TICKET_NUMBER_RE.test(ar.ticket_number)) {
-        throw new AgentInputValidationError(this.id, 'agency_records.ticket_number', `Invalid ticket number: ${ar.ticket_number ?? 'missing'}`);
+        throw new AgentInputValidationError(
+          this.id,
+          'agency_records.ticket_number',
+          `Invalid ticket number: ${ar.ticket_number ?? 'missing'}`,
+        );
       }
       if (!ar.airline_code || !CARRIER_RE.test(ar.airline_code)) {
-        throw new AgentInputValidationError(this.id, 'agency_records.airline_code', `Invalid airline code: ${ar.airline_code ?? 'missing'}`);
+        throw new AgentInputValidationError(
+          this.id,
+          'agency_records.airline_code',
+          `Invalid airline code: ${ar.airline_code ?? 'missing'}`,
+        );
       }
     }
 
     for (const hot of data.hot_records) {
       if (!hot.ticket_number || !TICKET_NUMBER_RE.test(hot.ticket_number)) {
-        throw new AgentInputValidationError(this.id, 'hot_records.ticket_number', `Invalid ticket number: ${hot.ticket_number ?? 'missing'}`);
+        throw new AgentInputValidationError(
+          this.id,
+          'hot_records.ticket_number',
+          `Invalid ticket number: ${hot.ticket_number ?? 'missing'}`,
+        );
       }
     }
   }

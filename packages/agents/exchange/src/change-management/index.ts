@@ -7,16 +7,8 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { ChangeManagementInput, ChangeManagementOutput } from './types.js';
 import { assessChange } from './change-engine.js';
 
@@ -25,9 +17,7 @@ const CARRIER_RE = /^[A-Z0-9]{2}$/;
 const PASSENGER_NAME_RE = /^[A-Z][A-Z' -]+\/[A-Z][A-Z' -]+$/;
 const RECORD_LOCATOR_RE = /^[A-Z0-9]{6}$/;
 
-export class ChangeManagement
-  implements Agent<ChangeManagementInput, ChangeManagementOutput>
-{
+export class ChangeManagement implements Agent<ChangeManagementInput, ChangeManagementOutput> {
   readonly id = '5.1';
   readonly name = 'Change Management';
   readonly version = '0.1.0';
@@ -54,7 +44,9 @@ export class ChangeManagement
       warnings.push('Change not permitted for this fare type.');
     }
     if (result.assessment.forfeited_amount !== '0.00') {
-      warnings.push(`Fare difference forfeited: ${result.assessment.currency} ${result.assessment.forfeited_amount} (non-refundable fare downgrade).`);
+      warnings.push(
+        `Fare difference forfeited: ${result.assessment.currency} ${result.assessment.forfeited_amount} (non-refundable fare downgrade).`,
+      );
     }
 
     return {
@@ -86,16 +78,32 @@ export class ChangeManagement
   private validateInput(data: ChangeManagementInput): void {
     const ot = data.original_ticket;
     if (!ot.ticket_number || !TICKET_NUMBER_RE.test(ot.ticket_number)) {
-      throw new AgentInputValidationError(this.id, 'ticket_number', 'Must be a 13-digit ticket number.');
+      throw new AgentInputValidationError(
+        this.id,
+        'ticket_number',
+        'Must be a 13-digit ticket number.',
+      );
     }
     if (!ot.issuing_carrier || !CARRIER_RE.test(ot.issuing_carrier)) {
-      throw new AgentInputValidationError(this.id, 'issuing_carrier', 'Must be a 2-character IATA carrier code.');
+      throw new AgentInputValidationError(
+        this.id,
+        'issuing_carrier',
+        'Must be a 2-character IATA carrier code.',
+      );
     }
     if (!ot.passenger_name || !PASSENGER_NAME_RE.test(ot.passenger_name)) {
-      throw new AgentInputValidationError(this.id, 'passenger_name', 'Must be in LAST/FIRST format.');
+      throw new AgentInputValidationError(
+        this.id,
+        'passenger_name',
+        'Must be in LAST/FIRST format.',
+      );
     }
     if (!ot.record_locator || !RECORD_LOCATOR_RE.test(ot.record_locator)) {
-      throw new AgentInputValidationError(this.id, 'record_locator', 'Must be a 6-character alphanumeric PNR locator.');
+      throw new AgentInputValidationError(
+        this.id,
+        'record_locator',
+        'Must be a 6-character alphanumeric PNR locator.',
+      );
     }
     if (!ot.base_fare || isNaN(Number(ot.base_fare))) {
       throw new AgentInputValidationError(this.id, 'base_fare', 'Must be a valid decimal string.');
@@ -103,7 +111,11 @@ export class ChangeManagement
 
     const ri = data.requested_itinerary;
     if (!ri.segments || ri.segments.length === 0) {
-      throw new AgentInputValidationError(this.id, 'segments', 'At least one segment required in requested itinerary.');
+      throw new AgentInputValidationError(
+        this.id,
+        'segments',
+        'At least one segment required in requested itinerary.',
+      );
     }
     if (!ri.new_fare || isNaN(Number(ri.new_fare))) {
       throw new AgentInputValidationError(this.id, 'new_fare', 'Must be a valid decimal string.');

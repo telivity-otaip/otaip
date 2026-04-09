@@ -26,22 +26,54 @@ function now(input: PnrValidationInput): Date {
 function check1SegmentStatus(input: PnrValidationInput): ValidationCheck {
   const invalid = input.segments.filter((s) => !VALID_STATUSES.has(s.status));
   if (invalid.length === 0) {
-    return { check_id: 1, name: 'Segment Status', passed: true, severity: 'error', message: 'All segments confirmed (HK/KK).' };
+    return {
+      check_id: 1,
+      name: 'Segment Status',
+      passed: true,
+      severity: 'error',
+      message: 'All segments confirmed (HK/KK).',
+    };
   }
-  const details = invalid.map((s) => `S${s.segment_number} ${s.carrier}${s.flight_number}: ${s.status}`).join(', ');
-  return { check_id: 1, name: 'Segment Status', passed: false, severity: 'error', message: `Unconfirmed segments: ${details}. Must be HK/KK before ticketing.` };
+  const details = invalid
+    .map((s) => `S${s.segment_number} ${s.carrier}${s.flight_number}: ${s.status}`)
+    .join(', ');
+  return {
+    check_id: 1,
+    name: 'Segment Status',
+    passed: false,
+    severity: 'error',
+    message: `Unconfirmed segments: ${details}. Must be HK/KK before ticketing.`,
+  };
 }
 
 function check2TtlNotExpired(input: PnrValidationInput): ValidationCheck {
   if (!input.ticketing) {
-    return { check_id: 2, name: 'TTL Not Expired', passed: false, severity: 'error', message: 'No ticketing data present.' };
+    return {
+      check_id: 2,
+      name: 'TTL Not Expired',
+      passed: false,
+      severity: 'error',
+      message: 'No ticketing data present.',
+    };
   }
   const ttl = new Date(input.ticketing.time_limit);
   const current = now(input);
   if (ttl >= current) {
-    return { check_id: 2, name: 'TTL Not Expired', passed: true, severity: 'error', message: `TTL ${input.ticketing.time_limit} is still valid.` };
+    return {
+      check_id: 2,
+      name: 'TTL Not Expired',
+      passed: true,
+      severity: 'error',
+      message: `TTL ${input.ticketing.time_limit} is still valid.`,
+    };
   }
-  return { check_id: 2, name: 'TTL Not Expired', passed: false, severity: 'error', message: `TTL expired: ${input.ticketing.time_limit}. Booking may auto-cancel.` };
+  return {
+    check_id: 2,
+    name: 'TTL Not Expired',
+    passed: false,
+    severity: 'error',
+    message: `TTL expired: ${input.ticketing.time_limit}. Booking may auto-cancel.`,
+  };
 }
 
 function check3NoDuplicateBookings(input: PnrValidationInput): ValidationCheck {
@@ -51,21 +83,41 @@ function check3NoDuplicateBookings(input: PnrValidationInput): ValidationCheck {
     for (const seg of input.segments) {
       const key = `${pax.last_name}/${pax.first_name}-${seg.carrier}${seg.flight_number}-${seg.departure_date}`;
       if (seen.has(key)) {
-        dupes.push(`${pax.last_name}/${pax.first_name} on ${seg.carrier}${seg.flight_number} ${seg.departure_date}`);
+        dupes.push(
+          `${pax.last_name}/${pax.first_name} on ${seg.carrier}${seg.flight_number} ${seg.departure_date}`,
+        );
       }
       seen.add(key);
     }
   }
   if (dupes.length === 0) {
-    return { check_id: 3, name: 'No Duplicate Bookings', passed: true, severity: 'error', message: 'No duplicate passenger/flight combinations.' };
+    return {
+      check_id: 3,
+      name: 'No Duplicate Bookings',
+      passed: true,
+      severity: 'error',
+      message: 'No duplicate passenger/flight combinations.',
+    };
   }
-  return { check_id: 3, name: 'No Duplicate Bookings', passed: false, severity: 'error', message: `Duplicate bookings detected: ${dupes.join('; ')}` };
+  return {
+    check_id: 3,
+    name: 'No Duplicate Bookings',
+    passed: false,
+    severity: 'error',
+    message: `Duplicate bookings detected: ${dupes.join('; ')}`,
+  };
 }
 
 function check4NoOrphanSegments(input: PnrValidationInput): ValidationCheck {
   // A segment is orphaned if there's a gap in the routing
   if (input.segments.length <= 1) {
-    return { check_id: 4, name: 'No Orphan Segments', passed: true, severity: 'warning', message: 'Single segment — no orphan check needed.' };
+    return {
+      check_id: 4,
+      name: 'No Orphan Segments',
+      passed: true,
+      severity: 'warning',
+      message: 'Single segment — no orphan check needed.',
+    };
   }
 
   const orphans: number[] = [];
@@ -78,15 +130,33 @@ function check4NoOrphanSegments(input: PnrValidationInput): ValidationCheck {
   }
 
   if (orphans.length === 0) {
-    return { check_id: 4, name: 'No Orphan Segments', passed: true, severity: 'warning', message: 'Routing is continuous.' };
+    return {
+      check_id: 4,
+      name: 'No Orphan Segments',
+      passed: true,
+      severity: 'warning',
+      message: 'Routing is continuous.',
+    };
   }
-  return { check_id: 4, name: 'No Orphan Segments', passed: false, severity: 'warning', message: `Orphan segments detected at S${orphans.join(', S')} — routing gap.` };
+  return {
+    check_id: 4,
+    name: 'No Orphan Segments',
+    passed: false,
+    severity: 'warning',
+    message: `Orphan segments detected at S${orphans.join(', S')} — routing gap.`,
+  };
 }
 
 function check5ApisCompleteness(input: PnrValidationInput): ValidationCheck {
   const intlSegments = input.segments.filter((s) => s.is_international);
   if (intlSegments.length === 0) {
-    return { check_id: 5, name: 'APIS Completeness', passed: true, severity: 'error', message: 'No international segments — APIS not required.' };
+    return {
+      check_id: 5,
+      name: 'APIS Completeness',
+      passed: true,
+      severity: 'error',
+      message: 'No international segments — APIS not required.',
+    };
   }
 
   const nonInfants = input.passengers.filter((p) => p.passenger_type !== 'INF');
@@ -105,15 +175,33 @@ function check5ApisCompleteness(input: PnrValidationInput): ValidationCheck {
   }
 
   if (missing.length === 0) {
-    return { check_id: 5, name: 'APIS Completeness', passed: true, severity: 'error', message: 'All passengers have complete APIS data.' };
+    return {
+      check_id: 5,
+      name: 'APIS Completeness',
+      passed: true,
+      severity: 'error',
+      message: 'All passengers have complete APIS data.',
+    };
   }
-  return { check_id: 5, name: 'APIS Completeness', passed: false, severity: 'error', message: `Incomplete APIS: ${missing.join('; ')}` };
+  return {
+    check_id: 5,
+    name: 'APIS Completeness',
+    passed: false,
+    severity: 'error',
+    message: `Incomplete APIS: ${missing.join('; ')}`,
+  };
 }
 
 function check6InfantLinked(input: PnrValidationInput): ValidationCheck {
   const infants = input.passengers.filter((p) => p.passenger_type === 'INF');
   if (infants.length === 0) {
-    return { check_id: 6, name: 'Infant Linked', passed: true, severity: 'error', message: 'No infants in booking.' };
+    return {
+      check_id: 6,
+      name: 'Infant Linked',
+      passed: true,
+      severity: 'error',
+      message: 'No infants in booking.',
+    };
   }
 
   const unlinked = infants.filter((inf) => !inf.infant_linked_to);
@@ -124,11 +212,29 @@ function check6InfantLinked(input: PnrValidationInput): ValidationCheck {
       return !adult || adult.passenger_type !== 'ADT';
     });
     if (invalidLinks.length === 0) {
-      return { check_id: 6, name: 'Infant Linked', passed: true, severity: 'error', message: 'All infants correctly linked to adults.' };
+      return {
+        check_id: 6,
+        name: 'Infant Linked',
+        passed: true,
+        severity: 'error',
+        message: 'All infants correctly linked to adults.',
+      };
     }
-    return { check_id: 6, name: 'Infant Linked', passed: false, severity: 'error', message: `Infants linked to non-existent or non-adult passengers: P${invalidLinks.map((i) => i.pax_number).join(', P')}` };
+    return {
+      check_id: 6,
+      name: 'Infant Linked',
+      passed: false,
+      severity: 'error',
+      message: `Infants linked to non-existent or non-adult passengers: P${invalidLinks.map((i) => i.pax_number).join(', P')}`,
+    };
   }
-  return { check_id: 6, name: 'Infant Linked', passed: false, severity: 'error', message: `Unlinked infants: P${unlinked.map((i) => i.pax_number).join(', P')}` };
+  return {
+    check_id: 6,
+    name: 'Infant Linked',
+    passed: false,
+    severity: 'error',
+    message: `Unlinked infants: P${unlinked.map((i) => i.pax_number).join(', P')}`,
+  };
 }
 
 function check7NameFormat(input: PnrValidationInput): ValidationCheck {
@@ -148,9 +254,21 @@ function check7NameFormat(input: PnrValidationInput): ValidationCheck {
   }
 
   if (issues.length === 0) {
-    return { check_id: 7, name: 'Name Format', passed: true, severity: 'error', message: 'All names comply with format rules.' };
+    return {
+      check_id: 7,
+      name: 'Name Format',
+      passed: true,
+      severity: 'error',
+      message: 'All names comply with format rules.',
+    };
   }
-  return { check_id: 7, name: 'Name Format', passed: false, severity: 'error', message: `Name issues: ${issues.join('; ')}` };
+  return {
+    check_id: 7,
+    name: 'Name Format',
+    passed: false,
+    severity: 'error',
+    message: `Name issues: ${issues.join('; ')}`,
+  };
 }
 
 function check8MarriedSegmentIntegrity(input: PnrValidationInput): ValidationCheck {
@@ -164,7 +282,13 @@ function check8MarriedSegmentIntegrity(input: PnrValidationInput): ValidationChe
   }
 
   if (marriedGroups.size === 0) {
-    return { check_id: 8, name: 'Married Segment Integrity', passed: true, severity: 'warning', message: 'No married segments.' };
+    return {
+      check_id: 8,
+      name: 'Married Segment Integrity',
+      passed: true,
+      severity: 'warning',
+      message: 'No married segments.',
+    };
   }
 
   const issues: string[] = [];
@@ -180,58 +304,137 @@ function check8MarriedSegmentIntegrity(input: PnrValidationInput): ValidationChe
   }
 
   if (issues.length === 0) {
-    return { check_id: 8, name: 'Married Segment Integrity', passed: true, severity: 'warning', message: 'Married segments are intact.' };
+    return {
+      check_id: 8,
+      name: 'Married Segment Integrity',
+      passed: true,
+      severity: 'warning',
+      message: 'Married segments are intact.',
+    };
   }
-  return { check_id: 8, name: 'Married Segment Integrity', passed: false, severity: 'warning', message: issues.join('; ') };
+  return {
+    check_id: 8,
+    name: 'Married Segment Integrity',
+    passed: false,
+    severity: 'warning',
+    message: issues.join('; '),
+  };
 }
 
 function check9FareToSegmentMatch(input: PnrValidationInput): ValidationCheck {
   if (!input.fare) {
-    return { check_id: 9, name: 'Fare-Segment Match', passed: false, severity: 'warning', message: 'No fare data to validate.' };
+    return {
+      check_id: 9,
+      name: 'Fare-Segment Match',
+      passed: false,
+      severity: 'warning',
+      message: 'No fare data to validate.',
+    };
   }
 
   const coveredSegments = new Set(input.fare.segment_indices);
   const uncovered = input.segments.filter((_, i) => !coveredSegments.has(i));
 
   if (uncovered.length === 0) {
-    return { check_id: 9, name: 'Fare-Segment Match', passed: true, severity: 'warning', message: 'All segments covered by fare.' };
+    return {
+      check_id: 9,
+      name: 'Fare-Segment Match',
+      passed: true,
+      severity: 'warning',
+      message: 'All segments covered by fare.',
+    };
   }
-  return { check_id: 9, name: 'Fare-Segment Match', passed: false, severity: 'warning', message: `Segments not covered by fare: S${uncovered.map((s) => s.segment_number).join(', S')}` };
+  return {
+    check_id: 9,
+    name: 'Fare-Segment Match',
+    passed: false,
+    severity: 'warning',
+    message: `Segments not covered by fare: S${uncovered.map((s) => s.segment_number).join(', S')}`,
+  };
 }
 
 function check10ContactPresent(input: PnrValidationInput): ValidationCheck {
   if (input.contact && (input.contact.phone || input.contact.email)) {
-    return { check_id: 10, name: 'Contact Present', passed: true, severity: 'error', message: 'Contact information present.' };
+    return {
+      check_id: 10,
+      name: 'Contact Present',
+      passed: true,
+      severity: 'error',
+      message: 'Contact information present.',
+    };
   }
-  return { check_id: 10, name: 'Contact Present', passed: false, severity: 'error', message: 'No contact information (phone or email) in PNR.' };
+  return {
+    check_id: 10,
+    name: 'Contact Present',
+    passed: false,
+    severity: 'error',
+    message: 'No contact information (phone or email) in PNR.',
+  };
 }
 
 function check11TicketingArrangement(input: PnrValidationInput): ValidationCheck {
   if (input.ticketing && input.ticketing.arranged) {
-    return { check_id: 11, name: 'Ticketing Arrangement', passed: true, severity: 'error', message: 'Ticketing arrangement present.' };
+    return {
+      check_id: 11,
+      name: 'Ticketing Arrangement',
+      passed: true,
+      severity: 'error',
+      message: 'Ticketing arrangement present.',
+    };
   }
-  return { check_id: 11, name: 'Ticketing Arrangement', passed: false, severity: 'error', message: 'No ticketing arrangement in PNR.' };
+  return {
+    check_id: 11,
+    name: 'Ticketing Arrangement',
+    passed: false,
+    severity: 'error',
+    message: 'No ticketing arrangement in PNR.',
+  };
 }
 
 function check12AdvancePurchase(input: PnrValidationInput): ValidationCheck {
   if (!input.fare?.advance_purchase_deadline) {
-    return { check_id: 12, name: 'Advance Purchase', passed: true, severity: 'warning', message: 'No advance purchase requirement.' };
+    return {
+      check_id: 12,
+      name: 'Advance Purchase',
+      passed: true,
+      severity: 'warning',
+      message: 'No advance purchase requirement.',
+    };
   }
 
   const deadline = new Date(input.fare.advance_purchase_deadline);
   const current = now(input);
 
   if (current <= deadline) {
-    return { check_id: 12, name: 'Advance Purchase', passed: true, severity: 'error', message: `Advance purchase deadline ${input.fare.advance_purchase_deadline} not yet passed.` };
+    return {
+      check_id: 12,
+      name: 'Advance Purchase',
+      passed: true,
+      severity: 'error',
+      message: `Advance purchase deadline ${input.fare.advance_purchase_deadline} not yet passed.`,
+    };
   }
-  return { check_id: 12, name: 'Advance Purchase', passed: false, severity: 'error', message: `Advance purchase deadline EXPIRED: ${input.fare.advance_purchase_deadline}. Fare may no longer be valid.` };
+  return {
+    check_id: 12,
+    name: 'Advance Purchase',
+    passed: false,
+    severity: 'error',
+    message: `Advance purchase deadline EXPIRED: ${input.fare.advance_purchase_deadline}. Fare may no longer be valid.`,
+  };
 }
 
 function check13NoNameChangePostBooking(_input: PnrValidationInput): ValidationCheck {
   // TODO: [NEEDS DOMAIN INPUT] Real name change detection requires comparing
   // current PNR names against original booking names from PNR history.
   // For now, always passes — would need PNR history data to implement.
-  return { check_id: 13, name: 'No Name Change', passed: true, severity: 'warning', message: 'Name change check requires PNR history comparison (not available in static validation).' };
+  return {
+    check_id: 13,
+    name: 'No Name Change',
+    passed: true,
+    severity: 'warning',
+    message:
+      'Name change check requires PNR history comparison (not available in static validation).',
+  };
 }
 
 // ---------------------------------------------------------------------------

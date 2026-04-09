@@ -5,8 +5,13 @@
  */
 
 export type PluginOperation =
-  | 'register_plugin' | 'unregister_plugin' | 'list_plugins'
-  | 'get_plugin' | 'discover_capabilities' | 'enable_plugin' | 'disable_plugin';
+  | 'register_plugin'
+  | 'unregister_plugin'
+  | 'list_plugins'
+  | 'get_plugin'
+  | 'discover_capabilities'
+  | 'enable_plugin'
+  | 'disable_plugin';
 
 export interface Plugin {
   plugin_id: string;
@@ -29,7 +34,10 @@ export interface PluginCapability {
 export interface PluginInput {
   operation: PluginOperation;
   plugin_id?: string;
-  plugin_data?: Omit<Plugin, 'registered_at' | 'enabled'> & { enabled?: boolean; metadata?: Record<string, unknown> };
+  plugin_data?: Omit<Plugin, 'registered_at' | 'enabled'> & {
+    enabled?: boolean;
+    metadata?: Record<string, unknown>;
+  };
   capability?: string;
 }
 

@@ -20,7 +20,13 @@ afterAll(() => {
 });
 
 // Helper to create flight segments
-function makeSegment(overrides: Partial<FlightSegment> & { carrier: string; departure_time: string; arrival_time: string }): FlightSegment {
+function makeSegment(
+  overrides: Partial<FlightSegment> & {
+    carrier: string;
+    departure_time: string;
+    arrival_time: string;
+  },
+): FlightSegment {
   return {
     flight_number: '100',
     origin: 'JFK',

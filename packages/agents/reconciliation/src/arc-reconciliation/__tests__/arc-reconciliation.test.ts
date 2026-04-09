@@ -9,7 +9,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ARCReconciliation } from '../index.js';
 import { IARParser } from '../iar-parser.js';
-import type { ARCReconciliationInput, ARCAgencyRecord, IARRecord, AirlineContract } from '../types.js';
+import type {
+  ARCReconciliationInput,
+  ARCAgencyRecord,
+  IARRecord,
+  AirlineContract,
+} from '../types.js';
 
 let agent: ARCReconciliation;
 
@@ -234,23 +239,28 @@ describe('ARC Reconciliation', () => {
         contracts,
       });
       const result = await agent.execute({ data: input });
-      const overComm = result.data.discrepancies.find(
-        (d) => d.description.includes('contracted rate'),
+      const overComm = result.data.discrepancies.find((d) =>
+        d.description.includes('contracted rate'),
       );
       expect(overComm).toBeUndefined();
     });
 
     it('ignores expired contract', async () => {
       const contracts: AirlineContract[] = [
-        { airline_code: 'BA', contracted_rate: 5, effective_from: '2025-01-01', effective_to: '2025-12-31' },
+        {
+          airline_code: 'BA',
+          contracted_rate: 5,
+          effective_from: '2025-01-01',
+          effective_to: '2025-12-31',
+        },
       ];
       const input = makeInput({
         iar_records: [makeIar({ commission_rate: 7 })],
         contracts,
       });
       const result = await agent.execute({ data: input });
-      const overComm = result.data.discrepancies.find(
-        (d) => d.description.includes('contracted rate'),
+      const overComm = result.data.discrepancies.find((d) =>
+        d.description.includes('contracted rate'),
       );
       expect(overComm).toBeUndefined();
     });
@@ -289,15 +299,19 @@ describe('ARC Reconciliation', () => {
 
     it('warns when ADM dispute window is expiring (<=5 days)', async () => {
       const input = makeInput({
-        iar_records: [makeIar({
-          transaction_type: 'ADM',
-          adm_issue_date: '2026-03-22', // 10 days ago, 5 days left in 15-day window
-        })],
+        iar_records: [
+          makeIar({
+            transaction_type: 'ADM',
+            adm_issue_date: '2026-03-22', // 10 days ago, 5 days left in 15-day window
+          }),
+        ],
         adm_dispute_window_days: 15,
         current_datetime: '2026-04-01T12:00:00Z',
       });
       const result = await agent.execute({ data: input });
-      const expiring = result.data.discrepancies.find((d) => d.type === 'ADM_DISPUTE_WINDOW_EXPIRING');
+      const expiring = result.data.discrepancies.find(
+        (d) => d.type === 'ADM_DISPUTE_WINDOW_EXPIRING',
+      );
       expect(expiring).toBeDefined();
       expect(expiring!.dispute_days_remaining).toBeGreaterThan(0);
       expect(expiring!.dispute_days_remaining).toBeLessThanOrEqual(5);
@@ -305,14 +319,18 @@ describe('ARC Reconciliation', () => {
 
     it('no dispute warning when ADM is old (window already closed)', async () => {
       const input = makeInput({
-        iar_records: [makeIar({
-          transaction_type: 'ADM',
-          adm_issue_date: '2026-03-01', // 31 days ago
-        })],
+        iar_records: [
+          makeIar({
+            transaction_type: 'ADM',
+            adm_issue_date: '2026-03-01', // 31 days ago
+          }),
+        ],
         current_datetime: '2026-04-01T12:00:00Z',
       });
       const result = await agent.execute({ data: input });
-      const expiring = result.data.discrepancies.find((d) => d.type === 'ADM_DISPUTE_WINDOW_EXPIRING');
+      const expiring = result.data.discrepancies.find(
+        (d) => d.type === 'ADM_DISPUTE_WINDOW_EXPIRING',
+      );
       expect(expiring).toBeUndefined();
     });
   });
@@ -330,9 +348,7 @@ describe('ARC Reconciliation', () => {
   describe('Net remittance', () => {
     it('calculates net remittance from IAR', async () => {
       const input = makeInput({
-        iar_records: [
-          makeIar({ total_amount: '570.00', commission_amount: '31.50' }),
-        ],
+        iar_records: [makeIar({ total_amount: '570.00', commission_amount: '31.50' })],
       });
       const result = await agent.execute({ data: input });
       // 570 - 31.50 = 538.50
@@ -357,15 +373,19 @@ describe('ARC Reconciliation', () => {
         agencies.push(makeAgency({ ticket_number: num, commission_amount: '31.50' }));
         iars.push(makeIar({ document_number: num, commission_amount: '50.00' }));
       }
-      const result = await agent.execute({ data: makeInput({ agency_records: agencies, iar_records: iars }) });
+      const result = await agent.execute({
+        data: makeInput({ agency_records: agencies, iar_records: iars }),
+      });
       expect(result.data.summary.patterns.length).toBeGreaterThan(0);
     });
 
     it('no patterns with fewer than 10 discrepancies', async () => {
-      const result = await agent.execute({ data: makeInput({
-        agency_records: [makeAgency()],
-        iar_records: [makeIar({ commission_amount: '50.00' })],
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          agency_records: [makeAgency()],
+          iar_records: [makeIar({ commission_amount: '50.00' })],
+        }),
+      });
       expect(result.data.summary.patterns).toHaveLength(0);
     });
   });
@@ -393,7 +413,9 @@ describe('ARC Reconciliation', () => {
     });
 
     it('rejects empty settlement week', async () => {
-      await expect(agent.execute({ data: makeInput({ settlement_week: '' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ settlement_week: '' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
   });
 
@@ -422,10 +444,12 @@ describe('ARC Reconciliation', () => {
 
     it('warns on expiring ADM disputes', async () => {
       const input = makeInput({
-        iar_records: [makeIar({
-          transaction_type: 'ADM',
-          adm_issue_date: '2026-03-22',
-        })],
+        iar_records: [
+          makeIar({
+            transaction_type: 'ADM',
+            adm_issue_date: '2026-03-22',
+          }),
+        ],
         current_datetime: '2026-04-01T12:00:00Z',
       });
       const result = await agent.execute({ data: input });

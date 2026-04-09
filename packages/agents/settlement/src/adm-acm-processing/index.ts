@@ -7,16 +7,8 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import Decimal from 'decimal.js';
 import type {
   ADMACMProcessingInput,
@@ -32,13 +24,24 @@ import type {
 } from './types.js';
 
 const VALID_OPERATIONS = new Set([
-  'receiveADM', 'receiveACM', 'assessADM', 'disputeADM',
-  'acceptADM', 'escalateADM', 'applyACM', 'getADM', 'getPendingWithDeadlines',
+  'receiveADM',
+  'receiveACM',
+  'assessADM',
+  'disputeADM',
+  'acceptADM',
+  'escalateADM',
+  'applyACM',
+  'getADM',
+  'getPendingWithDeadlines',
 ]);
 
 const VALID_DISPUTE_GROUNDS = new Set<DisputeGround>([
-  'FARE_ALREADY_CORRECT', 'WITHIN_WAIVER_WINDOW', 'DUPLICATE_ADM',
-  'AMOUNT_INCORRECT', 'OUTSIDE_AIRLINE_POLICY', 'TICKET_REISSUED',
+  'FARE_ALREADY_CORRECT',
+  'WITHIN_WAIVER_WINDOW',
+  'DUPLICATE_ADM',
+  'AMOUNT_INCORRECT',
+  'OUTSIDE_AIRLINE_POLICY',
+  'TICKET_REISSUED',
 ]);
 
 const CARRIER_RE = /^[A-Z0-9]{2}$/;
@@ -79,9 +82,7 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export class ADMACMProcessingAgent
-  implements Agent<ADMACMProcessingInput, ADMACMProcessingOutput>
-{
+export class ADMACMProcessingAgent implements Agent<ADMACMProcessingInput, ADMACMProcessingOutput> {
   readonly id = '6.3';
   readonly name = 'ADM/ACM Processing';
   readonly version = '0.1.0';
@@ -180,7 +181,10 @@ export class ADMACMProcessingAgent
 
   // --- Operation handlers ---
 
-  private handleReceiveADM(data: ADMACMProcessingInput, currentDate: string): ADMACMProcessingOutput {
+  private handleReceiveADM(
+    data: ADMACMProcessingInput,
+    currentDate: string,
+  ): ADMACMProcessingOutput {
     const issuedDate = currentDate;
     const disputeDeadline = addDays(issuedDate, DISPUTE_WINDOW_DAYS);
     const admId = generateUUID();
@@ -221,7 +225,10 @@ export class ADMACMProcessingAgent
     return { acm };
   }
 
-  private handleAssessADM(data: ADMACMProcessingInput, currentDate: string): ADMACMProcessingOutput {
+  private handleAssessADM(
+    data: ADMACMProcessingInput,
+    currentDate: string,
+  ): ADMACMProcessingOutput {
     const adm = this.admStore.get(data.admId!);
     if (!adm) {
       return { errorCode: 'ADM_NOT_FOUND', errorMessage: `ADM ${data.admId} not found.` };
@@ -264,30 +271,50 @@ export class ADMACMProcessingAgent
     return { adm, assessment };
   }
 
-  private handleDisputeADM(data: ADMACMProcessingInput, currentDate: string): ADMACMProcessingOutput {
+  private handleDisputeADM(
+    data: ADMACMProcessingInput,
+    currentDate: string,
+  ): ADMACMProcessingOutput {
     const adm = this.admStore.get(data.admId!);
     if (!adm) {
       return { errorCode: 'ADM_NOT_FOUND', errorMessage: `ADM ${data.admId} not found.` };
     }
 
     if (adm.status === 'DISPUTED') {
-      return { errorCode: 'ALREADY_DISPUTED', errorMessage: `ADM ${adm.admId} has already been disputed.` };
+      return {
+        errorCode: 'ALREADY_DISPUTED',
+        errorMessage: `ADM ${adm.admId} has already been disputed.`,
+      };
     }
 
     if (adm.status === 'ACCEPTED') {
-      return { errorCode: 'ALREADY_ACCEPTED', errorMessage: `ADM ${adm.admId} has already been accepted.` };
+      return {
+        errorCode: 'ALREADY_ACCEPTED',
+        errorMessage: `ADM ${adm.admId} has already been accepted.`,
+      };
     }
 
     const daysRemaining = daysBetween(currentDate, adm.disputeDeadline);
     if (daysRemaining < 0) {
-      return { errorCode: 'DISPUTE_WINDOW_CLOSED', errorMessage: `Dispute window for ADM ${adm.admId} has expired.` };
+      return {
+        errorCode: 'DISPUTE_WINDOW_CLOSED',
+        errorMessage: `Dispute window for ADM ${adm.admId} has expired.`,
+      };
     }
 
     if (adm.status !== 'RECEIVED' && adm.status !== 'ASSESSED') {
-      return { errorCode: 'INVALID_STATUS_TRANSITION', errorMessage: `Cannot dispute ADM in status ${adm.status}.` };
+      return {
+        errorCode: 'INVALID_STATUS_TRANSITION',
+        errorMessage: `Cannot dispute ADM in status ${adm.status}.`,
+      };
     }
 
-    this.transitionStatus(adm, 'DISPUTED', currentDate, `Disputed on ground: ${data.disputeGround}. Evidence: ${data.evidence ?? 'none'}`);
+    this.transitionStatus(
+      adm,
+      'DISPUTED',
+      currentDate,
+      `Disputed on ground: ${data.disputeGround}. Evidence: ${data.evidence ?? 'none'}`,
+    );
 
     const disputeResult: ADMDisputeResult = {
       admId: adm.admId,
@@ -300,32 +327,47 @@ export class ADMACMProcessingAgent
     return { adm, disputeResult };
   }
 
-  private handleAcceptADM(data: ADMACMProcessingInput, currentDate: string): ADMACMProcessingOutput {
+  private handleAcceptADM(
+    data: ADMACMProcessingInput,
+    currentDate: string,
+  ): ADMACMProcessingOutput {
     const adm = this.admStore.get(data.admId!);
     if (!adm) {
       return { errorCode: 'ADM_NOT_FOUND', errorMessage: `ADM ${data.admId} not found.` };
     }
 
     if (adm.status === 'ACCEPTED') {
-      return { errorCode: 'ALREADY_ACCEPTED', errorMessage: `ADM ${adm.admId} has already been accepted.` };
+      return {
+        errorCode: 'ALREADY_ACCEPTED',
+        errorMessage: `ADM ${adm.admId} has already been accepted.`,
+      };
     }
 
     if (adm.status === 'DISPUTED') {
-      return { errorCode: 'INVALID_STATUS_TRANSITION', errorMessage: `Cannot accept ADM that is already disputed.` };
+      return {
+        errorCode: 'INVALID_STATUS_TRANSITION',
+        errorMessage: `Cannot accept ADM that is already disputed.`,
+      };
     }
 
     this.transitionStatus(adm, 'ACCEPTED', currentDate, 'Accepted by agent.');
     return { adm };
   }
 
-  private handleEscalateADM(data: ADMACMProcessingInput, currentDate: string): ADMACMProcessingOutput {
+  private handleEscalateADM(
+    data: ADMACMProcessingInput,
+    currentDate: string,
+  ): ADMACMProcessingOutput {
     const adm = this.admStore.get(data.admId!);
     if (!adm) {
       return { errorCode: 'ADM_NOT_FOUND', errorMessage: `ADM ${data.admId} not found.` };
     }
 
     if (adm.status === 'ACCEPTED') {
-      return { errorCode: 'INVALID_STATUS_TRANSITION', errorMessage: `Cannot escalate ADM that has been accepted.` };
+      return {
+        errorCode: 'INVALID_STATUS_TRANSITION',
+        errorMessage: `Cannot escalate ADM that has been accepted.`,
+      };
     }
 
     this.transitionStatus(adm, 'ESCALATED', currentDate, 'Escalated for manual review.');
@@ -339,7 +381,10 @@ export class ADMACMProcessingAgent
     }
 
     if (acm.status === 'APPLIED') {
-      return { errorCode: 'INVALID_STATUS_TRANSITION', errorMessage: `ACM ${acm.acmId} has already been applied.` };
+      return {
+        errorCode: 'INVALID_STATUS_TRANSITION',
+        errorMessage: `ACM ${acm.acmId} has already been applied.`,
+      };
     }
 
     acm.status = 'APPLIED';
@@ -387,7 +432,11 @@ export class ADMACMProcessingAgent
 
   private validateInput(data: ADMACMProcessingInput): void {
     if (!data.operation || !VALID_OPERATIONS.has(data.operation)) {
-      throw new AgentInputValidationError(this.id, 'operation', 'Must be a valid ADM/ACM operation.');
+      throw new AgentInputValidationError(
+        this.id,
+        'operation',
+        'Must be a valid ADM/ACM operation.',
+      );
     }
 
     switch (data.operation) {
@@ -410,7 +459,11 @@ export class ADMACMProcessingAgent
           throw new AgentInputValidationError(this.id, 'admId', 'ADM ID is required.');
         }
         if (!data.disputeGround || !VALID_DISPUTE_GROUNDS.has(data.disputeGround)) {
-          throw new AgentInputValidationError(this.id, 'disputeGround', 'Must be a valid dispute ground.');
+          throw new AgentInputValidationError(
+            this.id,
+            'disputeGround',
+            'Must be a valid dispute ground.',
+          );
         }
         break;
       case 'applyACM':
@@ -428,10 +481,18 @@ export class ADMACMProcessingAgent
       throw new AgentInputValidationError(this.id, 'ticketNumber', 'Ticket number is required.');
     }
     if (!data.airline || !CARRIER_RE.test(data.airline)) {
-      throw new AgentInputValidationError(this.id, 'airline', 'Must be a 2-character IATA airline code.');
+      throw new AgentInputValidationError(
+        this.id,
+        'airline',
+        'Must be a 2-character IATA airline code.',
+      );
     }
     if (!data.amount || isNaN(Number(data.amount)) || new Decimal(data.amount).isNegative()) {
-      throw new AgentInputValidationError(this.id, 'amount', 'Must be a valid non-negative decimal string.');
+      throw new AgentInputValidationError(
+        this.id,
+        'amount',
+        'Must be a valid non-negative decimal string.',
+      );
     }
     if (!data.currency || !CURRENCY_RE.test(data.currency)) {
       throw new AgentInputValidationError(this.id, 'currency', 'Must be a 3-letter currency code.');
@@ -449,10 +510,18 @@ export class ADMACMProcessingAgent
       throw new AgentInputValidationError(this.id, 'ticketNumber', 'Ticket number is required.');
     }
     if (!data.airline || !CARRIER_RE.test(data.airline)) {
-      throw new AgentInputValidationError(this.id, 'airline', 'Must be a 2-character IATA airline code.');
+      throw new AgentInputValidationError(
+        this.id,
+        'airline',
+        'Must be a 2-character IATA airline code.',
+      );
     }
     if (!data.amount || isNaN(Number(data.amount)) || new Decimal(data.amount).isNegative()) {
-      throw new AgentInputValidationError(this.id, 'amount', 'Must be a valid non-negative decimal string.');
+      throw new AgentInputValidationError(
+        this.id,
+        'amount',
+        'Must be a valid non-negative decimal string.',
+      );
     }
     if (!data.currency || !CURRENCY_RE.test(data.currency)) {
       throw new AgentInputValidationError(this.id, 'currency', 'Must be a 3-letter currency code.');

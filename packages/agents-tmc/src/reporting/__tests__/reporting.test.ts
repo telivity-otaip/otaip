@@ -13,14 +13,115 @@ beforeAll(async () => {
   await agent.initialize();
 });
 
-afterAll(() => { agent.destroy(); });
+afterAll(() => {
+  agent.destroy();
+});
 
 const FIXTURES: Transaction[] = [
-  { transaction_id: 'T001', ticket_number: '1251234567890', passenger_name: 'SMITH/JOHN', traveler_id: 'TVL001', origin: 'LHR', destination: 'JFK', airline: 'BA', issue_date: '2026-03-15', departure_date: '2026-06-15', base_fare: '450.00', tax: '120.00', total_amount: '570.00', currency: 'USD', agent_id: 'AGT01', corporate_id: 'CORP001', department: 'Engineering', in_policy: true, transaction_type: 'SALE', ticket_used: true },
-  { transaction_id: 'T002', ticket_number: '1251234567891', passenger_name: 'JONES/MARY', traveler_id: 'TVL002', origin: 'CDG', destination: 'LAX', airline: 'AF', issue_date: '2026-03-16', departure_date: '2026-06-20', base_fare: '680.00', tax: '95.00', total_amount: '775.00', currency: 'USD', agent_id: 'AGT02', corporate_id: 'CORP001', department: 'Sales', in_policy: true, transaction_type: 'SALE', ticket_used: true },
-  { transaction_id: 'T003', ticket_number: '1251234567892', passenger_name: 'DOE/JANE', traveler_id: 'TVL003', origin: 'JFK', destination: 'LHR', airline: 'BA', issue_date: '2026-03-17', departure_date: '2026-07-01', base_fare: '0.00', tax: '0.00', total_amount: '450.00', currency: 'USD', agent_id: 'AGT01', corporate_id: 'CORP001', department: 'Engineering', in_policy: true, transaction_type: 'REFUND', ticket_used: false },
-  { transaction_id: 'T004', ticket_number: '1251234567893', passenger_name: 'BROWN/BOB', traveler_id: 'TVL004', origin: 'SIN', destination: 'HKG', airline: 'SQ', issue_date: '2026-03-18', departure_date: '2026-05-01', base_fare: '275.00', tax: '45.00', total_amount: '320.00', currency: 'USD', agent_id: 'AGT01', corporate_id: 'CORP002', department: 'HR', in_policy: false, transaction_type: 'SALE', ticket_used: false },
-  { transaction_id: 'T005', ticket_number: '1251234567894', passenger_name: 'TAYLOR/ANN', traveler_id: 'TVL005', origin: 'LHR', destination: 'SIN', airline: 'SQ', issue_date: '2026-03-19', departure_date: '2026-06-10', base_fare: '1050.00', tax: '150.00', total_amount: '1200.00', currency: 'USD', agent_id: 'AGT02', department: 'Marketing', in_policy: true, transaction_type: 'SALE', ticket_used: true },
+  {
+    transaction_id: 'T001',
+    ticket_number: '1251234567890',
+    passenger_name: 'SMITH/JOHN',
+    traveler_id: 'TVL001',
+    origin: 'LHR',
+    destination: 'JFK',
+    airline: 'BA',
+    issue_date: '2026-03-15',
+    departure_date: '2026-06-15',
+    base_fare: '450.00',
+    tax: '120.00',
+    total_amount: '570.00',
+    currency: 'USD',
+    agent_id: 'AGT01',
+    corporate_id: 'CORP001',
+    department: 'Engineering',
+    in_policy: true,
+    transaction_type: 'SALE',
+    ticket_used: true,
+  },
+  {
+    transaction_id: 'T002',
+    ticket_number: '1251234567891',
+    passenger_name: 'JONES/MARY',
+    traveler_id: 'TVL002',
+    origin: 'CDG',
+    destination: 'LAX',
+    airline: 'AF',
+    issue_date: '2026-03-16',
+    departure_date: '2026-06-20',
+    base_fare: '680.00',
+    tax: '95.00',
+    total_amount: '775.00',
+    currency: 'USD',
+    agent_id: 'AGT02',
+    corporate_id: 'CORP001',
+    department: 'Sales',
+    in_policy: true,
+    transaction_type: 'SALE',
+    ticket_used: true,
+  },
+  {
+    transaction_id: 'T003',
+    ticket_number: '1251234567892',
+    passenger_name: 'DOE/JANE',
+    traveler_id: 'TVL003',
+    origin: 'JFK',
+    destination: 'LHR',
+    airline: 'BA',
+    issue_date: '2026-03-17',
+    departure_date: '2026-07-01',
+    base_fare: '0.00',
+    tax: '0.00',
+    total_amount: '450.00',
+    currency: 'USD',
+    agent_id: 'AGT01',
+    corporate_id: 'CORP001',
+    department: 'Engineering',
+    in_policy: true,
+    transaction_type: 'REFUND',
+    ticket_used: false,
+  },
+  {
+    transaction_id: 'T004',
+    ticket_number: '1251234567893',
+    passenger_name: 'BROWN/BOB',
+    traveler_id: 'TVL004',
+    origin: 'SIN',
+    destination: 'HKG',
+    airline: 'SQ',
+    issue_date: '2026-03-18',
+    departure_date: '2026-05-01',
+    base_fare: '275.00',
+    tax: '45.00',
+    total_amount: '320.00',
+    currency: 'USD',
+    agent_id: 'AGT01',
+    corporate_id: 'CORP002',
+    department: 'HR',
+    in_policy: false,
+    transaction_type: 'SALE',
+    ticket_used: false,
+  },
+  {
+    transaction_id: 'T005',
+    ticket_number: '1251234567894',
+    passenger_name: 'TAYLOR/ANN',
+    traveler_id: 'TVL005',
+    origin: 'LHR',
+    destination: 'SIN',
+    airline: 'SQ',
+    issue_date: '2026-03-19',
+    departure_date: '2026-06-10',
+    base_fare: '1050.00',
+    tax: '150.00',
+    total_amount: '1200.00',
+    currency: 'USD',
+    agent_id: 'AGT02',
+    department: 'Marketing',
+    in_policy: true,
+    transaction_type: 'SALE',
+    ticket_used: true,
+  },
 ];
 
 function makeInput(overrides: Partial<ReportingInput> = {}): ReportingInput {
@@ -104,7 +205,9 @@ describe('Reporting & Analytics', () => {
 
   describe('Filters', () => {
     it('filters by corporate_id', async () => {
-      const res = await agent.execute({ data: makeInput({ filters: { corporate_id: 'CORP002' } }) });
+      const res = await agent.execute({
+        data: makeInput({ filters: { corporate_id: 'CORP002' } }),
+      });
       expect(Number(res.data.summary['total_bookings'])).toBe(1);
     });
 
@@ -121,7 +224,9 @@ describe('Reporting & Analytics', () => {
 
   describe('Empty period', () => {
     it('returns zeros for empty period', async () => {
-      const res = await agent.execute({ data: makeInput({ date_from: '2020-01-01', date_to: '2020-01-31' }) });
+      const res = await agent.execute({
+        data: makeInput({ date_from: '2020-01-01', date_to: '2020-01-31' }),
+      });
       expect(res.data.rows).toHaveLength(0);
       expect(Number(res.data.summary['total_bookings'])).toBe(0);
     });
@@ -129,17 +234,25 @@ describe('Reporting & Analytics', () => {
 
   describe('Input validation', () => {
     it('rejects invalid report type', async () => {
-      await expect(agent.execute({ data: makeInput({ report_type: 'INVALID' as 'booking_volume' }) })).rejects.toThrow('Invalid');
+      await expect(
+        agent.execute({ data: makeInput({ report_type: 'INVALID' as 'booking_volume' }) }),
+      ).rejects.toThrow('Invalid');
     });
 
     it('rejects missing date range', async () => {
-      await expect(agent.execute({ data: { ...makeInput(), date_from: '', date_to: '' } })).rejects.toThrow('Invalid');
+      await expect(
+        agent.execute({ data: { ...makeInput(), date_from: '', date_to: '' } }),
+      ).rejects.toThrow('Invalid');
     });
   });
 
   describe('agent compliance', () => {
-    it('has correct id/name', () => { expect(agent.id).toBe('8.4'); });
-    it('reports healthy', async () => { expect((await agent.health()).status).toBe('healthy'); });
+    it('has correct id/name', () => {
+      expect(agent.id).toBe('8.4');
+    });
+    it('reports healthy', async () => {
+      expect((await agent.health()).status).toBe('healthy');
+    });
     it('throws when not initialized', async () => {
       const u = new ReportingAgent();
       await expect(u.execute({ data: makeInput() })).rejects.toThrow('not been initialized');

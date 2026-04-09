@@ -37,7 +37,8 @@ export function verifyBooking(input: VerificationInput): VerificationOutput {
       crsValue: input.confirmation.crsConfirmation,
       pmsValue: 'MISSING',
       severity: 'critical',
-      message: 'PMS confirmation code missing — reservation may not have synced to property system.',
+      message:
+        'PMS confirmation code missing — reservation may not have synced to property system.',
     });
     escalationReasons.push('pms_code_missing');
 
@@ -178,8 +179,10 @@ function checkRates(
   discrepancies: Discrepancy[],
   reasons: EscalationReason[],
 ): void {
-  if (crs.nightlyRate.amount !== pms.nightlyRate.amount ||
-      crs.nightlyRate.currency !== pms.nightlyRate.currency) {
+  if (
+    crs.nightlyRate.amount !== pms.nightlyRate.amount ||
+    crs.nightlyRate.currency !== pms.nightlyRate.currency
+  ) {
     discrepancies.push({
       field: 'nightly_rate',
       crsValue: `${crs.nightlyRate.amount} ${crs.nightlyRate.currency}`,
@@ -190,8 +193,10 @@ function checkRates(
     reasons.push('rate_mismatch');
   }
 
-  if (crs.totalRate.amount !== pms.totalRate.amount ||
-      crs.totalRate.currency !== pms.totalRate.currency) {
+  if (
+    crs.totalRate.amount !== pms.totalRate.amount ||
+    crs.totalRate.currency !== pms.totalRate.currency
+  ) {
     discrepancies.push({
       field: 'total_rate',
       crsValue: `${crs.totalRate.amount} ${crs.totalRate.currency}`,
@@ -212,11 +217,11 @@ function checkRates(
 function normalizeGuestName(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[/,]/g, ' ')     // GDS uses / or , as delimiter
-    .replace(/\s+/g, ' ')      // collapse whitespace
+    .replace(/[/,]/g, ' ') // GDS uses / or , as delimiter
+    .replace(/\s+/g, ' ') // collapse whitespace
     .trim()
     .split(' ')
-    .sort()                     // order-independent comparison
+    .sort() // order-independent comparison
     .join(' ');
 }
 
@@ -224,7 +229,7 @@ function buildResult(
   discrepancies: Discrepancy[],
   escalationReasons: EscalationReason[],
 ): VerificationOutput {
-  const hasCritical = discrepancies.some(d => d.severity === 'critical');
+  const hasCritical = discrepancies.some((d) => d.severity === 'critical');
 
   return {
     verified: discrepancies.length === 0,
@@ -232,10 +237,11 @@ function buildResult(
     escalationRequired: escalationReasons.length > 0,
     escalationReasons,
     verifiedAt: new Date().toISOString(),
-    message: discrepancies.length === 0
-      ? 'Verification passed — CRS and PMS data match.'
-      : hasCritical
-        ? `Verification FAILED — ${discrepancies.length} discrepancy(ies) found, including critical issues.`
-        : `Verification completed with ${discrepancies.length} warning(s).`,
+    message:
+      discrepancies.length === 0
+        ? 'Verification passed — CRS and PMS data match.'
+        : hasCritical
+          ? `Verification FAILED — ${discrepancies.length} discrepancy(ies) found, including critical issues.`
+          : `Verification completed with ${discrepancies.length} warning(s).`,
   };
 }

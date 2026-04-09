@@ -277,4 +277,3 @@ export function resolve(
     match_confidence: 0,
   };
 }
-

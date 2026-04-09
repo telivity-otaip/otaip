@@ -96,10 +96,7 @@ export class NavitaireAdapter extends BaseAdapter implements ConnectAdapter {
   // priceItinerary — 2-step stateful: sell + price
   // ============================================================
 
-  async priceItinerary(
-    offerId: string,
-    _passengers: PassengerCount,
-  ): Promise<PricedItinerary> {
+  async priceItinerary(offerId: string, _passengers: PassengerCount): Promise<PricedItinerary> {
     return this.withRetry('priceItinerary', async () => {
       const { journeyKey, fareAvailabilityKey } = parseOfferId(offerId);
       const currency = this.config.defaultCurrencyCode;
@@ -183,9 +180,8 @@ export class NavitaireAdapter extends BaseAdapter implements ConnectAdapter {
           'createBooking:getState',
         );
 
-        const totalAmount = bookingState?.breakdown?.balanceDue
-          ?? bookingState?.breakdown?.totalAmount
-          ?? 0;
+        const totalAmount =
+          bookingState?.breakdown?.balanceDue ?? bookingState?.breakdown?.totalAmount ?? 0;
 
         const paymentBody = mapPaymentRequest(totalAmount, currency);
         await this.navitaireRequest<unknown>(
@@ -302,12 +298,7 @@ export class NavitaireAdapter extends BaseAdapter implements ConnectAdapter {
           .map((t) => t.ticketNumber)
           .filter((n): n is string => !!n);
 
-        return mapTicketingResponse(
-          retrieveResponse.data,
-          bookingId,
-          ticketNumbers,
-          currency,
-        );
+        return mapTicketingResponse(retrieveResponse.data, bookingId, ticketNumbers, currency);
       });
     });
   }
@@ -316,9 +307,7 @@ export class NavitaireAdapter extends BaseAdapter implements ConnectAdapter {
   // cancelBooking — Multi-step: retrieve + cancel journeys + commit
   // ============================================================
 
-  async cancelBooking(
-    bookingId: string,
-  ): Promise<{ success: boolean; message: string }> {
+  async cancelBooking(bookingId: string): Promise<{ success: boolean; message: string }> {
     return this.withRetry('cancelBooking', async () => {
       return this.session.withStatefulFlow(async (token) => {
         // Step 1: Retrieve booking into state
@@ -416,12 +405,7 @@ export class NavitaireAdapter extends BaseAdapter implements ConnectAdapter {
     }
 
     if (response.status === 429) {
-      throw new ConnectError(
-        `${operation}: Rate limited (429)`,
-        this.supplierId,
-        operation,
-        true,
-      );
+      throw new ConnectError(`${operation}: Rate limited (429)`, this.supplierId, operation, true);
     }
 
     if (!response.ok) {
@@ -437,12 +421,7 @@ export class NavitaireAdapter extends BaseAdapter implements ConnectAdapter {
         // Could not parse error body — use default message
       }
 
-      throw new ConnectError(
-        errorMessage,
-        this.supplierId,
-        operation,
-        response.status >= 500,
-      );
+      throw new ConnectError(errorMessage, this.supplierId, operation, response.status >= 500);
     }
 
     // Some endpoints return empty body (204 No Content)

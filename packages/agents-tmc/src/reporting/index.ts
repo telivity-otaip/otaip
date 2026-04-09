@@ -5,19 +5,26 @@
  */
 
 import Decimal from 'decimal.js';
-import type {
-  Agent, AgentInput, AgentOutput, AgentHealthStatus,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type {
-  ReportingInput, ReportingOutput,
-  Transaction, ReportRow, ReportSummary,
+  ReportingInput,
+  ReportingOutput,
+  Transaction,
+  ReportRow,
+  ReportSummary,
 } from './types.js';
 
 const VALID_REPORTS = new Set([
-  'booking_volume', 'revenue_summary', 'top_routes', 'agent_productivity',
-  'policy_compliance', 'spend_by_traveler', 'spend_by_department',
-  'spend_by_supplier', 'unused_tickets',
+  'booking_volume',
+  'revenue_summary',
+  'top_routes',
+  'agent_productivity',
+  'policy_compliance',
+  'spend_by_traveler',
+  'spend_by_department',
+  'spend_by_supplier',
+  'unused_tickets',
 ]);
 
 function filterTransactions(txns: Transaction[], input: ReportingInput): Transaction[] {
@@ -37,15 +44,29 @@ function sumAmount(txns: Transaction[]): string {
   return txns.reduce((sum, t) => sum.plus(new Decimal(t.total_amount)), new Decimal(0)).toFixed(2);
 }
 
-function generateReport(input: ReportingInput, filtered: Transaction[]): { summary: ReportSummary; rows: ReportRow[] } {
+function generateReport(
+  input: ReportingInput,
+  filtered: Transaction[],
+): { summary: ReportSummary; rows: ReportRow[] } {
   switch (input.report_type) {
     case 'booking_volume': {
       const sales = filtered.filter((t) => t.transaction_type === 'SALE');
       const refunds = filtered.filter((t) => t.transaction_type === 'REFUND');
       const exchanges = filtered.filter((t) => t.transaction_type === 'EXCHANGE');
       return {
-        summary: { total_bookings: sales.length, refunds: refunds.length, exchanges: exchanges.length, net_bookings: sales.length - refunds.length },
-        rows: sales.map((t) => ({ ticket_number: t.ticket_number, passenger: t.passenger_name, airline: t.airline, route: `${t.origin}-${t.destination}`, date: t.issue_date })),
+        summary: {
+          total_bookings: sales.length,
+          refunds: refunds.length,
+          exchanges: exchanges.length,
+          net_bookings: sales.length - refunds.length,
+        },
+        rows: sales.map((t) => ({
+          ticket_number: t.ticket_number,
+          passenger: t.passenger_name,
+          airline: t.airline,
+          route: `${t.origin}-${t.destination}`,
+          date: t.issue_date,
+        })),
       };
     }
 
@@ -56,7 +77,13 @@ function generateReport(input: ReportingInput, filtered: Transaction[]): { summa
       const totalRefunds = sumAmount(refunds);
       const net = new Decimal(totalSales).minus(new Decimal(totalRefunds)).toFixed(2);
       return {
-        summary: { total_sales: totalSales, total_refunds: totalRefunds, net_revenue: net, transaction_count: filtered.length, currency: input.filters?.currency ?? 'USD' },
+        summary: {
+          total_sales: totalSales,
+          total_refunds: totalRefunds,
+          net_revenue: net,
+          transaction_count: filtered.length,
+          currency: input.filters?.currency ?? 'USD',
+        },
         rows: [],
       };
     }
@@ -73,7 +100,11 @@ function generateReport(input: ReportingInput, filtered: Transaction[]): { summa
       }
       const rows: ReportRow[] = [...routeMap.entries()]
         .sort((a, b) => b[1].count - a[1].count)
-        .map(([route, data]) => ({ route, booking_count: data.count, total_spend: data.total.toFixed(2) }));
+        .map(([route, data]) => ({
+          route,
+          booking_count: data.count,
+          total_spend: data.total.toFixed(2),
+        }));
       return { summary: { total_routes: routeMap.size }, rows };
     }
 
@@ -93,8 +124,19 @@ function generateReport(input: ReportingInput, filtered: Transaction[]): { summa
       const outPolicy = filtered.filter((t) => !t.in_policy).length;
       const rate = filtered.length > 0 ? Math.round((inPolicy / filtered.length) * 100) : 0;
       return {
-        summary: { in_policy: inPolicy, out_of_policy: outPolicy, compliance_rate_percent: rate, total: filtered.length },
-        rows: filtered.filter((t) => !t.in_policy).map((t) => ({ ticket_number: t.ticket_number, passenger: t.passenger_name, amount: t.total_amount })),
+        summary: {
+          in_policy: inPolicy,
+          out_of_policy: outPolicy,
+          compliance_rate_percent: rate,
+          total: filtered.length,
+        },
+        rows: filtered
+          .filter((t) => !t.in_policy)
+          .map((t) => ({
+            ticket_number: t.ticket_number,
+            passenger: t.passenger_name,
+            amount: t.total_amount,
+          })),
       };
     }
 
@@ -103,22 +145,40 @@ function generateReport(input: ReportingInput, filtered: Transaction[]): { summa
       for (const t of filtered) {
         if (t.transaction_type !== 'SALE') continue;
         const key = t.traveler_id ?? t.passenger_name;
-        const existing = travMap.get(key) ?? { name: t.passenger_name, total: new Decimal(0), count: 0 };
+        const existing = travMap.get(key) ?? {
+          name: t.passenger_name,
+          total: new Decimal(0),
+          count: 0,
+        };
         existing.total = existing.total.plus(new Decimal(t.total_amount));
         existing.count++;
         travMap.set(key, existing);
       }
       const rows: ReportRow[] = [...travMap.entries()]
         .sort((a, b) => b[1].total.comparedTo(a[1].total))
-        .map(([id, data]) => ({ traveler: id, name: data.name, total_spend: data.total.toFixed(2), bookings: data.count }));
-      return { summary: { total_travelers: travMap.size, total_spend: sumAmount(filtered.filter((t) => t.transaction_type === 'SALE')) }, rows };
+        .map(([id, data]) => ({
+          traveler: id,
+          name: data.name,
+          total_spend: data.total.toFixed(2),
+          bookings: data.count,
+        }));
+      return {
+        summary: {
+          total_travelers: travMap.size,
+          total_spend: sumAmount(filtered.filter((t) => t.transaction_type === 'SALE')),
+        },
+        rows,
+      };
     }
 
     case 'spend_by_department': {
       const deptMap = new Map<string, Decimal>();
       for (const t of filtered) {
         if (t.transaction_type !== 'SALE' || !t.department) continue;
-        deptMap.set(t.department, (deptMap.get(t.department) ?? new Decimal(0)).plus(new Decimal(t.total_amount)));
+        deptMap.set(
+          t.department,
+          (deptMap.get(t.department) ?? new Decimal(0)).plus(new Decimal(t.total_amount)),
+        );
       }
       const rows: ReportRow[] = [...deptMap.entries()]
         .sort((a, b) => b[1].comparedTo(a[1]))
@@ -130,7 +190,10 @@ function generateReport(input: ReportingInput, filtered: Transaction[]): { summa
       const airlineMap = new Map<string, Decimal>();
       for (const t of filtered) {
         if (t.transaction_type !== 'SALE') continue;
-        airlineMap.set(t.airline, (airlineMap.get(t.airline) ?? new Decimal(0)).plus(new Decimal(t.total_amount)));
+        airlineMap.set(
+          t.airline,
+          (airlineMap.get(t.airline) ?? new Decimal(0)).plus(new Decimal(t.total_amount)),
+        );
       }
       const rows: ReportRow[] = [...airlineMap.entries()]
         .sort((a, b) => b[1].comparedTo(a[1]))
@@ -142,26 +205,29 @@ function generateReport(input: ReportingInput, filtered: Transaction[]): { summa
       const unused = filtered.filter((t) => t.transaction_type === 'SALE' && !t.ticket_used);
       return {
         summary: { unused_count: unused.length, unused_value: sumAmount(unused) },
-        rows: unused.map((t) => ({ ticket_number: t.ticket_number, passenger: t.passenger_name, amount: t.total_amount, departure: t.departure_date })),
+        rows: unused.map((t) => ({
+          ticket_number: t.ticket_number,
+          passenger: t.passenger_name,
+          amount: t.total_amount,
+          departure: t.departure_date,
+        })),
       };
     }
   }
 }
 
-export class ReportingAgent
-  implements Agent<ReportingInput, ReportingOutput>
-{
+export class ReportingAgent implements Agent<ReportingInput, ReportingOutput> {
   readonly id = '8.4';
   readonly name = 'Reporting & Analytics';
   readonly version = '0.1.0';
 
   private initialized = false;
 
-  async initialize(): Promise<void> { this.initialized = true; }
+  async initialize(): Promise<void> {
+    this.initialized = true;
+  }
 
-  async execute(
-    input: AgentInput<ReportingInput>,
-  ): Promise<AgentOutput<ReportingOutput>> {
+  async execute(input: AgentInput<ReportingInput>): Promise<AgentOutput<ReportingOutput>> {
     if (!this.initialized) throw new AgentNotInitializedError(this.id);
 
     const d = input.data;
@@ -184,7 +250,11 @@ export class ReportingAgent
         rows,
       },
       confidence: 1.0,
-      metadata: { agent_id: this.id, agent_version: this.version, records_processed: filtered.length },
+      metadata: {
+        agent_id: this.id,
+        agent_version: this.version,
+        records_processed: filtered.length,
+      },
     };
   }
 
@@ -193,10 +263,17 @@ export class ReportingAgent
     return { status: 'healthy' };
   }
 
-  destroy(): void { this.initialized = false; }
+  destroy(): void {
+    this.initialized = false;
+  }
 }
 
 export type {
-  ReportingInput, ReportingOutput,
-  Transaction, ReportType, ReportRow, ReportSummary, ReportFilters,
+  ReportingInput,
+  ReportingOutput,
+  Transaction,
+  ReportType,
+  ReportRow,
+  ReportSummary,
+  ReportFilters,
 } from './types.js';

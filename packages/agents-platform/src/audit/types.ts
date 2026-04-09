@@ -5,16 +5,25 @@
  */
 
 export type AuditOperation =
-  | 'log_event' | 'query_audit_log' | 'flag_compliance_issue'
-  | 'get_compliance_report' | 'redact_pii';
+  | 'log_event'
+  | 'query_audit_log'
+  | 'flag_compliance_issue'
+  | 'get_compliance_report'
+  | 'redact_pii';
 
 export type EventType =
-  | 'agent_decision' | 'data_access' | 'booking_created'
-  | 'ticket_issued' | 'refund_processed' | 'data_exported';
+  | 'agent_decision'
+  | 'data_access'
+  | 'booking_created'
+  | 'ticket_issued'
+  | 'refund_processed'
+  | 'data_exported';
 
 export type ComplianceIssueType =
-  | 'gdpr_data_retention' | 'pci_data_exposure'
-  | 'iata_audit_gap' | 'unauthorized_access';
+  | 'gdpr_data_retention'
+  | 'pci_data_exposure'
+  | 'iata_audit_gap'
+  | 'unauthorized_access';
 
 export type ComplianceSeverity = 'low' | 'medium' | 'high' | 'critical';
 

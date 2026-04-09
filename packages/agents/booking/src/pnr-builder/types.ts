@@ -120,7 +120,16 @@ export interface PnrCommand {
   /** Human-readable description */
   description: string;
   /** Element type */
-  element_type: 'NAME' | 'SEGMENT' | 'CONTACT' | 'TICKETING' | 'RECEIVED_FROM' | 'SSR' | 'OSI' | 'GROUP' | 'END_TRANSACT';
+  element_type:
+    | 'NAME'
+    | 'SEGMENT'
+    | 'CONTACT'
+    | 'TICKETING'
+    | 'RECEIVED_FROM'
+    | 'SSR'
+    | 'OSI'
+    | 'GROUP'
+    | 'END_TRANSACT';
 }
 
 export interface PnrBuilderOutput {

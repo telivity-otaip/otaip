@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { HotelModificationAgent } from '../index.js';
 import { classifyChange } from '../modification-classifier.js';
-import { calculateCancellationPenalty, calculateNoShowPenalty } from '../cancellation-calculator.js';
+import {
+  calculateCancellationPenalty,
+  calculateNoShowPenalty,
+} from '../cancellation-calculator.js';
 import type { CancellationPolicy } from '../../types/hotel-common.js';
 
 // ---------------------------------------------------------------------------
@@ -38,7 +41,9 @@ describe('Agent 20.6 — Hotel Modification & Cancellation', () => {
     });
 
     it('classifies accessibility needs as free modification', () => {
-      expect(classifyChange({ accessibilityNeeds: 'Wheelchair accessible' })).toBe('free_modification');
+      expect(classifyChange({ accessibilityNeeds: 'Wheelchair accessible' })).toBe(
+        'free_modification',
+      );
     });
 
     it('classifies guest count change as free modification', () => {
@@ -46,15 +51,18 @@ describe('Agent 20.6 — Hotel Modification & Cancellation', () => {
     });
 
     it('classifies date change as cancel/rebook required', () => {
-      expect(classifyChange(undefined, { newCheckIn: '2025-07-01', newCheckOut: '2025-07-03' }))
-        .toBe('cancel_rebook_required');
+      expect(
+        classifyChange(undefined, { newCheckIn: '2025-07-01', newCheckOut: '2025-07-03' }),
+      ).toBe('cancel_rebook_required');
     });
 
     it('date change overrides free modifications', () => {
-      expect(classifyChange(
-        { guestFirstName: 'Jane' },
-        { newCheckIn: '2025-07-01', newCheckOut: '2025-07-03' },
-      )).toBe('cancel_rebook_required');
+      expect(
+        classifyChange(
+          { guestFirstName: 'Jane' },
+          { newCheckIn: '2025-07-01', newCheckOut: '2025-07-03' },
+        ),
+      ).toBe('cancel_rebook_required');
     });
   });
 
@@ -208,9 +216,9 @@ describe('Agent 20.6 — Hotel Modification & Cancellation', () => {
 
   describe('Input validation', () => {
     it('rejects missing booking ID', async () => {
-      await expect(
-        agent.execute({ data: { operation: 'modify', bookingId: '' } }),
-      ).rejects.toThrow('bookingId');
+      await expect(agent.execute({ data: { operation: 'modify', bookingId: '' } })).rejects.toThrow(
+        'bookingId',
+      );
     });
 
     it('rejects invalid operation', async () => {

@@ -70,12 +70,7 @@ function jaroSimilarity(s1: string, s2: string): number {
     k++;
   }
 
-  return (
-    (matches / s1.length +
-      matches / s2.length +
-      (matches - transpositions / 2) / matches) /
-    3
-  );
+  return (matches / s1.length + matches / s2.length + (matches - transpositions / 2) / matches) / 3;
 }
 
 /**
@@ -126,8 +121,8 @@ function levenshteinDistance(s1: string, s2: string): number {
     for (let j = 1; j <= s2.length; j++) {
       const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
       currRow[j] = Math.min(
-        prevRow[j]! + 1,        // deletion
-        currRow[j - 1]! + 1,    // insertion
+        prevRow[j]! + 1, // deletion
+        currRow[j - 1]! + 1, // insertion
         prevRow[j - 1]! + cost, // substitution
       );
     }
@@ -160,10 +155,7 @@ const EARTH_RADIUS_METERS = 6_371_000;
  * Haversine distance between two coordinate pairs.
  * Returns distance in meters.
  */
-export function haversineDistance(
-  lat1: number, lon1: number,
-  lat2: number, lon2: number,
-): number {
+export function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const toRad = (deg: number): number => (deg * Math.PI) / 180;
 
   const dLat = toRad(lat2 - lat1);
@@ -171,8 +163,7 @@ export function haversineDistance(
 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -185,10 +176,7 @@ export function haversineDistance(
  * - Linear decay to 0 at 500m
  * - Threshold for potential match: 250m
  */
-export function haversineScore(
-  lat1: number, lon1: number,
-  lat2: number, lon2: number,
-): number {
+export function haversineScore(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const distance = haversineDistance(lat1, lon1, lat2, lon2);
 
   if (distance <= 50) return 1.0;

@@ -5,20 +5,48 @@ export type PolicySeverity = 'SOFT' | 'HARD';
 
 export interface CorporatePolicy {
   corporateId: string;
-  cabinRules: { domestic: CabinRank; international: CabinRank; longHaulThresholdMinutes: number; longHaul: CabinRank };
+  cabinRules: {
+    domestic: CabinRank;
+    international: CabinRank;
+    longHaulThresholdMinutes: number;
+    longHaul: CabinRank;
+  };
   fareRules: { maxFareAmount?: string; preferredCarriers?: string[]; blockedCarriers?: string[] };
   bookingRules: { minAdvanceDays?: number; minAdvanceDaysHard?: number };
   bypassCodes?: string[];
 }
 
-export interface PolicyViolation { rule: PolicyRule; severity: PolicySeverity; detail: string; policyValue: string; actualValue: string; }
+export interface PolicyViolation {
+  rule: PolicyRule;
+  severity: PolicySeverity;
+  detail: string;
+  policyValue: string;
+  actualValue: string;
+}
 
-export interface PolicySegment { origin: string; destination: string; durationMinutes: number; }
+export interface PolicySegment {
+  origin: string;
+  destination: string;
+  durationMinutes: number;
+}
 
 export interface PolicyValidationInput {
-  offer: { offerId: string; cabin: CabinRank; fareAmount: string; currency: string; carrier: string; fareBasis: string; advanceBookingDays: number; segments: PolicySegment[] };
+  offer: {
+    offerId: string;
+    cabin: CabinRank;
+    fareAmount: string;
+    currency: string;
+    carrier: string;
+    fareBasis: string;
+    advanceBookingDays: number;
+    segments: PolicySegment[];
+  };
   policy: CorporatePolicy;
   bypassCode?: string;
 }
 
-export interface PolicyValidationOutput { result: PolicyResult; violations: PolicyViolation[]; bypassApplied: boolean; }
+export interface PolicyValidationOutput {
+  result: PolicyResult;
+  violations: PolicyViolation[];
+  bypassApplied: boolean;
+}

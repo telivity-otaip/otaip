@@ -24,9 +24,10 @@ const DEFAULT_TIME_CHANGE_THRESHOLD = 60; // minutes
 // Trigger assessment
 // ---------------------------------------------------------------------------
 
-function assessTrigger(
-  input: InvoluntaryRebookInput,
-): { isInvoluntary: boolean; trigger: InvoluntaryTrigger } {
+function assessTrigger(input: InvoluntaryRebookInput): {
+  isInvoluntary: boolean;
+  trigger: InvoluntaryTrigger;
+} {
   const sc = input.schedule_change;
   const thresholds = input.thresholds ?? {};
   const timeThreshold = thresholds.time_change_minutes ?? DEFAULT_TIME_CHANGE_THRESHOLD;
@@ -52,7 +53,7 @@ function assessTrigger(
 
     case 'EQUIPMENT_DOWNGRADE': {
       // Flag but not auto-involuntary
-      const isDowngrade = (sc.original_is_widebody === true) && (sc.new_is_widebody === false);
+      const isDowngrade = sc.original_is_widebody === true && sc.new_is_widebody === false;
       return { isInvoluntary: false, trigger: 'EQUIPMENT_DOWNGRADE' };
       void isDowngrade;
     }
@@ -85,7 +86,9 @@ function buildProtectionOptions(input: InvoluntaryRebookInput): ProtectionOption
   }
 
   // Priority 2: Alliance partners
-  const alliance = input.available_flights.filter((f) => f.is_alliance_partner && !f.is_same_carrier);
+  const alliance = input.available_flights.filter(
+    (f) => f.is_alliance_partner && !f.is_same_carrier,
+  );
   for (const f of alliance) {
     options.push({
       path: 'ALLIANCE_PARTNER',
@@ -99,7 +102,9 @@ function buildProtectionOptions(input: InvoluntaryRebookInput): ProtectionOption
   }
 
   // Priority 3: Interline
-  const interline = input.available_flights.filter((f) => f.is_interline && !f.is_same_carrier && !f.is_alliance_partner);
+  const interline = input.available_flights.filter(
+    (f) => f.is_interline && !f.is_same_carrier && !f.is_alliance_partner,
+  );
   for (const f of interline) {
     options.push({
       path: 'INTERLINE',
@@ -165,9 +170,8 @@ export function processInvoluntaryRebook(input: InvoluntaryRebookInput): Involun
   const isNoShow = input.is_passenger_no_show === true;
 
   const protectionOptions = isInvoluntary ? buildProtectionOptions(input) : [];
-  const protectionPath: ProtectionPath = protectionOptions.length > 0
-    ? protectionOptions[0]!.path
-    : 'NONE_AVAILABLE';
+  const protectionPath: ProtectionPath =
+    protectionOptions.length > 0 ? protectionOptions[0]!.path : 'NONE_AVAILABLE';
 
   const regulatoryFlags = isInvoluntary ? assessRegulatory(input) : [];
 
@@ -181,7 +185,9 @@ export function processInvoluntaryRebook(input: InvoluntaryRebookInput): Involun
   } else if (isInvoluntary) {
     summaryParts.push(`Involuntary change: ${trigger.replace('_', ' ').toLowerCase()}.`);
     if (protectionOptions.length > 0) {
-      summaryParts.push(`Protection: ${protectionPath.replace('_', ' ').toLowerCase()} — ${protectionOptions[0]!.carrier}${protectionOptions[0]!.flight_number}.`);
+      summaryParts.push(
+        `Protection: ${protectionPath.replace('_', ' ').toLowerCase()} — ${protectionOptions[0]!.carrier}${protectionOptions[0]!.flight_number}.`,
+      );
     } else {
       summaryParts.push('No protection flights available — manual rebooking required.');
     }
@@ -194,7 +200,9 @@ export function processInvoluntaryRebook(input: InvoluntaryRebookInput): Involun
       summaryParts.push('Original routing credit: passenger retains original fare basis.');
     }
   } else {
-    summaryParts.push(`Schedule change does not meet involuntary threshold (trigger: ${trigger.replace('_', ' ').toLowerCase()}).`);
+    summaryParts.push(
+      `Schedule change does not meet involuntary threshold (trigger: ${trigger.replace('_', ' ').toLowerCase()}).`,
+    );
   }
 
   const result: InvoluntaryRebookResult = {

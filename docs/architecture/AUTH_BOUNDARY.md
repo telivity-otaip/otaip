@@ -1,0 +1,44 @@
+# Authentication & Authorization Boundary
+
+## Design Principle
+
+OTAIP is a library, not a SaaS platform. Authentication and authorization live in the consuming application, not in OTAIP.
+
+## What OTAIP handles
+
+- **Adapter credentials**: API keys, OAuth tokens, and session credentials for distribution adapters are injected via constructor config. OTAIP never stores or manages credentials itself.
+- **PII handling**: The Audit Agent (9.4) supports PII redaction for compliance, but this is data processing, not access control.
+
+## What OTAIP does NOT handle
+
+- User authentication (JWT, sessions, OAuth flows)
+- Role-based access control
+- API key management or rotation
+- Rate limiting per user/tenant (the core RateLimiter is per-adapter, not per-user)
+- Multi-tenant isolation
+
+## Recommended patterns for consuming applications
+
+### Single-tenant (e.g., a TMC backend)
+```
+Your API Server → auth middleware → OTAIP agents → distribution adapters
+```
+Your server handles auth. OTAIP agents are called as library functions.
+
+### Multi-tenant (e.g., a SaaS travel platform)
+```
+Your API Server → auth + tenant middleware → per-tenant adapter config → OTAIP agents
+```
+Each tenant gets their own adapter instances with their own credentials. OTAIP is stateless, so no tenant isolation concerns at the agent level.
+
+### Credential injection
+```typescript
+// Credentials come from your config/secret store, not from OTAIP
+const adapter = new DuffelAdapter({
+  apiKey: process.env.DUFFEL_API_KEY!,
+});
+```
+
+## Environment variables
+
+See `.env.example` for the list of credentials OTAIP adapters accept. These are injected by the consuming application.

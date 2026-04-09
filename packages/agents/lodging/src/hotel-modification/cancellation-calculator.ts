@@ -70,8 +70,14 @@ export function calculateCancellationPenalty(
   for (const deadline of sortedDeadlines) {
     if (hoursBeforeCheckin < deadline.hoursBeforeCheckin) {
       // We're past this deadline — penalty applies
-      const penaltyAmount = calculatePenaltyAmount(deadline.penaltyType, deadline.penaltyValue, nightlyRate);
-      const deadlineDate = new Date(checkIn.getTime() - deadline.hoursBeforeCheckin * 60 * 60 * 1000);
+      const penaltyAmount = calculatePenaltyAmount(
+        deadline.penaltyType,
+        deadline.penaltyValue,
+        nightlyRate,
+      );
+      const deadlineDate = new Date(
+        checkIn.getTime() - deadline.hoursBeforeCheckin * 60 * 60 * 1000,
+      );
 
       return {
         penaltyAmount,

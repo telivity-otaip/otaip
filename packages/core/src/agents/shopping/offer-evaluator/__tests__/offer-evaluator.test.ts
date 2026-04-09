@@ -88,14 +88,16 @@ describe('Scenario 1: Demo scenario — LHR-AMS, meeting at 11:00, 45-min buffer
         offer_id: `on_time_${i}`,
         price: { total: 150 + i * 10, currency: 'USD' },
         itinerary: {
-          segments: [{
-            carrier: 'LH',
-            flight_number: String(i).padStart(4, '0'),
-            origin: 'LHR',
-            destination: 'AMS',
-            departure_time: '2026-04-14T07:00:00',
-            arrival_time: `2026-04-14T09:${String(i + 10).padStart(2, '0')}:00`,
-          }],
+          segments: [
+            {
+              carrier: 'LH',
+              flight_number: String(i).padStart(4, '0'),
+              origin: 'LHR',
+              destination: 'AMS',
+              departure_time: '2026-04-14T07:00:00',
+              arrival_time: `2026-04-14T09:${String(i + 10).padStart(2, '0')}:00`,
+            },
+          ],
           total_duration_minutes: 90 + i * 2,
           connection_count: 0,
         },
@@ -107,14 +109,16 @@ describe('Scenario 1: Demo scenario — LHR-AMS, meeting at 11:00, 45-min buffer
         offer_id: `late_${i}`,
         price: { total: 100 + i * 5, currency: 'USD' },
         itinerary: {
-          segments: [{
-            carrier: 'BA',
-            flight_number: String(1000 + i),
-            origin: 'LHR',
-            destination: 'AMS',
-            departure_time: '2026-04-14T10:00:00',
-            arrival_time: `2026-04-14T12:${String(i % 60).padStart(2, '0')}:00`,
-          }],
+          segments: [
+            {
+              carrier: 'BA',
+              flight_number: String(1000 + i),
+              origin: 'LHR',
+              destination: 'AMS',
+              departure_time: '2026-04-14T10:00:00',
+              arrival_time: `2026-04-14T12:${String(i % 60).padStart(2, '0')}:00`,
+            },
+          ],
           total_duration_minutes: 120 + i,
           connection_count: 0,
         },
@@ -160,14 +164,16 @@ describe('Scenario 2: All offers arrive too late', () => {
       makeOffer({
         offer_id: `late_${i}`,
         itinerary: {
-          segments: [{
-            carrier: 'BA',
-            flight_number: String(i),
-            origin: 'LHR',
-            destination: 'AMS',
-            departure_time: '2026-04-14T10:00:00',
-            arrival_time: '2026-04-14T14:00:00',
-          }],
+          segments: [
+            {
+              carrier: 'BA',
+              flight_number: String(i),
+              origin: 'LHR',
+              destination: 'AMS',
+              departure_time: '2026-04-14T10:00:00',
+              arrival_time: '2026-04-14T14:00:00',
+            },
+          ],
           total_duration_minutes: 240,
           connection_count: 0,
         },
@@ -200,14 +206,16 @@ describe('Scenario 3: Direct flight available, prefer_direct=true', () => {
         offer_id: 'direct_150',
         price: { total: 150, currency: 'GBP' },
         itinerary: {
-          segments: [{
-            carrier: 'KL',
-            flight_number: '1000',
-            origin: 'LHR',
-            destination: 'AMS',
-            departure_time: '2026-04-14T08:00:00',
-            arrival_time: '2026-04-14T10:00:00',
-          }],
+          segments: [
+            {
+              carrier: 'KL',
+              flight_number: '1000',
+              origin: 'LHR',
+              destination: 'AMS',
+              departure_time: '2026-04-14T08:00:00',
+              arrival_time: '2026-04-14T10:00:00',
+            },
+          ],
           total_duration_minutes: 120,
           connection_count: 0,
         },
@@ -227,7 +235,9 @@ describe('Scenario 3: Direct flight available, prefer_direct=true', () => {
     // Direct flight should win — connection_quality=1.0 vs penalized connecting
     expect(result.data.selected.offer_id).toBe('direct_150');
     expect(result.data.selected.score_breakdown.connection_quality.score).toBe(1.0);
-    expect(result.data.selected.structured_explanation.direct_availability).toContain('Direct flight selected');
+    expect(result.data.selected.structured_explanation.direct_availability).toContain(
+      'Direct flight selected',
+    );
   });
 });
 
@@ -267,14 +277,16 @@ describe('Scenario 5: Near-tie — top two offers within 0.010 composite', () =>
       offer_id: 'near1',
       price: { total: 200, currency: 'USD' },
       itinerary: {
-        segments: [{
-          carrier: 'KL',
-          flight_number: '1000',
-          origin: 'LHR',
-          destination: 'AMS',
-          departure_time: '2026-04-14T08:00:00',
-          arrival_time: '2026-04-14T09:30:00',
-        }],
+        segments: [
+          {
+            carrier: 'KL',
+            flight_number: '1000',
+            origin: 'LHR',
+            destination: 'AMS',
+            departure_time: '2026-04-14T08:00:00',
+            arrival_time: '2026-04-14T09:30:00',
+          },
+        ],
         total_duration_minutes: 90,
         connection_count: 0,
       },
@@ -283,14 +295,16 @@ describe('Scenario 5: Near-tie — top two offers within 0.010 composite', () =>
       offer_id: 'near2',
       price: { total: 201, currency: 'USD' },
       itinerary: {
-        segments: [{
-          carrier: 'BA',
-          flight_number: '2000',
-          origin: 'LHR',
-          destination: 'AMS',
-          departure_time: '2026-04-14T08:05:00',
-          arrival_time: '2026-04-14T09:35:00',
-        }],
+        segments: [
+          {
+            carrier: 'BA',
+            flight_number: '2000',
+            origin: 'LHR',
+            destination: 'AMS',
+            departure_time: '2026-04-14T08:05:00',
+            arrival_time: '2026-04-14T09:35:00',
+          },
+        ],
         total_duration_minutes: 90,
         connection_count: 0,
       },
@@ -357,14 +371,16 @@ describe('Scenario 8: Single eligible offer after hard filtering', () => {
     const eligible = makeOffer({
       offer_id: 'survivor',
       itinerary: {
-        segments: [{
-          carrier: 'KL',
-          flight_number: '1000',
-          origin: 'LHR',
-          destination: 'AMS',
-          departure_time: '2026-04-14T07:00:00',
-          arrival_time: '2026-04-14T09:00:00',
-        }],
+        segments: [
+          {
+            carrier: 'KL',
+            flight_number: '1000',
+            origin: 'LHR',
+            destination: 'AMS',
+            departure_time: '2026-04-14T07:00:00',
+            arrival_time: '2026-04-14T09:00:00',
+          },
+        ],
         total_duration_minutes: 120,
         connection_count: 0,
       },
@@ -374,14 +390,16 @@ describe('Scenario 8: Single eligible offer after hard filtering', () => {
       makeOffer({
         offer_id: `late_${i}`,
         itinerary: {
-          segments: [{
-            carrier: 'BA',
-            flight_number: String(i),
-            origin: 'LHR',
-            destination: 'AMS',
-            departure_time: '2026-04-14T12:00:00',
-            arrival_time: '2026-04-14T14:00:00',
-          }],
+          segments: [
+            {
+              carrier: 'BA',
+              flight_number: String(i),
+              origin: 'LHR',
+              destination: 'AMS',
+              departure_time: '2026-04-14T12:00:00',
+              arrival_time: '2026-04-14T14:00:00',
+            },
+          ],
           total_duration_minutes: 120,
           connection_count: 0,
         },
@@ -414,14 +432,16 @@ describe('Scenario 9: Upstream chain_confidence low', () => {
         offer_id: 'b',
         price: { total: 300, currency: 'USD' },
         itinerary: {
-          segments: [{
-            carrier: 'BA',
-            flight_number: '2000',
-            origin: 'LHR',
-            destination: 'AMS',
-            departure_time: '2026-04-14T09:00:00',
-            arrival_time: '2026-04-14T11:00:00',
-          }],
+          segments: [
+            {
+              carrier: 'BA',
+              flight_number: '2000',
+              origin: 'LHR',
+              destination: 'AMS',
+              departure_time: '2026-04-14T09:00:00',
+              arrival_time: '2026-04-14T11:00:00',
+            },
+          ],
           total_duration_minutes: 120,
           connection_count: 0,
         },
@@ -457,14 +477,16 @@ describe('Scenario 10: Adversarial — offer with historical arrival time', () =
     const historicalOffer = makeOffer({
       offer_id: 'past_offer',
       itinerary: {
-        segments: [{
-          carrier: 'AA',
-          flight_number: '999',
-          origin: 'LHR',
-          destination: 'AMS',
-          departure_time: '2020-01-01T08:00:00',
-          arrival_time: '2020-01-01T10:00:00',
-        }],
+        segments: [
+          {
+            carrier: 'AA',
+            flight_number: '999',
+            origin: 'LHR',
+            destination: 'AMS',
+            departure_time: '2020-01-01T08:00:00',
+            arrival_time: '2020-01-01T10:00:00',
+          },
+        ],
         total_duration_minutes: 120,
         connection_count: 0,
       },
@@ -474,14 +496,16 @@ describe('Scenario 10: Adversarial — offer with historical arrival time', () =
     const validOffer = makeOffer({
       offer_id: 'valid_now',
       itinerary: {
-        segments: [{
-          carrier: 'KL',
-          flight_number: '1000',
-          origin: 'LHR',
-          destination: 'AMS',
-          departure_time: '2026-04-14T08:00:00',
-          arrival_time: '2026-04-14T09:30:00',
-        }],
+        segments: [
+          {
+            carrier: 'KL',
+            flight_number: '1000',
+            origin: 'LHR',
+            destination: 'AMS',
+            departure_time: '2026-04-14T08:00:00',
+            arrival_time: '2026-04-14T09:30:00',
+          },
+        ],
         total_duration_minutes: 90,
         connection_count: 0,
       },
@@ -569,7 +593,9 @@ describe('Edge case: prefer_direct=true but no direct flights', () => {
     // Both connecting — prefer_direct penalty applied but offers not eliminated
     expect(result.data.selected.connection_count).toBeGreaterThan(0);
     expect(result.data.selected.score_breakdown.connection_quality.score).toBeLessThan(1.0);
-    expect(result.data.selected.structured_explanation.direct_availability).toContain('No direct flights');
+    expect(result.data.selected.structured_explanation.direct_availability).toContain(
+      'No direct flights',
+    );
   });
 });
 
@@ -583,14 +609,16 @@ describe('Edge case: No latest_arrival — weight redistribution', () => {
         offer_id: 'cheap',
         price: { total: 100, currency: 'USD' },
         itinerary: {
-          segments: [{
-            carrier: 'KL',
-            flight_number: '1',
-            origin: 'LHR',
-            destination: 'AMS',
-            departure_time: '2026-04-14T10:00:00',
-            arrival_time: '2026-04-14T12:00:00',
-          }],
+          segments: [
+            {
+              carrier: 'KL',
+              flight_number: '1',
+              origin: 'LHR',
+              destination: 'AMS',
+              departure_time: '2026-04-14T10:00:00',
+              arrival_time: '2026-04-14T12:00:00',
+            },
+          ],
           total_duration_minutes: 120,
           connection_count: 0,
         },
@@ -599,14 +627,16 @@ describe('Edge case: No latest_arrival — weight redistribution', () => {
         offer_id: 'expensive',
         price: { total: 300, currency: 'USD' },
         itinerary: {
-          segments: [{
-            carrier: 'BA',
-            flight_number: '2',
-            origin: 'LHR',
-            destination: 'AMS',
-            departure_time: '2026-04-14T10:00:00',
-            arrival_time: '2026-04-14T11:30:00',
-          }],
+          segments: [
+            {
+              carrier: 'BA',
+              flight_number: '2',
+              origin: 'LHR',
+              destination: 'AMS',
+              departure_time: '2026-04-14T10:00:00',
+              arrival_time: '2026-04-14T11:30:00',
+            },
+          ],
           total_duration_minutes: 90,
           connection_count: 0,
         },
@@ -682,14 +712,16 @@ describe('Price scoring: 15% band softening', () => {
         offer_id: 'slightly_more',
         price: { total: 110, currency: 'USD' },
         itinerary: {
-          segments: [{
-            carrier: 'BA',
-            flight_number: '2',
-            origin: 'LHR',
-            destination: 'AMS',
-            departure_time: '2026-04-14T08:00:00',
-            arrival_time: '2026-04-14T09:30:00',
-          }],
+          segments: [
+            {
+              carrier: 'BA',
+              flight_number: '2',
+              origin: 'LHR',
+              destination: 'AMS',
+              departure_time: '2026-04-14T08:00:00',
+              arrival_time: '2026-04-14T09:30:00',
+            },
+          ],
           total_duration_minutes: 90,
           connection_count: 0,
         },

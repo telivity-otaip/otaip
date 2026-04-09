@@ -8,8 +8,8 @@ If you lack domain input to proceed: refactor, clean, document existing code, th
 
 ## Tech Stack
 - TypeScript (strict mode — all strict flags ON)
-- Node.js >=20
-- pnpm 9.15+ (workspace monorepo)
+- Node.js >=24
+- pnpm 10+ (workspace monorepo)
 - Vitest for testing
 - tsup for building
 - ESLint + Prettier for linting/formatting

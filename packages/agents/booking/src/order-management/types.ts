@@ -4,12 +4,7 @@
  * Agent 3.6: Travel order lifecycle management.
  */
 
-export type OrderStatus =
-  | 'PENDING'
-  | 'CONFIRMED'
-  | 'MODIFIED'
-  | 'CANCELLED'
-  | 'FULFILLED';
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'MODIFIED' | 'CANCELLED' | 'FULFILLED';
 
 export type OrderOperationType =
   | 'createOrder'

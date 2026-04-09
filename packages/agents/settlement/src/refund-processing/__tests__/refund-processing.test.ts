@@ -94,18 +94,24 @@ describe('Refund Processing', () => {
 
   describe('Non-refundable fares', () => {
     it('forfeits base fare for BASIC economy', async () => {
-      const result = await agent.execute({ data: makeInput({ fare_basis: 'HOWBASIC', is_refundable: false }) });
+      const result = await agent.execute({
+        data: makeInput({ fare_basis: 'HOWBASIC', is_refundable: false }),
+      });
       expect(result.data.refund.base_fare_refund).toBe('0.00');
       expect(result.data.refund.tax_refund).toBe('120.00');
     });
 
     it('forfeits base fare for NR fares', async () => {
-      const result = await agent.execute({ data: makeInput({ fare_basis: 'HOWNR', is_refundable: false }) });
+      const result = await agent.execute({
+        data: makeInput({ fare_basis: 'HOWNR', is_refundable: false }),
+      });
       expect(result.data.refund.base_fare_refund).toBe('0.00');
     });
 
     it('taxes still refundable on non-refundable fare', async () => {
-      const result = await agent.execute({ data: makeInput({ fare_basis: 'HOWBASIC', is_refundable: false }) });
+      const result = await agent.execute({
+        data: makeInput({ fare_basis: 'HOWBASIC', is_refundable: false }),
+      });
       expect(Number(result.data.refund.tax_refund)).toBeGreaterThan(0);
     });
   });
@@ -129,17 +135,19 @@ describe('Refund Processing', () => {
         { coupon_number: 1, status: 'O', refundable: true },
         { coupon_number: 2, status: 'O', refundable: true },
       ];
-      const result = await agent.execute({ data: makeInput({ refund_type: 'PARTIAL', coupons_to_refund: coupons }) });
+      const result = await agent.execute({
+        data: makeInput({ refund_type: 'PARTIAL', coupons_to_refund: coupons }),
+      });
       // 2 of 4 coupons = 50% of base fare
       expect(Number(result.data.refund.audit.original_base_fare)).toBe(450);
       expect(result.data.refund.audit.coupons_refunded).toEqual([1, 2]);
     });
 
     it('prorates taxes for partial refund', async () => {
-      const coupons: CouponRefundItem[] = [
-        { coupon_number: 3, status: 'O', refundable: true },
-      ];
-      const result = await agent.execute({ data: makeInput({ refund_type: 'PARTIAL', coupons_to_refund: coupons }) });
+      const coupons: CouponRefundItem[] = [{ coupon_number: 3, status: 'O', refundable: true }];
+      const result = await agent.execute({
+        data: makeInput({ refund_type: 'PARTIAL', coupons_to_refund: coupons }),
+      });
       // 1 of 4 coupons = 25% of taxes
       expect(result.data.refund.tax_refund).toBe('30.00');
     });
@@ -149,7 +157,9 @@ describe('Refund Processing', () => {
         { coupon_number: 1, status: 'O', refundable: true },
         { coupon_number: 2, status: 'L', refundable: false },
       ];
-      const result = await agent.execute({ data: makeInput({ refund_type: 'PARTIAL', coupons_to_refund: coupons }) });
+      const result = await agent.execute({
+        data: makeInput({ refund_type: 'PARTIAL', coupons_to_refund: coupons }),
+      });
       expect(result.data.refund.audit.coupons_refunded).toEqual([1]);
     });
   });
@@ -176,12 +186,16 @@ describe('Refund Processing', () => {
 
     it('recalls proportional commission on partial refund', async () => {
       const coupons: CouponRefundItem[] = [{ coupon_number: 1, status: 'O', refundable: true }];
-      const result = await agent.execute({ data: makeInput({
-        refund_type: 'PARTIAL', coupons_to_refund: coupons, waiver_code: 'W',
-      }) });
+      const result = await agent.execute({
+        data: makeInput({
+          refund_type: 'PARTIAL',
+          coupons_to_refund: coupons,
+          waiver_code: 'W',
+        }),
+      });
       // 1/4 = 25% of base = 112.50 refunded → commission recall = 31.50 * 112.50/450 = 7.875 → 7.88
       expect(Number(result.data.commission_recalled)).toBeGreaterThan(0);
-      expect(Number(result.data.commission_recalled)).toBeLessThan(31.50);
+      expect(Number(result.data.commission_recalled)).toBeLessThan(31.5);
     });
 
     it('no commission recall when no commission data', async () => {
@@ -241,27 +255,39 @@ describe('Refund Processing', () => {
 
   describe('Input validation', () => {
     it('rejects invalid ticket number', async () => {
-      await expect(agent.execute({ data: makeInput({ ticket_number: 'BAD' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ ticket_number: 'BAD' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid carrier', async () => {
-      await expect(agent.execute({ data: makeInput({ issuing_carrier: 'X' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ issuing_carrier: 'X' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid passenger name', async () => {
-      await expect(agent.execute({ data: makeInput({ passenger_name: 'bad' }) })).rejects.toThrow('Invalid input');
+      await expect(agent.execute({ data: makeInput({ passenger_name: 'bad' }) })).rejects.toThrow(
+        'Invalid input',
+      );
     });
 
     it('rejects invalid refund type', async () => {
-      await expect(agent.execute({ data: makeInput({ refund_type: 'INVALID' as 'FULL' }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeInput({ refund_type: 'INVALID' as 'FULL' }) }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects partial without coupons', async () => {
-      await expect(agent.execute({ data: makeInput({ refund_type: 'PARTIAL', coupons_to_refund: [] }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeInput({ refund_type: 'PARTIAL', coupons_to_refund: [] }) }),
+      ).rejects.toThrow('Invalid input');
     });
 
     it('rejects invalid settlement system', async () => {
-      await expect(agent.execute({ data: makeInput({ settlement_system: 'INVALID' as 'BSP' }) })).rejects.toThrow('Invalid input');
+      await expect(
+        agent.execute({ data: makeInput({ settlement_system: 'INVALID' as 'BSP' }) }),
+      ).rejects.toThrow('Invalid input');
     });
   });
 

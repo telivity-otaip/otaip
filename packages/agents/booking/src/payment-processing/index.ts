@@ -8,16 +8,8 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import Decimal from 'decimal.js';
 import type {
   PaymentProcessingInput,
@@ -48,9 +40,7 @@ const VALID_STATUSES = new Set(['AUTHORISED', 'DECLINED', 'ERROR', 'SETTLED', 'R
 const RAW_CARD_RE = /^[0-9]{13,19}$/;
 const UATP_RE = /^[0-9]{15}$/;
 
-export class PaymentProcessing
-  implements Agent<PaymentProcessingInput, PaymentProcessingOutput>
-{
+export class PaymentProcessing implements Agent<PaymentProcessingInput, PaymentProcessingOutput> {
   readonly id = '3.7';
   readonly name = 'Payment Processing';
   readonly version = '0.1.0';
@@ -276,9 +266,10 @@ export class PaymentProcessing
   // ---------------------------------------------------------------------------
 
   private buildGDSString(fop: FormOfPayment): string {
-    const mmyy = (fop.expiryMonth != null && fop.expiryYear != null)
-      ? `${String(fop.expiryMonth).padStart(2, '0')}${String(fop.expiryYear).slice(-2)}`
-      : '';
+    const mmyy =
+      fop.expiryMonth != null && fop.expiryYear != null
+        ? `${String(fop.expiryMonth).padStart(2, '0')}${String(fop.expiryYear).slice(-2)}`
+        : '';
 
     switch (fop.type) {
       case 'CC_TOKEN':
@@ -453,7 +444,11 @@ export class PaymentProcessing
     switch (data.operation) {
       case 'validateFOP':
         if (!data.validateFOP) {
-          throw new AgentInputValidationError(this.id, 'validateFOP', 'validateFOP data is required.');
+          throw new AgentInputValidationError(
+            this.id,
+            'validateFOP',
+            'validateFOP data is required.',
+          );
         }
         if (!data.validateFOP.fop) {
           throw new AgentInputValidationError(this.id, 'fop', 'FormOfPayment object is required.');
@@ -461,7 +456,11 @@ export class PaymentProcessing
         break;
       case 'buildPaymentInstruction':
         if (!data.buildPaymentInstruction) {
-          throw new AgentInputValidationError(this.id, 'buildPaymentInstruction', 'buildPaymentInstruction data is required.');
+          throw new AgentInputValidationError(
+            this.id,
+            'buildPaymentInstruction',
+            'buildPaymentInstruction data is required.',
+          );
         }
         if (!data.buildPaymentInstruction.fop) {
           throw new AgentInputValidationError(this.id, 'fop', 'FormOfPayment object is required.');
@@ -475,13 +474,25 @@ export class PaymentProcessing
         break;
       case 'recordPayment':
         if (!data.recordPayment) {
-          throw new AgentInputValidationError(this.id, 'recordPayment', 'recordPayment data is required.');
+          throw new AgentInputValidationError(
+            this.id,
+            'recordPayment',
+            'recordPayment data is required.',
+          );
         }
         if (!data.recordPayment.instructionId) {
-          throw new AgentInputValidationError(this.id, 'instructionId', 'Instruction ID is required.');
+          throw new AgentInputValidationError(
+            this.id,
+            'instructionId',
+            'Instruction ID is required.',
+          );
         }
         if (!data.recordPayment.status || !VALID_STATUSES.has(data.recordPayment.status)) {
-          throw new AgentInputValidationError(this.id, 'status', `Status must be one of: ${[...VALID_STATUSES].join(', ')}`);
+          throw new AgentInputValidationError(
+            this.id,
+            'status',
+            `Status must be one of: ${[...VALID_STATUSES].join(', ')}`,
+          );
         }
         if (!data.recordPayment.amount) {
           throw new AgentInputValidationError(this.id, 'amount', 'Amount is required.');
@@ -492,15 +503,27 @@ export class PaymentProcessing
         break;
       case 'getPaymentRecord':
         if (!data.getPaymentRecord) {
-          throw new AgentInputValidationError(this.id, 'getPaymentRecord', 'getPaymentRecord data is required.');
+          throw new AgentInputValidationError(
+            this.id,
+            'getPaymentRecord',
+            'getPaymentRecord data is required.',
+          );
         }
         if (!data.getPaymentRecord.transactionId) {
-          throw new AgentInputValidationError(this.id, 'transactionId', 'Transaction ID is required.');
+          throw new AgentInputValidationError(
+            this.id,
+            'transactionId',
+            'Transaction ID is required.',
+          );
         }
         break;
       case 'buildGDSFOPString':
         if (!data.buildGDSFOPString) {
-          throw new AgentInputValidationError(this.id, 'buildGDSFOPString', 'buildGDSFOPString data is required.');
+          throw new AgentInputValidationError(
+            this.id,
+            'buildGDSFOPString',
+            'buildGDSFOPString data is required.',
+          );
         }
         if (!data.buildGDSFOPString.fop) {
           throw new AgentInputValidationError(this.id, 'fop', 'FormOfPayment object is required.');

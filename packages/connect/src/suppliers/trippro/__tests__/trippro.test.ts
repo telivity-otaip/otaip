@@ -107,8 +107,8 @@ describe('mapCabinClass', () => {
 describe('calculateTotalPrice', () => {
   it('sums all fares using decimal math', () => {
     const fares: TripProFare[] = [
-      makeFare({ BaseFare: 100.10, Taxes: 50.20, CCFee: 5, FullFare: 155.30 }),
-      makeFare({ BaseFare: 80.05, Taxes: 40.10, CCFee: 3, FullFare: 123.15 }),
+      makeFare({ BaseFare: 100.1, Taxes: 50.2, CCFee: 5, FullFare: 155.3 }),
+      makeFare({ BaseFare: 80.05, Taxes: 40.1, CCFee: 3, FullFare: 123.15 }),
     ];
     const result = calculateTotalPrice(fares);
     expect(result.amount).toBe('278.45');
@@ -116,9 +116,7 @@ describe('calculateTotalPrice', () => {
   });
 
   it('handles single fare', () => {
-    const fares: TripProFare[] = [
-      makeFare({ BaseFare: 500, Taxes: 100, CCFee: 0, FullFare: 600 }),
-    ];
+    const fares: TripProFare[] = [makeFare({ BaseFare: 500, Taxes: 100, CCFee: 0, FullFare: 600 })];
     const result = calculateTotalPrice(fares);
     expect(result.amount).toBe('600');
   });
@@ -130,9 +128,7 @@ describe('calculateTotalPrice', () => {
   });
 
   it('avoids floating point errors', () => {
-    const fares: TripProFare[] = [
-      makeFare({ BaseFare: 0.1, Taxes: 0.2, CCFee: 0, FullFare: 0.3 }),
-    ];
+    const fares: TripProFare[] = [makeFare({ BaseFare: 0.1, Taxes: 0.2, CCFee: 0, FullFare: 0.3 })];
     const result = calculateTotalPrice(fares);
     expect(result.amount).toBe('0.3');
   });
@@ -180,10 +176,7 @@ describe('mapSearchRequest', () => {
   });
 
   it('maps round-trip search correctly', () => {
-    const result = mapSearchRequest(
-      { ...baseInput, returnDate: '2026-06-22' },
-      config,
-    );
+    const result = mapSearchRequest({ ...baseInput, returnDate: '2026-06-22' }, config);
 
     expect(result.OriginDestination).toHaveLength(2);
     expect(result.OriginDestination[1].DepartureTime).toBe('22/06/2026');
@@ -192,10 +185,7 @@ describe('mapSearchRequest', () => {
   });
 
   it('maps cabin class correctly', () => {
-    const result = mapSearchRequest(
-      { ...baseInput, cabinClass: 'business' },
-      config,
-    );
+    const result = mapSearchRequest({ ...baseInput, cabinClass: 'business' }, config);
     expect(result.OriginDestination[0].CabinClass).toBe('B');
   });
 
@@ -216,10 +206,7 @@ describe('mapSearchRequest', () => {
   });
 
   it('maps preferred airlines', () => {
-    const result = mapSearchRequest(
-      { ...baseInput, preferredAirlines: ['BA', 'AA'] },
-      config,
-    );
+    const result = mapSearchRequest({ ...baseInput, preferredAirlines: ['BA', 'AA'] }, config);
     expect(result.OriginDestination[0].PreferredAirlines).toBe('BA,AA');
   });
 
@@ -229,10 +216,7 @@ describe('mapSearchRequest', () => {
   });
 
   it('uses input currency when specified', () => {
-    const result = mapSearchRequest(
-      { ...baseInput, currency: 'GBP' },
-      config,
-    );
+    const result = mapSearchRequest({ ...baseInput, currency: 'GBP' }, config);
     expect(result.CurrencyInfo.CurrencyCode).toBe('GBP');
   });
 });
@@ -471,8 +455,7 @@ describe('XML response helpers', () => {
   });
 
   it('extractXmlValues finds all occurrences', () => {
-    const xml =
-      '<root><TicketNumber>T1</TicketNumber><TicketNumber>T2</TicketNumber></root>';
+    const xml = '<root><TicketNumber>T1</TicketNumber><TicketNumber>T2</TicketNumber></root>';
     expect(extractXmlValues(xml, 'TicketNumber')).toEqual(['T1', 'T2']);
   });
 
@@ -512,11 +495,14 @@ describe('soapRequest', () => {
   });
 
   it('throws on non-OK response', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      statusText: 'Internal Server Error',
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+      }),
+    );
 
     await expect(
       soapRequest('https://api.example.com/soap', 'ReadPNR', '<Body/>', 'token'),
@@ -705,10 +691,7 @@ describe('TripProAdapter', () => {
   });
 
   it('healthCheck returns latency', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({ ok: true }),
-    );
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
 
     const adapter = new TripProAdapter(validConfig);
     const result = await adapter.healthCheck();

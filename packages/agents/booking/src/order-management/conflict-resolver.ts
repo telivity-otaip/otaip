@@ -84,7 +84,8 @@ export class ConflictResolver {
 
       return {
         action: 'KEEP_REFUND_VOID_TICKET',
-        reason: 'Refund already reported to BSP — irreversible. Ticket must be voided to prevent ADM.',
+        reason:
+          'Refund already reported to BSP — irreversible. Ticket must be voided to prevent ADM.',
         requires_manual_intervention: false,
       };
     }

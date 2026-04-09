@@ -28,10 +28,7 @@ function directAnswer(content: string): ModelCallFn {
   return async () => ({ role: 'assistant', content });
 }
 
-function toolThenAnswer(
-  toolCalls: ToolCall[],
-  finalContent: string,
-): ModelCallFn {
+function toolThenAnswer(toolCalls: ToolCall[], finalContent: string): ModelCallFn {
   let callCount = 0;
   return async () => {
     callCount++;
@@ -148,9 +145,7 @@ describe('SubAgentSpawner', () => {
       { role: 'user', content: 'Now do the task' },
     ];
 
-    const result = await spawner.spawn(
-      baseOptions({ contextMessages }),
-    );
+    const result = await spawner.spawn(baseOptions({ contextMessages }));
 
     // Should have context messages + the final assistant response
     expect(result.state.messages.length).toBeGreaterThan(contextMessages.length);
@@ -186,12 +181,12 @@ describe('SubAgentSpawner', () => {
     registry.register(makeTool('double'));
     const hooks = new HookRegistry();
     const hookCalls: string[] = [];
-    hooks.on('onLoopStart', () => { hookCalls.push('start'); });
+    hooks.on('onLoopStart', () => {
+      hookCalls.push('start');
+    });
 
     const spawner = new SubAgentSpawner(registry, hooks);
-    await spawner.spawn(
-      baseOptions({ propagateHooks: false }),
-    );
+    await spawner.spawn(baseOptions({ propagateHooks: false }));
 
     expect(hookCalls).toHaveLength(0);
   });
@@ -201,13 +196,15 @@ describe('SubAgentSpawner', () => {
     registry.register(makeTool('double'));
     const hooks = new HookRegistry();
     const hookCalls: string[] = [];
-    hooks.on('onLoopStart', () => { hookCalls.push('start'); });
-    hooks.on('onLoopEnd', () => { hookCalls.push('end'); });
+    hooks.on('onLoopStart', () => {
+      hookCalls.push('start');
+    });
+    hooks.on('onLoopEnd', () => {
+      hookCalls.push('end');
+    });
 
     const spawner = new SubAgentSpawner(registry, hooks);
-    await spawner.spawn(
-      baseOptions({ propagateHooks: true }),
-    );
+    await spawner.spawn(baseOptions({ propagateHooks: true }));
 
     expect(hookCalls).toContain('start');
     expect(hookCalls).toContain('end');
@@ -250,9 +247,7 @@ describe('SubAgentSpawner', () => {
       };
     };
 
-    const result = await spawner.spawn(
-      baseOptions({ modelCall: infiniteModel, maxIterations: 3 }),
-    );
+    const result = await spawner.spawn(baseOptions({ modelCall: infiniteModel, maxIterations: 3 }));
 
     expect(result.success).toBe(false);
     expect(result.state.phase).toBe('error');
@@ -270,9 +265,7 @@ describe('SubAgentSpawner', () => {
       throw new Error('model crashed');
     };
 
-    const result = await spawner.spawn(
-      baseOptions({ modelCall: failModel }),
-    );
+    const result = await spawner.spawn(baseOptions({ modelCall: failModel }));
 
     expect(result.success).toBe(false);
     expect(result.state.phase).toBe('error');

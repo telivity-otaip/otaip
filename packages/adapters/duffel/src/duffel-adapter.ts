@@ -39,11 +39,16 @@ export function parseDurationToMinutes(iso: string | null | undefined): number {
 
 function mapCabinClass(duffelCabin: string): FlightSegment['cabin_class'] {
   switch (duffelCabin) {
-    case 'economy': return 'economy';
-    case 'premium_economy': return 'premium_economy';
-    case 'business': return 'business';
-    case 'first': return 'first';
-    default: return 'economy';
+    case 'economy':
+      return 'economy';
+    case 'premium_economy':
+      return 'premium_economy';
+    case 'business':
+      return 'business';
+    case 'first':
+      return 'first';
+    default:
+      return 'economy';
   }
 }
 
@@ -200,7 +205,6 @@ export interface BookRequest {
   }>;
 }
 
-
 export interface BookResponse {
   booking_reference: string;
   order_id: string;
@@ -217,7 +221,9 @@ export class DuffelAdapter implements DistributionAdapter {
   constructor(apiKey?: string, baseUrl?: string) {
     const resolvedKey = apiKey ?? process.env['DUFFEL_API_KEY'] ?? '';
     if (!resolvedKey || resolvedKey.trim().length === 0) {
-      throw new Error('DuffelAdapter requires a valid API key. Pass it to the constructor or set DUFFEL_API_KEY env var.');
+      throw new Error(
+        'DuffelAdapter requires a valid API key. Pass it to the constructor or set DUFFEL_API_KEY env var.',
+      );
     }
     this.apiKey = resolvedKey;
     this.baseUrl = baseUrl ?? DUFFEL_BASE_URL;
@@ -231,7 +237,9 @@ export class DuffelAdapter implements DistributionAdapter {
     }));
 
     const passengers = request.passengers.flatMap((p) =>
-      Array.from({ length: p.count }, () => ({ type: p.type === 'ADT' ? 'adult' : p.type === 'CHD' ? 'child' : 'infant_without_seat' })),
+      Array.from({ length: p.count }, () => ({
+        type: p.type === 'ADT' ? 'adult' : p.type === 'CHD' ? 'child' : 'infant_without_seat',
+      })),
     );
 
     const body: Record<string, unknown> = {
@@ -248,7 +256,11 @@ export class DuffelAdapter implements DistributionAdapter {
       (body['data'] as Record<string, unknown>)['currency'] = request.currency;
     }
 
-    const response = await this.request('POST', '/air/offer_requests', body) as DuffelOfferRequestResponse;
+    const response = (await this.request(
+      'POST',
+      '/air/offer_requests',
+      body,
+    )) as DuffelOfferRequestResponse;
     const offers: DuffelOffer[] = response.data?.offers ?? [];
 
     return {
@@ -259,7 +271,10 @@ export class DuffelAdapter implements DistributionAdapter {
   }
 
   async price(request: PriceRequest): Promise<PriceResponse> {
-    const response = await this.request('GET', `/air/offers/${request.offer_id}`) as DuffelOfferResponse;
+    const response = (await this.request(
+      'GET',
+      `/air/offers/${request.offer_id}`,
+    )) as DuffelOfferResponse;
     const offer: DuffelOffer | undefined = response.data;
 
     if (!offer) {
@@ -288,7 +303,10 @@ export class DuffelAdapter implements DistributionAdapter {
 
   async book(request: BookRequest): Promise<BookResponse> {
     // Fetch the offer to get Duffel passenger IDs and total for payment
-    const offerResponse = await this.request('GET', `/air/offers/${request.offer_id}?return_available_services=false`) as DuffelOfferWithPassengers;
+    const offerResponse = (await this.request(
+      'GET',
+      `/air/offers/${request.offer_id}?return_available_services=false`,
+    )) as DuffelOfferWithPassengers;
     const offer = offerResponse.data;
     if (!offer) {
       throw new Error('Could not fetch offer details for booking');
@@ -316,7 +334,7 @@ export class DuffelAdapter implements DistributionAdapter {
       },
     };
 
-    const response = await this.request('POST', '/air/orders', body) as DuffelOrderResponse;
+    const response = (await this.request('POST', '/air/orders', body)) as DuffelOrderResponse;
     const order = response.data;
 
     if (!order) {
@@ -332,12 +350,16 @@ export class DuffelAdapter implements DistributionAdapter {
     };
   }
 
-  private async request(method: string, path: string, body?: Record<string, unknown>): Promise<unknown> {
+  private async request(
+    method: string,
+    path: string,
+    body?: Record<string, unknown>,
+  ): Promise<unknown> {
     const url = `${this.baseUrl}${path}`;
     const headers: Record<string, string> = {
-      'Authorization': `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.apiKey}`,
       'Duffel-Version': 'v2',
-      'Accept': 'application/json',
+      Accept: 'application/json',
     };
     if (body) {
       headers['Content-Type'] = 'application/json';
@@ -368,7 +390,9 @@ export class DuffelAdapter implements DistributionAdapter {
         throw new Error(`Duffel API rate limited (429). ${errorDetail}`.trim());
       }
 
-      throw new Error(`Duffel API error ${response.status}: ${errorDetail || response.statusText}`.trim());
+      throw new Error(
+        `Duffel API error ${response.status}: ${errorDetail || response.statusText}`.trim(),
+      );
     }
 
     return response.json();

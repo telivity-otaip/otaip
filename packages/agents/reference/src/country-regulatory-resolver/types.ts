@@ -4,15 +4,30 @@
  * Agent 0.7: APIS requirements, visa requirements, restriction levels.
  */
 
-export type RegulatoryOperation = 'getAPISRequirements' | 'getVisaRequirement' | 'getRestrictionLevel';
+export type RegulatoryOperation =
+  | 'getAPISRequirements'
+  | 'getVisaRequirement'
+  | 'getRestrictionLevel';
 
 export type APISField =
-  | 'passport_number' | 'nationality' | 'dob' | 'gender'
-  | 'expiry_date' | 'given_name' | 'surname' | 'country_of_birth'
-  | 'place_of_birth' | 'resident_address' | 'visa_number';
+  | 'passport_number'
+  | 'nationality'
+  | 'dob'
+  | 'gender'
+  | 'expiry_date'
+  | 'given_name'
+  | 'surname'
+  | 'country_of_birth'
+  | 'place_of_birth'
+  | 'resident_address'
+  | 'visa_number';
 
 export type VisaRequirementType =
-  | 'visa_free' | 'visa_on_arrival' | 'eta_required' | 'visa_required' | 'not_permitted';
+  | 'visa_free'
+  | 'visa_on_arrival'
+  | 'eta_required'
+  | 'visa_required'
+  | 'not_permitted';
 
 export type RestrictionLevel = 1 | 2 | 3 | 4;
 

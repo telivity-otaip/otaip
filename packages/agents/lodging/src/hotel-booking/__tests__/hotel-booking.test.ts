@@ -165,21 +165,21 @@ describe('Agent 20.5 — Hotel Booking', () => {
 
   describe('Input validation', () => {
     it('rejects missing operation', async () => {
-      await expect(
-        agent.execute({ data: { operation: '' as 'book' } }),
-      ).rejects.toThrow('operation');
+      await expect(agent.execute({ data: { operation: '' as 'book' } })).rejects.toThrow(
+        'operation',
+      );
     });
 
     it('rejects missing booking request for book operation', async () => {
-      await expect(
-        agent.execute({ data: { operation: 'book' } }),
-      ).rejects.toThrow('bookingRequest');
+      await expect(agent.execute({ data: { operation: 'book' } })).rejects.toThrow(
+        'bookingRequest',
+      );
     });
 
     it('rejects missing booking ID for get_booking', async () => {
-      await expect(
-        agent.execute({ data: { operation: 'get_booking' } }),
-      ).rejects.toThrow('bookingId');
+      await expect(agent.execute({ data: { operation: 'get_booking' } })).rejects.toThrow(
+        'bookingId',
+      );
     });
 
     it('rejects missing guest details', async () => {

@@ -9,10 +9,7 @@ import type { ValidationResult, ValidationIssue } from './types.js';
  * Validate data against a Zod schema, returning a typed result
  * with field-level error details on failure.
  */
-function validate<T extends z.ZodType>(
-  schema: T,
-  data: unknown,
-): ValidationResult<z.output<T>> {
+function validate<T extends z.ZodType>(schema: T, data: unknown): ValidationResult<z.output<T>> {
   const result = schema.safeParse(data);
   if (result.success) {
     return { success: true, data: result.data as z.output<T> };

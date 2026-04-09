@@ -15,11 +15,7 @@ export type NotificationType =
   | 'WAITLIST_CLEARED'
   | 'ADM_RECEIVED';
 
-export type Channel =
-  | 'EMAIL_HTML'
-  | 'EMAIL_TEXT'
-  | 'SMS'
-  | 'WHATSAPP';
+export type Channel = 'EMAIL_HTML' | 'EMAIL_TEXT' | 'SMS' | 'WHATSAPP';
 
 export interface NotificationVariables {
   /** Passenger name */

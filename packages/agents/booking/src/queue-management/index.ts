@@ -7,29 +7,23 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { QueueManagementInput, QueueManagementOutput } from './types.js';
 import { processQueue } from './queue-engine.js';
 
 const RECORD_LOCATOR_RE = /^[A-Z0-9]{6}$/;
 const VALID_GDS = new Set(['AMADEUS', 'SABRE', 'TRAVELPORT']);
 const VALID_ENTRY_TYPES = new Set([
-  'TTL_DEADLINE', 'SCHEDULE_CHANGE', 'WAITLIST_CLEAR',
-  'INVOLUNTARY_REBOOK', 'GENERAL', 'TICKET_REMINDER',
+  'TTL_DEADLINE',
+  'SCHEDULE_CHANGE',
+  'WAITLIST_CLEAR',
+  'INVOLUNTARY_REBOOK',
+  'GENERAL',
+  'TICKET_REMINDER',
 ]);
 
-export class QueueManagement
-  implements Agent<QueueManagementInput, QueueManagementOutput>
-{
+export class QueueManagement implements Agent<QueueManagementInput, QueueManagementOutput> {
   readonly id = '3.4';
   readonly name = 'Queue Management';
   readonly version = '0.1.0';
@@ -96,16 +90,32 @@ export class QueueManagement
 
     for (const entry of data.entries) {
       if (!entry.record_locator || !RECORD_LOCATOR_RE.test(entry.record_locator)) {
-        throw new AgentInputValidationError(this.id, 'record_locator', `Invalid record locator: ${entry.record_locator ?? 'missing'}`);
+        throw new AgentInputValidationError(
+          this.id,
+          'record_locator',
+          `Invalid record locator: ${entry.record_locator ?? 'missing'}`,
+        );
       }
       if (!entry.gds || !VALID_GDS.has(entry.gds)) {
-        throw new AgentInputValidationError(this.id, 'gds', `Invalid GDS: ${entry.gds ?? 'missing'}`);
+        throw new AgentInputValidationError(
+          this.id,
+          'gds',
+          `Invalid GDS: ${entry.gds ?? 'missing'}`,
+        );
       }
       if (!entry.entry_type || !VALID_ENTRY_TYPES.has(entry.entry_type)) {
-        throw new AgentInputValidationError(this.id, 'entry_type', `Invalid entry type: ${entry.entry_type ?? 'missing'}`);
+        throw new AgentInputValidationError(
+          this.id,
+          'entry_type',
+          `Invalid entry type: ${entry.entry_type ?? 'missing'}`,
+        );
       }
       if (entry.queue_number == null || entry.queue_number < 0) {
-        throw new AgentInputValidationError(this.id, 'queue_number', 'Queue number must be a non-negative integer.');
+        throw new AgentInputValidationError(
+          this.id,
+          'queue_number',
+          'Queue number must be a non-negative integer.',
+        );
       }
     }
 

@@ -32,11 +32,7 @@ export class AgentLoop {
   private readonly modelCall: ModelCallFn;
   private readonly hooks: HookRegistry | undefined;
 
-  constructor(
-    toolRegistry: ToolRegistry,
-    modelCall: ModelCallFn,
-    config?: Partial<LoopConfig>,
-  ) {
+  constructor(toolRegistry: ToolRegistry, modelCall: ModelCallFn, config?: Partial<LoopConfig>) {
     this.toolRegistry = toolRegistry;
     this.modelCall = modelCall;
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -130,9 +126,9 @@ export class AgentLoop {
         // Append tool results as a message
         const toolResultMessage: LoopMessage = {
           role: 'tool_result',
-          content: toolResults.map((r) =>
-            r.isError ? `Error: ${String(r.output)}` : JSON.stringify(r.output),
-          ).join('\n'),
+          content: toolResults
+            .map((r) => (r.isError ? `Error: ${String(r.output)}` : JSON.stringify(r.output)))
+            .join('\n'),
           toolResults,
         };
         messages.push(toolResultMessage);

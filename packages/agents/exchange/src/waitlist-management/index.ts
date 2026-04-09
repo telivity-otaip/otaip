@@ -2,7 +2,10 @@
 import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError } from '@otaip/core';
 
-export class WaitlistManagementAgent implements Agent<Record<string, unknown>, Record<string, unknown>> {
+export class WaitlistManagementAgent implements Agent<
+  Record<string, unknown>,
+  Record<string, unknown>
+> {
   readonly id = '5.6';
   readonly name = 'Waitlist Management';
   readonly version = '0.0.0';

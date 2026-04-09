@@ -29,9 +29,7 @@ export async function soapRequest(
   });
 
   if (!response.ok) {
-    throw new Error(
-      `SOAP request failed: ${response.status} ${response.statusText}`,
-    );
+    throw new Error(`SOAP request failed: ${response.status} ${response.statusText}`);
   }
 
   return response.text();
@@ -73,7 +71,7 @@ export function buildReadETicketBody(ticketNumber: string): string {
 export function extractXmlValue(xml: string, tagName: string): string | null {
   const regex = new RegExp(`<${tagName}[^>]*>([^<]*)</${tagName}>`, 'i');
   const match = xml.match(regex);
-  return match ? match[1] ?? null : null;
+  return match ? (match[1] ?? null) : null;
 }
 
 /** Extract all text values of a named XML element. */

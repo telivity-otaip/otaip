@@ -73,9 +73,7 @@ function matchRecords(input: BSPReconciliationInput): BSPReconciliationOutput {
 
     // Match each agency record to a HOT record
     for (const ar of agencyRecs) {
-      const matchingHot = hotRecs.find(
-        (h) => h.transaction_type === ar.transaction_type,
-      );
+      const matchingHot = hotRecs.find((h) => h.transaction_type === ar.transaction_type);
 
       if (!matchingHot) {
         discrepancies.push({
@@ -228,7 +226,10 @@ function matchRecords(input: BSPReconciliationInput): BSPReconciliationOutput {
   return { discrepancies, summary, passed };
 }
 
-function detectPatterns(discrepancies: Discrepancy[], input: BSPReconciliationInput): PatternDetection[] {
+function detectPatterns(
+  discrepancies: Discrepancy[],
+  input: BSPReconciliationInput,
+): PatternDetection[] {
   const patterns: PatternDetection[] = [];
 
   // Only detect patterns with sample size >= 10

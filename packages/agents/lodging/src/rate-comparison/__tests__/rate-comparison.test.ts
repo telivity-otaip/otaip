@@ -34,23 +34,49 @@ const PROPERTY_WITH_MULTIPLE_RATES: CanonicalProperty = {
   sourceResults: [
     makeSourceResult({
       source: { sourceId: 'amadeus', sourcePropertyId: 'AM-001' },
-      rates: [{
-        rateId: 'AM-R1', roomTypeId: 'AM-STD', nightlyRate: '299.00', totalRate: '299.00',
-        currency: 'USD', rateType: 'bar', paymentModel: 'pay_at_property',
-        cancellationPolicy: { refundable: true, deadlines: [{ hoursBeforeCheckin: 24, penaltyType: 'nights', penaltyValue: 1 }], freeCancel24hrBooking: true },
-        mandatoryFees: [{ type: 'resort_fee', amount: '25.00', currency: 'USD', perUnit: 'per_night' }],
-        taxAmount: '53.28',
-      }],
+      rates: [
+        {
+          rateId: 'AM-R1',
+          roomTypeId: 'AM-STD',
+          nightlyRate: '299.00',
+          totalRate: '299.00',
+          currency: 'USD',
+          rateType: 'bar',
+          paymentModel: 'pay_at_property',
+          cancellationPolicy: {
+            refundable: true,
+            deadlines: [{ hoursBeforeCheckin: 24, penaltyType: 'nights', penaltyValue: 1 }],
+            freeCancel24hrBooking: true,
+          },
+          mandatoryFees: [
+            { type: 'resort_fee', amount: '25.00', currency: 'USD', perUnit: 'per_night' },
+          ],
+          taxAmount: '53.28',
+        },
+      ],
     }),
     makeSourceResult({
       source: { sourceId: 'hotelbeds', sourcePropertyId: 'HB-001' },
-      rates: [{
-        rateId: 'HB-R1', roomTypeId: 'HB-STD', nightlyRate: '305.00', totalRate: '305.00',
-        currency: 'USD', rateType: 'bar', paymentModel: 'prepaid',
-        cancellationPolicy: { refundable: true, deadlines: [{ hoursBeforeCheckin: 24, penaltyType: 'nights', penaltyValue: 1 }], freeCancel24hrBooking: true },
-        mandatoryFees: [{ type: 'destination_fee', amount: '25.00', currency: 'USD', perUnit: 'per_night' }],
-        taxAmount: '54.35',
-      }],
+      rates: [
+        {
+          rateId: 'HB-R1',
+          roomTypeId: 'HB-STD',
+          nightlyRate: '305.00',
+          totalRate: '305.00',
+          currency: 'USD',
+          rateType: 'bar',
+          paymentModel: 'prepaid',
+          cancellationPolicy: {
+            refundable: true,
+            deadlines: [{ hoursBeforeCheckin: 24, penaltyType: 'nights', penaltyValue: 1 }],
+            freeCancel24hrBooking: true,
+          },
+          mandatoryFees: [
+            { type: 'destination_fee', amount: '25.00', currency: 'USD', perUnit: 'per_night' },
+          ],
+          taxAmount: '54.35',
+        },
+      ],
     }),
   ],
   mergeConfidence: 0.95,
@@ -64,21 +90,35 @@ const PROPERTY_WITH_PARITY: CanonicalProperty = {
   sourceResults: [
     makeSourceResult({
       source: { sourceId: 'amadeus', sourcePropertyId: 'AM-002' },
-      rates: [{
-        rateId: 'AM-R2', roomTypeId: 'AM-STD', nightlyRate: '200.00', totalRate: '200.00',
-        currency: 'USD', rateType: 'bar', paymentModel: 'pay_at_property',
-        cancellationPolicy: { refundable: true, deadlines: [], freeCancel24hrBooking: true },
-        taxAmount: '20.00',
-      }],
+      rates: [
+        {
+          rateId: 'AM-R2',
+          roomTypeId: 'AM-STD',
+          nightlyRate: '200.00',
+          totalRate: '200.00',
+          currency: 'USD',
+          rateType: 'bar',
+          paymentModel: 'pay_at_property',
+          cancellationPolicy: { refundable: true, deadlines: [], freeCancel24hrBooking: true },
+          taxAmount: '20.00',
+        },
+      ],
     }),
     makeSourceResult({
       source: { sourceId: 'hotelbeds', sourcePropertyId: 'HB-002' },
-      rates: [{
-        rateId: 'HB-R2', roomTypeId: 'HB-STD', nightlyRate: '201.00', totalRate: '201.00',
-        currency: 'USD', rateType: 'bar', paymentModel: 'prepaid',
-        cancellationPolicy: { refundable: true, deadlines: [], freeCancel24hrBooking: true },
-        taxAmount: '20.10',
-      }],
+      rates: [
+        {
+          rateId: 'HB-R2',
+          roomTypeId: 'HB-STD',
+          nightlyRate: '201.00',
+          totalRate: '201.00',
+          currency: 'USD',
+          rateType: 'bar',
+          paymentModel: 'prepaid',
+          cancellationPolicy: { refundable: true, deadlines: [], freeCancel24hrBooking: true },
+          taxAmount: '20.10',
+        },
+      ],
     }),
   ],
 };
@@ -200,21 +240,43 @@ describe('Agent 20.4 — Rate Comparison', () => {
         sourceResults: [
           makeSourceResult({
             source: { sourceId: 'cheap', sourcePropertyId: 'C-001' },
-            rates: [{
-              rateId: 'C-R1', roomTypeId: 'C-STD', nightlyRate: '200.00', totalRate: '200.00',
-              currency: 'USD', rateType: 'bar', paymentModel: 'prepaid',
-              cancellationPolicy: { refundable: true, deadlines: [], freeCancel24hrBooking: true },
-              taxAmount: '0.00',
-            }],
+            rates: [
+              {
+                rateId: 'C-R1',
+                roomTypeId: 'C-STD',
+                nightlyRate: '200.00',
+                totalRate: '200.00',
+                currency: 'USD',
+                rateType: 'bar',
+                paymentModel: 'prepaid',
+                cancellationPolicy: {
+                  refundable: true,
+                  deadlines: [],
+                  freeCancel24hrBooking: true,
+                },
+                taxAmount: '0.00',
+              },
+            ],
           }),
           makeSourceResult({
             source: { sourceId: 'expensive', sourcePropertyId: 'E-001' },
-            rates: [{
-              rateId: 'E-R1', roomTypeId: 'E-STD', nightlyRate: '280.00', totalRate: '280.00',
-              currency: 'USD', rateType: 'bar', paymentModel: 'pay_at_property',
-              cancellationPolicy: { refundable: true, deadlines: [], freeCancel24hrBooking: true },
-              taxAmount: '0.00',
-            }],
+            rates: [
+              {
+                rateId: 'E-R1',
+                roomTypeId: 'E-STD',
+                nightlyRate: '280.00',
+                totalRate: '280.00',
+                currency: 'USD',
+                rateType: 'bar',
+                paymentModel: 'pay_at_property',
+                cancellationPolicy: {
+                  refundable: true,
+                  deadlines: [],
+                  freeCancel24hrBooking: true,
+                },
+                taxAmount: '0.00',
+              },
+            ],
           }),
         ],
       };
@@ -235,11 +297,22 @@ describe('Agent 20.4 — Rate Comparison', () => {
         sourceResults: [
           makeSourceResult({
             source: { sourceId: 'amadeus', sourcePropertyId: 'AM-003' },
-            rates: [{
-              rateId: 'AM-R3', roomTypeId: 'AM-STD', nightlyRate: '200.00', totalRate: '200.00',
-              currency: 'USD', rateType: 'bar', paymentModel: 'pay_at_property',
-              cancellationPolicy: { refundable: true, deadlines: [], freeCancel24hrBooking: true },
-            }],
+            rates: [
+              {
+                rateId: 'AM-R3',
+                roomTypeId: 'AM-STD',
+                nightlyRate: '200.00',
+                totalRate: '200.00',
+                currency: 'USD',
+                rateType: 'bar',
+                paymentModel: 'pay_at_property',
+                cancellationPolicy: {
+                  refundable: true,
+                  deadlines: [],
+                  freeCancel24hrBooking: true,
+                },
+              },
+            ],
           }),
         ],
       };
@@ -258,9 +331,9 @@ describe('Agent 20.4 — Rate Comparison', () => {
 
     it('throws when not initialized', async () => {
       const uninit = new RateComparisonAgent();
-      await expect(
-        uninit.execute({ data: { properties: [] } }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninit.execute({ data: { properties: [] } })).rejects.toThrow(
+        'not been initialized',
+      );
     });
 
     it('reports healthy status', async () => {

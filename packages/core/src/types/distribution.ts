@@ -25,7 +25,7 @@ export interface PassengerCount {
 export interface SearchSegment {
   origin: string;
   destination: string;
-  departure_date: string;  // ISO 8601 date (YYYY-MM-DD)
+  departure_date: string; // ISO 8601 date (YYYY-MM-DD)
 }
 
 export interface SearchRequest {

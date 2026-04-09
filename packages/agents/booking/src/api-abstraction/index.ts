@@ -7,25 +7,15 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type { ApiAbstractionInput, ApiAbstractionOutput, HttpMethod } from './types.js';
 import { ApiClient } from './api-client.js';
 import type { RequestHandler } from './api-client.js';
 
 const VALID_METHODS = new Set<HttpMethod>(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']);
 
-export class ApiAbstraction
-  implements Agent<ApiAbstractionInput, ApiAbstractionOutput>
-{
+export class ApiAbstraction implements Agent<ApiAbstractionInput, ApiAbstractionOutput> {
   readonly id = '3.5';
   readonly name = 'API Abstraction';
   readonly version = '0.1.0';
@@ -54,10 +44,14 @@ export class ApiAbstraction
 
     const warnings: string[] = [];
     if (result.circuit_breaker.state !== 'closed') {
-      warnings.push(`Circuit breaker for ${input.data.request.provider_id} is ${result.circuit_breaker.state}`);
+      warnings.push(
+        `Circuit breaker for ${input.data.request.provider_id} is ${result.circuit_breaker.state}`,
+      );
     }
     if (result.rate_limit.request_count > result.rate_limit.max_requests * 0.8) {
-      warnings.push(`Rate limit for ${input.data.request.provider_id}: ${result.rate_limit.request_count}/${result.rate_limit.max_requests} (>80%)`);
+      warnings.push(
+        `Rate limit for ${input.data.request.provider_id}: ${result.rate_limit.request_count}/${result.rate_limit.max_requests} (>80%)`,
+      );
     }
 
     return {
@@ -95,10 +89,18 @@ export class ApiAbstraction
       throw new AgentInputValidationError(this.id, 'request', 'Request object is required.');
     }
     if (!data.request.provider_id || typeof data.request.provider_id !== 'string') {
-      throw new AgentInputValidationError(this.id, 'request.provider_id', 'Provider ID is required.');
+      throw new AgentInputValidationError(
+        this.id,
+        'request.provider_id',
+        'Provider ID is required.',
+      );
     }
     if (!data.request.method || !VALID_METHODS.has(data.request.method)) {
-      throw new AgentInputValidationError(this.id, 'request.method', 'Must be GET, POST, PUT, DELETE, or PATCH.');
+      throw new AgentInputValidationError(
+        this.id,
+        'request.method',
+        'Must be GET, POST, PUT, DELETE, or PATCH.',
+      );
     }
     if (!data.request.path || typeof data.request.path !== 'string') {
       throw new AgentInputValidationError(this.id, 'request.path', 'Path is required.');
@@ -107,9 +109,7 @@ export class ApiAbstraction
 }
 
 export { ApiClient, ProviderError } from './api-client.js';
-export type {
-  RequestHandler,
-} from './api-client.js';
+export type { RequestHandler } from './api-client.js';
 export type {
   ApiAbstractionInput,
   ApiAbstractionOutput,

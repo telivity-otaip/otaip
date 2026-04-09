@@ -50,9 +50,7 @@ export class SabreAuth {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Sabre auth failed: ${response.status} ${response.statusText}`,
-      );
+      throw new Error(`Sabre auth failed: ${response.status} ${response.statusText}`);
     }
 
     const data = (await response.json()) as {

@@ -39,10 +39,7 @@ export abstract class BaseAdapter {
     this.retryConfig = { ...DEFAULT_RETRY_CONFIG, ...retryConfig };
   }
 
-  protected async withRetry<T>(
-    operation: string,
-    fn: () => Promise<T>,
-  ): Promise<T> {
+  protected async withRetry<T>(operation: string, fn: () => Promise<T>): Promise<T> {
     const coreConfig: Partial<CoreRetryConfig> = {
       maxRetries: this.retryConfig.maxRetries,
       baseDelayMs: this.retryConfig.baseDelayMs,
@@ -66,11 +63,7 @@ export abstract class BaseAdapter {
     }
   }
 
-  protected wrapError(
-    operation: string,
-    error: unknown,
-    retryable: boolean = false,
-  ): ConnectError {
+  protected wrapError(operation: string, error: unknown, retryable: boolean = false): ConnectError {
     if (error instanceof ConnectError) return error;
 
     const message = error instanceof Error ? error.message : String(error);

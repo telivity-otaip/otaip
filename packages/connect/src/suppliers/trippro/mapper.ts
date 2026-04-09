@@ -106,10 +106,7 @@ export function mapCabinClass(tripProClass: string): CabinClass {
 
 export function calculateTotalPrice(fares: TripProFare[]): MoneyAmount {
   const currency = fares[0]?.CurrencyCode ?? 'USD';
-  const total = fares.reduce(
-    (sum, fare) => sum.plus(new Decimal(fare.FullFare)),
-    new Decimal(0),
-  );
+  const total = fares.reduce((sum, fare) => sum.plus(new Decimal(fare.FullFare)), new Decimal(0));
   return { amount: total.toString(), currency };
 }
 
@@ -202,9 +199,7 @@ export function mapBookRequest(input: CreateBookingInput): TripProBookRequest {
       CountryOfIssue: pax.passportCountry ?? '',
       Nationality: pax.nationality ?? '',
       PassportIssueDate: '',
-      PassportExpiryDate: pax.passportExpiry
-        ? formatDateMMDDYYYY(pax.passportExpiry)
-        : '',
+      PassportExpiryDate: pax.passportExpiry ? formatDateMMDDYYYY(pax.passportExpiry) : '',
     })),
     BookItineraryPaxContactInfo: {
       PhoneNumber: input.contact.phone,
@@ -280,8 +275,7 @@ export function mapSearchResponse(results: TripProItinerary[]): FlightOffer[] {
     cabinClass: mapCabinClass(itinerary.CabinClass),
     refundable: !itinerary.Fares[0]?.IsNonRefundableFare,
     changeable: true,
-    baggageAllowance:
-      itinerary.Citypairs[0]?.FlightSegment[0]?.BaggageAllowance,
+    baggageAllowance: itinerary.Citypairs[0]?.FlightSegment[0]?.BaggageAllowance,
     raw: itinerary,
   }));
 }

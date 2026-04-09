@@ -1,56 +1,93 @@
 import Decimal from 'decimal.js';
 import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
-import type { CommissionManagementInput, CommissionManagementOutput, CommissionAgreement, CommissionRate, CommissionValidationResult, IncentiveResult } from './types.js';
+import type {
+  CommissionManagementInput,
+  CommissionManagementOutput,
+  CommissionAgreement,
+  CommissionRate,
+  CommissionValidationResult,
+  IncentiveResult,
+} from './types.js';
 
 let nextId = 0;
-function uuid(): string { return `CMA${String(++nextId).padStart(8, '0')}`; }
+function uuid(): string {
+  return `CMA${String(++nextId).padStart(8, '0')}`;
+}
 
 function matchesFareBasis(pattern: string, fareBasis: string): boolean {
   if (pattern.endsWith('*')) return fareBasis.startsWith(pattern.slice(0, -1));
   return pattern === fareBasis;
 }
 
-export class CommissionManagementAgent implements Agent<CommissionManagementInput, CommissionManagementOutput> {
-  readonly id = '7.3'; readonly name = 'Commission Management'; readonly version = '0.1.0';
+export class CommissionManagementAgent implements Agent<
+  CommissionManagementInput,
+  CommissionManagementOutput
+> {
+  readonly id = '7.3';
+  readonly name = 'Commission Management';
+  readonly version = '0.1.0';
   private initialized = false;
   private agreements = new Map<string, CommissionAgreement>();
 
-  getAgreements(): Map<string, CommissionAgreement> { return this.agreements; }
-  async initialize(): Promise<void> { this.initialized = true; }
+  getAgreements(): Map<string, CommissionAgreement> {
+    return this.agreements;
+  }
+  async initialize(): Promise<void> {
+    this.initialized = true;
+  }
 
-  async execute(input: AgentInput<CommissionManagementInput>): Promise<AgentOutput<CommissionManagementOutput>> {
+  async execute(
+    input: AgentInput<CommissionManagementInput>,
+  ): Promise<AgentOutput<CommissionManagementOutput>> {
     if (!this.initialized) throw new AgentNotInitializedError(this.id);
     const d = input.data;
 
     switch (d.operation) {
-      case 'registerAgreement': return this.register(d);
-      case 'getRate': return this.getRate(d);
-      case 'validateCommission': return this.validate(d);
-      case 'calculateIncentive': return this.incentive(d);
-      case 'listAgreements': return this.list(d);
-      default: throw new AgentInputValidationError(this.id, 'operation', 'Invalid.');
+      case 'registerAgreement':
+        return this.register(d);
+      case 'getRate':
+        return this.getRate(d);
+      case 'validateCommission':
+        return this.validate(d);
+      case 'calculateIncentive':
+        return this.incentive(d);
+      case 'listAgreements':
+        return this.list(d);
+      default:
+        throw new AgentInputValidationError(this.id, 'operation', 'Invalid.');
     }
   }
 
   private register(d: CommissionManagementInput): AgentOutput<CommissionManagementOutput> {
     if (!d.agreement) throw new AgentInputValidationError(this.id, 'agreement', 'Required.');
-    if (!d.agreement.effectiveFrom) throw new AgentInputValidationError(this.id, 'effectiveFrom', 'INVALID_DATE_RANGE');
+    if (!d.agreement.effectiveFrom)
+      throw new AgentInputValidationError(this.id, 'effectiveFrom', 'INVALID_DATE_RANGE');
 
     // Check duplicate
     for (const existing of this.agreements.values()) {
-      if (existing.agentId === d.agreement.agentId && existing.airline === d.agreement.airline && existing.type === d.agreement.type && existing.effectiveFrom === d.agreement.effectiveFrom) {
+      if (
+        existing.agentId === d.agreement.agentId &&
+        existing.airline === d.agreement.airline &&
+        existing.type === d.agreement.type &&
+        existing.effectiveFrom === d.agreement.effectiveFrom
+      ) {
         throw new AgentInputValidationError(this.id, 'agreement', 'DUPLICATE_AGREEMENT');
       }
     }
 
     const agreement: CommissionAgreement = { agreementId: uuid(), ...d.agreement };
     this.agreements.set(agreement.agreementId, agreement);
-    return { data: { agreement, message: 'Agreement registered.' }, confidence: 1.0, metadata: { agent_id: this.id } };
+    return {
+      data: { agreement, message: 'Agreement registered.' },
+      confidence: 1.0,
+      metadata: { agent_id: this.id },
+    };
   }
 
   private getRate(d: CommissionManagementInput): AgentOutput<CommissionManagementOutput> {
-    if (!d.airline || !d.agentId) throw new AgentInputValidationError(this.id, 'airline/agentId', 'Required.');
+    if (!d.airline || !d.agentId)
+      throw new AgentInputValidationError(this.id, 'airline/agentId', 'Required.');
 
     let bestRate: { agreement: CommissionAgreement; rate: Decimal } | undefined;
 
@@ -69,9 +106,15 @@ export class CommissionManagementAgent implements Agent<CommissionManagementInpu
       }
     }
 
-    if (!bestRate) return { data: { rate: undefined }, confidence: 0, metadata: { agent_id: this.id } };
+    if (!bestRate)
+      return { data: { rate: undefined }, confidence: 0, metadata: { agent_id: this.id } };
 
-    const commRate: CommissionRate = { agreementId: bestRate.agreement.agreementId, rate: bestRate.agreement.rate, basis: bestRate.agreement.basis, type: bestRate.agreement.type };
+    const commRate: CommissionRate = {
+      agreementId: bestRate.agreement.agreementId,
+      rate: bestRate.agreement.rate,
+      basis: bestRate.agreement.basis,
+      type: bestRate.agreement.type,
+    };
     return { data: { rate: commRate }, confidence: 1.0, metadata: { agent_id: this.id } };
   }
 
@@ -84,7 +127,14 @@ export class CommissionManagementAgent implements Agent<CommissionManagementInpu
     const rate = rateResult.data.rate;
 
     if (!rate) {
-      const validation: CommissionValidationResult = { valid: false, expectedRate: '0', claimedRate: d.claimedCommission, variance: d.claimedCommission, variancePercent: '100', status: 'NO_AGREEMENT' };
+      const validation: CommissionValidationResult = {
+        valid: false,
+        expectedRate: '0',
+        claimedRate: d.claimedCommission,
+        variance: d.claimedCommission,
+        variancePercent: '100',
+        status: 'NO_AGREEMENT',
+      };
       return { data: { validation }, confidence: 1.0, metadata: { agent_id: this.id } };
     }
 
@@ -92,7 +142,9 @@ export class CommissionManagementAgent implements Agent<CommissionManagementInpu
     const claimed = new Decimal(d.claimedCommission);
     const expected = fare.times(new Decimal(rate.rate)).dividedBy(100);
     const variance = claimed.minus(expected);
-    const variancePct = expected.isZero() ? new Decimal(100) : variance.abs().dividedBy(expected).times(100);
+    const variancePct = expected.isZero()
+      ? new Decimal(100)
+      : variance.abs().dividedBy(expected).times(100);
 
     let status: CommissionValidationResult['status'];
     if (variance.abs().lessThanOrEqualTo('0.01')) status = 'MATCH';
@@ -111,7 +163,8 @@ export class CommissionManagementAgent implements Agent<CommissionManagementInpu
   }
 
   private incentive(d: CommissionManagementInput): AgentOutput<CommissionManagementOutput> {
-    if (!d.agentId || !d.airline || !d.period) throw new AgentInputValidationError(this.id, 'agentId/airline/period', 'Required.');
+    if (!d.agentId || !d.airline || !d.period)
+      throw new AgentInputValidationError(this.id, 'agentId/airline/period', 'Required.');
 
     const tickets = d.tickets ?? [];
     const totalFare = tickets.reduce((s, t) => s.plus(new Decimal(t.fareAmount)), new Decimal(0));
@@ -125,17 +178,26 @@ export class CommissionManagementAgent implements Agent<CommissionManagementInpu
       }
     }
 
-    const thresholdMet = incentiveAg?.minimumTickets ? tickets.length >= incentiveAg.minimumTickets : true;
+    const thresholdMet = incentiveAg?.minimumTickets
+      ? tickets.length >= incentiveAg.minimumTickets
+      : true;
     const incentiveRate = incentiveAg ? new Decimal(incentiveAg.rate) : new Decimal(0);
-    const incentiveEarned = thresholdMet ? totalFare.times(incentiveRate).dividedBy(100) : new Decimal(0);
+    const incentiveEarned = thresholdMet
+      ? totalFare.times(incentiveRate).dividedBy(100)
+      : new Decimal(0);
 
     const incentive: IncentiveResult = {
-      agentId: d.agentId, airline: d.airline, period: d.period,
-      ticketCount: tickets.length, totalFareAmount: totalFare.toFixed(2),
+      agentId: d.agentId,
+      airline: d.airline,
+      period: d.period,
+      ticketCount: tickets.length,
+      totalFareAmount: totalFare.toFixed(2),
       incentiveEarned: incentiveEarned.toFixed(2),
       currency: incentiveAg?.currencyCode ?? 'USD',
       thresholdMet,
-      notes: thresholdMet ? 'Incentive threshold met.' : `Need ${incentiveAg?.minimumTickets ?? 0} tickets, have ${tickets.length}.`,
+      notes: thresholdMet
+        ? 'Incentive threshold met.'
+        : `Need ${incentiveAg?.minimumTickets ?? 0} tickets, have ${tickets.length}.`,
     };
     return { data: { incentive }, confidence: 1.0, metadata: { agent_id: this.id } };
   }
@@ -150,8 +212,26 @@ export class CommissionManagementAgent implements Agent<CommissionManagementInpu
     return { data: { agreements }, confidence: 1.0, metadata: { agent_id: this.id } };
   }
 
-  async health(): Promise<AgentHealthStatus> { return this.initialized ? { status: 'healthy' } : { status: 'unhealthy', details: 'Not initialized.' }; }
-  destroy(): void { this.initialized = false; this.agreements.clear(); }
+  async health(): Promise<AgentHealthStatus> {
+    return this.initialized
+      ? { status: 'healthy' }
+      : { status: 'unhealthy', details: 'Not initialized.' };
+  }
+  destroy(): void {
+    this.initialized = false;
+    this.agreements.clear();
+  }
 }
 
-export type { CommissionManagementInput, CommissionManagementOutput, CommissionAgreement, CommissionRate, CommissionValidationResult, IncentiveResult, AgreementType, CommissionBasis, ValidationStatus, CommissionOperation } from './types.js';
+export type {
+  CommissionManagementInput,
+  CommissionManagementOutput,
+  CommissionAgreement,
+  CommissionRate,
+  CommissionValidationResult,
+  IncentiveResult,
+  AgreementType,
+  CommissionBasis,
+  ValidationStatus,
+  CommissionOperation,
+} from './types.js';

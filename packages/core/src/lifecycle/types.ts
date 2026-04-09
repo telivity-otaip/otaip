@@ -35,3 +35,21 @@ export interface BeforeToolCallResult {
 export type HookHandler = (
   context: HookContext,
 ) => void | BeforeToolCallResult | Promise<void | BeforeToolCallResult>;
+
+/** Controls how the HookRegistry handles errors thrown by hook handlers. */
+export type HookErrorPolicy =
+  /** Silently swallow errors (default, backward-compatible). */
+  | 'swallow'
+  /** Log errors via the onHookError callback, then continue. */
+  | 'log'
+  /** Re-throw the error, stopping hook execution. */
+  | 'propagate';
+
+/** Configuration for HookRegistry behavior. */
+export interface HookRegistryConfig {
+  /** How to handle errors from hook handlers. Default: 'swallow'. */
+  errorPolicy?: HookErrorPolicy;
+
+  /** Called when a hook throws and errorPolicy is 'log'. Receives the error and handler context. */
+  onHookError?: (error: unknown, event: LifecycleEvent) => void;
+}

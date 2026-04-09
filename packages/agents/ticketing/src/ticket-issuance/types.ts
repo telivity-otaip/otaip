@@ -6,13 +6,13 @@
 
 /** Coupon status lifecycle */
 export type CouponStatus =
-  | 'O'  // Open for use
-  | 'A'  // Airport control
-  | 'E'  // Exchanged
-  | 'R'  // Refunded
-  | 'V'  // Voided
-  | 'C'  // Checked in
-  | 'L'  // Lifted / boarded
+  | 'O' // Open for use
+  | 'A' // Airport control
+  | 'E' // Exchanged
+  | 'R' // Refunded
+  | 'V' // Voided
+  | 'C' // Checked in
+  | 'L' // Lifted / boarded
   | 'S'; // Suspended
 
 export type FormOfPaymentType = 'CASH' | 'CREDIT_CARD' | 'INVOICE' | 'MISCELLANEOUS';

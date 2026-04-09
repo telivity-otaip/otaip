@@ -79,9 +79,7 @@ function matchAmenity(raw: string): NormalizedAmenity | null {
  * Union of all sources — most complete list wins.
  * Deduplicates by amenityId across sources.
  */
-export function mergeAmenities(
-  amenityLists: string[][],
-): NormalizationResult {
+export function mergeAmenities(amenityLists: string[][]): NormalizationResult {
   const allRaw = amenityLists.flat();
   return normalizeAmenities(allRaw);
 }

@@ -15,7 +15,11 @@ export class AgentError extends Error {
 
 export class AgentNotInitializedError extends AgentError {
   constructor(agentId: string) {
-    super(`Agent ${agentId} has not been initialized. Call initialize() first.`, agentId, 'NOT_INITIALIZED');
+    super(
+      `Agent ${agentId} has not been initialized. Call initialize() first.`,
+      agentId,
+      'NOT_INITIALIZED',
+    );
     this.name = 'AgentNotInitializedError';
   }
 }
@@ -37,4 +41,3 @@ export class AgentDataUnavailableError extends AgentError {
     this.name = 'AgentDataUnavailableError';
   }
 }
-

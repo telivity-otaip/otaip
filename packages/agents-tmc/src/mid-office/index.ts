@@ -4,32 +4,31 @@
  * PNR quality checks, ticketing deadline monitoring, duplicate/passive detection.
  */
 
-import type {
-  Agent, AgentInput, AgentOutput, AgentHealthStatus,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type {
-  MidOfficeInput, MidOfficeOutput,
-  MockPnr, PnrCheckResult, PnrIssue,
+  MidOfficeInput,
+  MidOfficeOutput,
+  MockPnr,
+  PnrCheckResult,
+  PnrIssue,
 } from './types.js';
 
 const PASSIVE_STATUSES = new Set(['HX', 'UN', 'NO', 'UC']);
 const ACTIVE_STATUSES = new Set(['HK', 'KL']);
 
-export class MidOfficeAgent
-  implements Agent<MidOfficeInput, MidOfficeOutput>
-{
+export class MidOfficeAgent implements Agent<MidOfficeInput, MidOfficeOutput> {
   readonly id = '8.3';
   readonly name = 'Mid-Office Automation';
   readonly version = '0.1.0';
 
   private initialized = false;
 
-  async initialize(): Promise<void> { this.initialized = true; }
+  async initialize(): Promise<void> {
+    this.initialized = true;
+  }
 
-  async execute(
-    input: AgentInput<MidOfficeInput>,
-  ): Promise<AgentOutput<MidOfficeOutput>> {
+  async execute(input: AgentInput<MidOfficeInput>): Promise<AgentOutput<MidOfficeOutput>> {
     if (!this.initialized) throw new AgentNotInitializedError(this.id);
 
     const d = input.data;
@@ -48,7 +47,12 @@ export class MidOfficeAgent
     if (actionCount > 0) warnings.push(`${actionCount} PNR(s) require action.`);
 
     return {
-      data: { results, total_pnrs: d.pnrs.length, action_required_count: actionCount, urgent_count: urgentCount },
+      data: {
+        results,
+        total_pnrs: d.pnrs.length,
+        action_required_count: actionCount,
+        urgent_count: urgentCount,
+      },
       confidence: 1.0,
       warnings: warnings.length > 0 ? warnings : undefined,
       metadata: { agent_id: this.id, agent_version: this.version, trigger: d.trigger_type },
@@ -60,7 +64,9 @@ export class MidOfficeAgent
     return { status: 'healthy' };
   }
 
-  destroy(): void { this.initialized = false; }
+  destroy(): void {
+    this.initialized = false;
+  }
 
   private checkPnr(pnr: MockPnr, now: Date, activePnrs: MockPnr[]): PnrCheckResult {
     const issues: PnrIssue[] = [];
@@ -72,11 +78,23 @@ export class MidOfficeAgent
       const deadline = new Date(pnr.ticket_deadline);
       const hoursUntil = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
       if (hoursUntil < 0) {
-        issues.push({ code: 'TTL_URGENT', severity: 'urgent', message: `Ticketing deadline expired at ${pnr.ticket_deadline}.` });
+        issues.push({
+          code: 'TTL_URGENT',
+          severity: 'urgent',
+          message: `Ticketing deadline expired at ${pnr.ticket_deadline}.`,
+        });
       } else if (hoursUntil <= 1) {
-        issues.push({ code: 'TTL_URGENT', severity: 'urgent', message: `Ticketing deadline in ${Math.round(hoursUntil * 60)} minutes.` });
+        issues.push({
+          code: 'TTL_URGENT',
+          severity: 'urgent',
+          message: `Ticketing deadline in ${Math.round(hoursUntil * 60)} minutes.`,
+        });
       } else if (hoursUntil <= 4) {
-        issues.push({ code: 'TTL_APPROACHING', severity: 'high', message: `Ticketing deadline in ${Math.round(hoursUntil)} hours.` });
+        issues.push({
+          code: 'TTL_APPROACHING',
+          severity: 'high',
+          message: `Ticketing deadline in ${Math.round(hoursUntil)} hours.`,
+        });
       }
     }
 
@@ -84,16 +102,28 @@ export class MidOfficeAgent
     checksRun++;
     for (const seg of pnr.segments) {
       if (!ACTIVE_STATUSES.has(seg.status) && !PASSIVE_STATUSES.has(seg.status)) {
-        issues.push({ code: 'MISSING_SEGMENT_STATUS', severity: 'medium', message: `Segment ${seg.carrier}${seg.flight_number} has status ${seg.status}.` });
+        issues.push({
+          code: 'MISSING_SEGMENT_STATUS',
+          severity: 'medium',
+          message: `Segment ${seg.carrier}${seg.flight_number} has status ${seg.status}.`,
+        });
       }
     }
 
     const hasInternational = pnr.segments.some((s) => s.origin_country !== s.destination_country);
     if (hasInternational && !pnr.apis_complete) {
-      issues.push({ code: 'MISSING_APIS', severity: 'high', message: 'APIS data missing for international itinerary.' });
+      issues.push({
+        code: 'MISSING_APIS',
+        severity: 'high',
+        message: 'APIS data missing for international itinerary.',
+      });
     }
     if (!pnr.contact_present) {
-      issues.push({ code: 'MISSING_CONTACT', severity: 'medium', message: 'Contact information missing.' });
+      issues.push({
+        code: 'MISSING_CONTACT',
+        severity: 'medium',
+        message: 'Contact information missing.',
+      });
     }
     if (!pnr.fop_present) {
       issues.push({ code: 'MISSING_FOP', severity: 'medium', message: 'Form of payment missing.' });
@@ -107,8 +137,16 @@ export class MidOfficeAgent
 
       for (const mySeg of pnr.segments) {
         for (const otherSeg of other.segments) {
-          if (mySeg.origin === otherSeg.origin && mySeg.destination === otherSeg.destination && mySeg.departure_date === otherSeg.departure_date) {
-            issues.push({ code: 'DUPLICATE_PNR', severity: 'high', message: `Duplicate: ${pnr.passenger_name} ${mySeg.origin}-${mySeg.destination} ${mySeg.departure_date} also in ${other.recloc}.` });
+          if (
+            mySeg.origin === otherSeg.origin &&
+            mySeg.destination === otherSeg.destination &&
+            mySeg.departure_date === otherSeg.departure_date
+          ) {
+            issues.push({
+              code: 'DUPLICATE_PNR',
+              severity: 'high',
+              message: `Duplicate: ${pnr.passenger_name} ${mySeg.origin}-${mySeg.destination} ${mySeg.departure_date} also in ${other.recloc}.`,
+            });
           }
         }
       }
@@ -118,7 +156,11 @@ export class MidOfficeAgent
     checksRun++;
     for (const seg of pnr.segments) {
       if (PASSIVE_STATUSES.has(seg.status)) {
-        issues.push({ code: 'PASSIVE_SEGMENT', severity: 'high', message: `Passive segment ${seg.carrier}${seg.flight_number} status ${seg.status} — ADM risk.` });
+        issues.push({
+          code: 'PASSIVE_SEGMENT',
+          severity: 'high',
+          message: `Passive segment ${seg.carrier}${seg.flight_number} status ${seg.status} — ADM risk.`,
+        });
       }
     }
 
@@ -129,7 +171,11 @@ export class MidOfficeAgent
         if (seg.cabin === 'first' || seg.cabin === 'business') {
           const isDomestic = seg.origin_country === seg.destination_country;
           if (isDomestic) {
-            issues.push({ code: 'POLICY_VIOLATION', severity: 'medium', message: `Domestic flight ${seg.carrier}${seg.flight_number} booked in ${seg.cabin} class (corporate policy review needed).` });
+            issues.push({
+              code: 'POLICY_VIOLATION',
+              severity: 'medium',
+              message: `Domestic flight ${seg.carrier}${seg.flight_number} booked in ${seg.cabin} class (corporate policy review needed).`,
+            });
           }
         }
       }
@@ -147,7 +193,11 @@ export class MidOfficeAgent
     }
     for (const [group, segs] of marriedGroups) {
       if (segs.length < 2) {
-        issues.push({ code: 'MARRIED_SEGMENT_INCOMPLETE', severity: 'high', message: `Married group ${group} has only ${segs.length} segment(s) — connecting itinerary incomplete.` });
+        issues.push({
+          code: 'MARRIED_SEGMENT_INCOMPLETE',
+          severity: 'high',
+          message: `Married group ${group} has only ${segs.length} segment(s) — connecting itinerary incomplete.`,
+        });
       }
     }
 
@@ -163,7 +213,13 @@ export class MidOfficeAgent
 }
 
 export type {
-  MidOfficeInput, MidOfficeOutput,
-  MockPnr, PnrCheckResult, PnrIssue,
-  PnrSegment, TriggerType, IssueSeverity, IssueCode,
+  MidOfficeInput,
+  MidOfficeOutput,
+  MockPnr,
+  PnrCheckResult,
+  PnrIssue,
+  PnrSegment,
+  TriggerType,
+  IssueSeverity,
+  IssueCode,
 } from './types.js';

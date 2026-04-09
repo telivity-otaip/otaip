@@ -28,10 +28,7 @@ export type ConfirmationStatus =
   | 'RETRY'
   | 'FAILED';
 
-export type ReconciliationStatus =
-  | 'CLEAN'
-  | 'CONFLICT'
-  | 'RESOLVED';
+export type ReconciliationStatus = 'CLEAN' | 'CONFLICT' | 'RESOLVED';
 
 // ---------------------------------------------------------------------------
 // Composite state
@@ -100,7 +97,10 @@ export const VALID_PAYMENT_TRANSITIONS: Record<PaymentStatus, ReadonlySet<Paymen
   REFUND_REVERSED: new Set([]),
 };
 
-export const VALID_CONFIRMATION_TRANSITIONS: Record<ConfirmationStatus, ReadonlySet<ConfirmationStatus>> = {
+export const VALID_CONFIRMATION_TRANSITIONS: Record<
+  ConfirmationStatus,
+  ReadonlySet<ConfirmationStatus>
+> = {
   PENDING: new Set(['AWAITING']),
   AWAITING: new Set(['CONFIRMED', 'TIMEOUT']),
   TIMEOUT: new Set(['RETRY', 'FAILED']),
@@ -109,7 +109,10 @@ export const VALID_CONFIRMATION_TRANSITIONS: Record<ConfirmationStatus, Readonly
   FAILED: new Set([]),
 };
 
-export const VALID_RECONCILIATION_TRANSITIONS: Record<ReconciliationStatus, ReadonlySet<ReconciliationStatus>> = {
+export const VALID_RECONCILIATION_TRANSITIONS: Record<
+  ReconciliationStatus,
+  ReadonlySet<ReconciliationStatus>
+> = {
   CLEAN: new Set(['CONFLICT']),
   CONFLICT: new Set(['RESOLVED']),
   RESOLVED: new Set([]),
@@ -151,19 +154,31 @@ export function createInitialOrderState(): OrderState {
 // Transition validation
 // ---------------------------------------------------------------------------
 
-export function validatePaymentTransition(from: PaymentStatus, to: PaymentStatus, agentId: string): void {
+export function validatePaymentTransition(
+  from: PaymentStatus,
+  to: PaymentStatus,
+  agentId: string,
+): void {
   if (!VALID_PAYMENT_TRANSITIONS[from].has(to)) {
     throw new InvalidStateTransitionError(agentId, 'payment_status', from, to);
   }
 }
 
-export function validateConfirmationTransition(from: ConfirmationStatus, to: ConfirmationStatus, agentId: string): void {
+export function validateConfirmationTransition(
+  from: ConfirmationStatus,
+  to: ConfirmationStatus,
+  agentId: string,
+): void {
   if (!VALID_CONFIRMATION_TRANSITIONS[from].has(to)) {
     throw new InvalidStateTransitionError(agentId, 'confirmation_status', from, to);
   }
 }
 
-export function validateReconciliationTransition(from: ReconciliationStatus, to: ReconciliationStatus, agentId: string): void {
+export function validateReconciliationTransition(
+  from: ReconciliationStatus,
+  to: ReconciliationStatus,
+  agentId: string,
+): void {
   if (!VALID_RECONCILIATION_TRANSITIONS[from].has(to)) {
     throw new InvalidStateTransitionError(agentId, 'reconciliation_status', from, to);
   }

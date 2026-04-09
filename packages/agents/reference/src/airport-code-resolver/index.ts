@@ -7,20 +7,9 @@
  * Implements the base Agent interface from @otaip/core.
  */
 
-import type {
-  Agent,
-  AgentInput,
-  AgentOutput,
-  AgentHealthStatus,
-} from '@otaip/core';
-import {
-  AgentNotInitializedError,
-  AgentInputValidationError,
-} from '@otaip/core';
-import type {
-  AirportCodeResolverInput,
-  AirportCodeResolverOutput,
-} from './types.js';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
+import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
+import type { AirportCodeResolverInput, AirportCodeResolverOutput } from './types.js';
 import { loadAirportData, type AirportDataset } from './data-loader.js';
 import { buildIndexes } from './resolver.js';
 import { resolve } from './resolver.js';
@@ -30,9 +19,10 @@ type AirportIndexes = ReturnType<typeof buildIndexes>;
 
 const VALID_CODE_TYPES = new Set(['iata', 'icao', 'city', 'name', 'auto']);
 
-export class AirportCodeResolver
-  implements Agent<AirportCodeResolverInput, AirportCodeResolverOutput>
-{
+export class AirportCodeResolver implements Agent<
+  AirportCodeResolverInput,
+  AirportCodeResolverOutput
+> {
   readonly id = '0.1';
   readonly name = 'Airport/City Code Resolver';
   readonly version = '0.1.0';
@@ -69,7 +59,9 @@ export class AirportCodeResolver
     const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
     if (dataAge > THIRTY_DAYS_MS) {
       result.stale_data = true;
-      warnings.push('Airport data is older than 30 days. Consider refreshing with pnpm run data:download.');
+      warnings.push(
+        'Airport data is older than 30 days. Consider refreshing with pnpm run data:download.',
+      );
     }
 
     return {
@@ -105,7 +97,11 @@ export class AirportCodeResolver
 
   private validateInput(data: AirportCodeResolverInput): void {
     if (!data.code || typeof data.code !== 'string') {
-      throw new AgentInputValidationError(this.id, 'code', 'Required string field. Provide an IATA, ICAO, city code, or airport name.');
+      throw new AgentInputValidationError(
+        this.id,
+        'code',
+        'Required string field. Provide an IATA, ICAO, city code, or airport name.',
+      );
     }
 
     const trimmed = data.code.trim();
@@ -140,4 +136,3 @@ export type {
   AirportType,
   AirportStatus,
 } from './types.js';
-

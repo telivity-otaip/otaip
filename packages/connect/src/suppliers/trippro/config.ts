@@ -5,8 +5,7 @@
 import { z } from 'zod';
 import { validateConfig } from '../../config.js';
 
-export const TRIPPRO_DEFAULT_SEARCH_URL =
-  'http://mas.trippro.com/resources/v2/Flights/search';
+export const TRIPPRO_DEFAULT_SEARCH_URL = 'http://mas.trippro.com/resources/v2/Flights/search';
 export const TRIPPRO_DEFAULT_CALENDAR_SEARCH_URL =
   'http://mas.trippro.com/resources/v3/calendarsearch';
 export const TRIPPRO_DEFAULT_REPRICE_URL =

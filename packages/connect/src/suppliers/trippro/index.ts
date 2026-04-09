@@ -19,7 +19,11 @@ import type {
 import { BaseAdapter, ConnectError } from '../../base-adapter.js';
 import type { TripProConfig } from './config.js';
 import { validateTripProConfig } from './config.js';
-import type { TripProSearchResponse, TripProRepriceResponse, TripProBookResponse } from './types.js';
+import type {
+  TripProSearchResponse,
+  TripProRepriceResponse,
+  TripProBookResponse,
+} from './types.js';
 import {
   mapSearchRequest,
   mapSearchResponse,
@@ -73,10 +77,7 @@ export class TripProAdapter extends BaseAdapter implements ConnectAdapter {
     });
   }
 
-  async priceItinerary(
-    offerId: string,
-    passengers: PassengerCount,
-  ): Promise<PricedItinerary> {
+  async priceItinerary(offerId: string, passengers: PassengerCount): Promise<PricedItinerary> {
     return this.withRetry('priceItinerary', async () => {
       const body = mapRepriceRequest(offerId, passengers);
 
@@ -122,9 +123,7 @@ export class TripProAdapter extends BaseAdapter implements ConnectAdapter {
       const data = (await response.json()) as TripProBookResponse;
 
       if (!data.errorsList.empty && data.errorsList.tperror?.length) {
-        const errorText = data.errorsList.tperror
-          .map((e) => e.errorText)
-          .join('; ');
+        const errorText = data.errorsList.tperror.map((e) => e.errorText).join('; ');
         throw new ConnectError(
           `Booking error: ${errorText}`,
           this.supplierId,
@@ -201,9 +200,7 @@ export class TripProAdapter extends BaseAdapter implements ConnectAdapter {
     });
   }
 
-  async cancelBooking(
-    bookingId: string,
-  ): Promise<{ success: boolean; message: string }> {
+  async cancelBooking(bookingId: string): Promise<{ success: boolean; message: string }> {
     const xml = await soapRequest(
       this.config.soapBaseUrl,
       'CancelPNR',
@@ -255,9 +252,7 @@ export class TripProAdapter extends BaseAdapter implements ConnectAdapter {
     };
   }
 
-  private mapBookingStatus(
-    tripProStatus: string,
-  ): BookingStatusResult['status'] {
+  private mapBookingStatus(tripProStatus: string): BookingStatusResult['status'] {
     const normalized = tripProStatus.toLowerCase();
     if (normalized.includes('ticket')) return 'ticketed';
     if (normalized.includes('cancel')) return 'cancelled';

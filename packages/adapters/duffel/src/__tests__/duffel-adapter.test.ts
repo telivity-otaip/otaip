@@ -12,12 +12,15 @@ import { DuffelAdapter, parseDurationToMinutes } from '../duffel-adapter.js';
 // ---------------------------------------------------------------------------
 
 function mockFetchResponse(status: number, body: unknown): void {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-    ok: status >= 200 && status < 300,
-    status,
-    statusText: status === 200 ? 'OK' : 'Error',
-    json: () => Promise.resolve(body),
-  }));
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: status >= 200 && status < 300,
+      status,
+      statusText: status === 200 ? 'OK' : 'Error',
+      json: () => Promise.resolve(body),
+    }),
+  );
 }
 
 function mockFetchNetworkError(message: string): void {
@@ -26,21 +29,25 @@ function mockFetchNetworkError(message: string): void {
 
 const DUFFEL_OFFER = {
   id: 'off_test_123',
-  slices: [{
-    segments: [{
-      marketing_carrier: { iata_code: 'BA' },
-      operating_carrier: { iata_code: 'BA' },
-      marketing_carrier_flight_number: '115',
-      origin: { iata_code: 'LHR' },
-      destination: { iata_code: 'JFK' },
-      departing_at: '2026-06-15T10:00:00',
-      arriving_at: '2026-06-15T13:30:00',
+  slices: [
+    {
+      segments: [
+        {
+          marketing_carrier: { iata_code: 'BA' },
+          operating_carrier: { iata_code: 'BA' },
+          marketing_carrier_flight_number: '115',
+          origin: { iata_code: 'LHR' },
+          destination: { iata_code: 'JFK' },
+          departing_at: '2026-06-15T10:00:00',
+          arriving_at: '2026-06-15T13:30:00',
+          duration: 'PT7H30M',
+          aircraft: { name: '787-9' },
+          passengers: [{ cabin_class: 'economy', fare_basis_code: 'Y26NR' }],
+        },
+      ],
       duration: 'PT7H30M',
-      aircraft: { name: '787-9' },
-      passengers: [{ cabin_class: 'economy', fare_basis_code: 'Y26NR' }],
-    }],
-    duration: 'PT7H30M',
-  }],
+    },
+  ],
   total_amount: '595.50',
   total_currency: 'GBP',
   base_amount: '450.00',
@@ -213,12 +220,23 @@ describe('DuffelAdapter search', () => {
     const connectingOffer = {
       ...DUFFEL_OFFER,
       id: 'off_connecting',
-      slices: [{
-        segments: [
-          { ...DUFFEL_OFFER.slices[0]!.segments[0], destination: { iata_code: 'ORD' }, duration: 'PT2H' },
-          { ...DUFFEL_OFFER.slices[0]!.segments[0], origin: { iata_code: 'ORD' }, destination: { iata_code: 'JFK' }, duration: 'PT3H' },
-        ],
-      }],
+      slices: [
+        {
+          segments: [
+            {
+              ...DUFFEL_OFFER.slices[0]!.segments[0],
+              destination: { iata_code: 'ORD' },
+              duration: 'PT2H',
+            },
+            {
+              ...DUFFEL_OFFER.slices[0]!.segments[0],
+              origin: { iata_code: 'ORD' },
+              destination: { iata_code: 'JFK' },
+              duration: 'PT3H',
+            },
+          ],
+        },
+      ],
     };
     mockFetchResponse(200, { data: { id: 'orq_1', offers: [connectingOffer] } });
 
@@ -301,7 +319,9 @@ describe('DuffelAdapter error handling', () => {
 
   it('throws on network failure with clear message', async () => {
     mockFetchNetworkError('ECONNREFUSED');
-    await expect(adapter.search(SEARCH_REQUEST)).rejects.toThrow('Duffel API network error: ECONNREFUSED');
+    await expect(adapter.search(SEARCH_REQUEST)).rejects.toThrow(
+      'Duffel API network error: ECONNREFUSED',
+    );
   });
 
   it('throws on 429 rate limit', async () => {
@@ -311,7 +331,9 @@ describe('DuffelAdapter error handling', () => {
 
   it('throws on 4xx API error with detail', async () => {
     mockFetchResponse(422, { errors: [{ message: 'Invalid origin' }] });
-    await expect(adapter.search(SEARCH_REQUEST)).rejects.toThrow('Duffel API error 422: Invalid origin');
+    await expect(adapter.search(SEARCH_REQUEST)).rejects.toThrow(
+      'Duffel API error 422: Invalid origin',
+    );
   });
 
   it('throws on 500 server error', async () => {

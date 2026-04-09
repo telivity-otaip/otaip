@@ -38,10 +38,7 @@ function findPenaltyRule(fareBasis: string): RefundPenaltyRule | undefined {
   return undefined;
 }
 
-function calculateCommissionRecall(
-  input: RefundProcessingInput,
-  baseFareRefund: Decimal,
-): Decimal {
+function calculateCommissionRecall(input: RefundProcessingInput, baseFareRefund: Decimal): Decimal {
   if (!input.commission) return new Decimal(0);
 
   const originalBase = new Decimal(input.base_fare);
@@ -125,9 +122,10 @@ export function processRefund(input: RefundProcessingInput): RefundProcessingOut
     case 'PARTIAL': {
       // Partial refund — specific coupons only
       const refundableCoupons = (input.coupons_to_refund ?? []).filter((c) => c.refundable);
-      const couponRatio = input.total_coupons > 0
-        ? new Decimal(refundableCoupons.length).dividedBy(input.total_coupons)
-        : new Decimal(0);
+      const couponRatio =
+        input.total_coupons > 0
+          ? new Decimal(refundableCoupons.length).dividedBy(input.total_coupons)
+          : new Decimal(0);
 
       const proratedBase = originalBase.times(couponRatio).toDecimalPlaces(2);
 
@@ -188,12 +186,14 @@ export function processRefund(input: RefundProcessingInput): RefundProcessingOut
   };
 
   // Settlement fields
-  const bspFields = input.settlement_system === 'BSP'
-    ? buildBspFields(input, totalRefund, taxBreakdown, penalty)
-    : undefined;
-  const arcFields = input.settlement_system === 'ARC'
-    ? buildArcFields(input, totalRefund, taxBreakdown, penalty)
-    : undefined;
+  const bspFields =
+    input.settlement_system === 'BSP'
+      ? buildBspFields(input, totalRefund, taxBreakdown, penalty)
+      : undefined;
+  const arcFields =
+    input.settlement_system === 'ARC'
+      ? buildArcFields(input, totalRefund, taxBreakdown, penalty)
+      : undefined;
 
   const refund: RefundRecord = {
     ticket_number: input.ticket_number,

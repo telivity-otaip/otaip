@@ -31,15 +31,45 @@ const PROPERTY_WITH_ROOMS = makeCanonical({
       coordinates: { latitude: 40.75, longitude: -73.98 },
       amenities: ['Free WiFi', 'Fitness Center', 'Restaurant', 'Complimentary Breakfast'],
       roomTypes: [
-        { roomTypeId: 'R1', code: 'KNG', description: 'Standard King Room', maxOccupancy: 2, bedTypeRaw: 'King' },
-        { roomTypeId: 'R2', code: 'KDLX', description: 'Deluxe King Room City View', maxOccupancy: 2, bedTypeRaw: 'King' },
+        {
+          roomTypeId: 'R1',
+          code: 'KNG',
+          description: 'Standard King Room',
+          maxOccupancy: 2,
+          bedTypeRaw: 'King',
+        },
+        {
+          roomTypeId: 'R2',
+          code: 'KDLX',
+          description: 'Deluxe King Room City View',
+          maxOccupancy: 2,
+          bedTypeRaw: 'King',
+        },
         { roomTypeId: 'R3', code: 'STE', description: 'Junior Suite', maxOccupancy: 3 },
-        { roomTypeId: 'R4', code: 'TWN', description: 'Twin Room', maxOccupancy: 2, bedTypeRaw: 'Twin' },
+        {
+          roomTypeId: 'R4',
+          code: 'TWN',
+          description: 'Twin Room',
+          maxOccupancy: 2,
+          bedTypeRaw: 'Twin',
+        },
       ],
       rates: [],
       photos: [
-        { url: 'https://example.com/exterior.jpg', caption: 'Hotel Exterior', category: 'exterior', width: 1920, height: 1080 },
-        { url: 'https://example.com/room.jpg', caption: 'Guest Room', category: 'room', width: 1200, height: 800 },
+        {
+          url: 'https://example.com/exterior.jpg',
+          caption: 'Hotel Exterior',
+          category: 'exterior',
+          width: 1920,
+          height: 1080,
+        },
+        {
+          url: 'https://example.com/room.jpg',
+          caption: 'Guest Room',
+          category: 'room',
+          width: 1200,
+          height: 800,
+        },
       ],
     },
   ],
@@ -107,8 +137,8 @@ describe('Agent 20.3 — Content Normalization', () => {
       const deluxe = prop.normalizedRoomTypes.find((r) => r.category === 'deluxe');
       expect(deluxe).toBeDefined();
 
-      const suite = prop.normalizedRoomTypes.find((r) =>
-        r.category === 'junior_suite' || r.category === 'suite',
+      const suite = prop.normalizedRoomTypes.find(
+        (r) => r.category === 'junior_suite' || r.category === 'suite',
       );
       expect(suite).toBeDefined();
     });
@@ -143,7 +173,9 @@ describe('Agent 20.3 — Content Normalization', () => {
 
   describe('Amenity normalization', () => {
     it('normalizes amenity synonyms to canonical IDs', async () => {
-      const result = await agent.execute({ data: { properties: [PROPERTY_WITH_AMENITY_SYNONYMS] } });
+      const result = await agent.execute({
+        data: { properties: [PROPERTY_WITH_AMENITY_SYNONYMS] },
+      });
       const prop = result.data.properties[0]!;
 
       const wifiAmenity = prop.normalizedAmenities.find((a) => a.amenityId === 'wifi_free');
@@ -152,7 +184,9 @@ describe('Agent 20.3 — Content Normalization', () => {
     });
 
     it('deduplicates amenities across sources', async () => {
-      const result = await agent.execute({ data: { properties: [PROPERTY_WITH_AMENITY_SYNONYMS] } });
+      const result = await agent.execute({
+        data: { properties: [PROPERTY_WITH_AMENITY_SYNONYMS] },
+      });
       const prop = result.data.properties[0]!;
 
       // "Complimentary WiFi" and "Free Internet" should both map to wifi_free
@@ -167,16 +201,18 @@ describe('Agent 20.3 — Content Normalization', () => {
     it('handles missing/incomplete amenity data', async () => {
       const emptyAmenities = makeCanonical({
         canonicalId: 'empty-amenity',
-        sourceResults: [{
-          source: { sourceId: 'test', sourcePropertyId: 'T-001' },
-          propertyName: 'Empty Hotel',
-          address: { line1: '1 St', city: 'NYC', countryCode: 'US' },
-          coordinates: { latitude: 40.75, longitude: -73.98 },
-          amenities: [],
-          roomTypes: [],
-          rates: [],
-          photos: [],
-        }],
+        sourceResults: [
+          {
+            source: { sourceId: 'test', sourcePropertyId: 'T-001' },
+            propertyName: 'Empty Hotel',
+            address: { line1: '1 St', city: 'NYC', countryCode: 'US' },
+            coordinates: { latitude: 40.75, longitude: -73.98 },
+            amenities: [],
+            roomTypes: [],
+            rates: [],
+            photos: [],
+          },
+        ],
       });
 
       const result = await agent.execute({ data: { properties: [emptyAmenities] } });
@@ -222,9 +258,9 @@ describe('Agent 20.3 — Content Normalization', () => {
 
     it('throws when not initialized', async () => {
       const uninit = new ContentNormalizationAgent();
-      await expect(
-        uninit.execute({ data: { properties: [] } }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninit.execute({ data: { properties: [] } })).rejects.toThrow(
+        'not been initialized',
+      );
     });
 
     it('reports healthy status', async () => {

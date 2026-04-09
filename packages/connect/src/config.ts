@@ -20,9 +20,7 @@ export function validateConfig<TOutput, TInput = unknown>(
 ): TOutput {
   const result = schema.safeParse(config);
   if (!result.success) {
-    const issues = result.error.issues
-      .map((i) => `${i.path.join('.')}: ${i.message}`)
-      .join('; ');
+    const issues = result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
     throw new Error(`Invalid ${supplierName} config: ${issues}`);
   }
   return result.data;

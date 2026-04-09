@@ -56,4 +56,3 @@ export function fuzzySearch(query: string, limit: number = 5): FuzzyMatchResult[
 export function resetFuzzyIndex(): void {
   fuseInstance = null;
 }
-

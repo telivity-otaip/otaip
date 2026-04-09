@@ -6,7 +6,14 @@ import type { RawHotelResult } from '../../types/hotel-common.js';
 // Test fixtures — overlapping properties from different sources
 // ---------------------------------------------------------------------------
 
-function makeProperty(overrides: Partial<RawHotelResult> & { source: RawHotelResult['source']; propertyName: string; address: RawHotelResult['address']; coordinates: RawHotelResult['coordinates'] }): RawHotelResult {
+function makeProperty(
+  overrides: Partial<RawHotelResult> & {
+    source: RawHotelResult['source'];
+    propertyName: string;
+    address: RawHotelResult['address'];
+    coordinates: RawHotelResult['coordinates'];
+  },
+): RawHotelResult {
   return {
     amenities: [],
     roomTypes: [],
@@ -20,8 +27,14 @@ function makeProperty(overrides: Partial<RawHotelResult> & { source: RawHotelRes
 const MARRIOTT_AMADEUS = makeProperty({
   source: { sourceId: 'amadeus', sourcePropertyId: 'AM-001' },
   propertyName: 'Marriott Marquis Times Square',
-  address: { line1: '1535 Broadway', city: 'New York', stateProvince: 'NY', postalCode: '10036', countryCode: 'US' },
-  coordinates: { latitude: 40.7580, longitude: -73.9855 },
+  address: {
+    line1: '1535 Broadway',
+    city: 'New York',
+    stateProvince: 'NY',
+    postalCode: '10036',
+    countryCode: 'US',
+  },
+  coordinates: { latitude: 40.758, longitude: -73.9855 },
   chainCode: 'MC',
   starRating: 4,
 });
@@ -29,7 +42,13 @@ const MARRIOTT_AMADEUS = makeProperty({
 const MARRIOTT_HOTELBEDS = makeProperty({
   source: { sourceId: 'hotelbeds', sourcePropertyId: 'HB-87234' },
   propertyName: 'New York Marriott Marquis',
-  address: { line1: '1535 Broadway Ave', city: 'New York', stateProvince: 'NY', postalCode: '10036', countryCode: 'US' },
+  address: {
+    line1: '1535 Broadway Ave',
+    city: 'New York',
+    stateProvince: 'NY',
+    postalCode: '10036',
+    countryCode: 'US',
+  },
   coordinates: { latitude: 40.7581, longitude: -73.9856 },
   chainCode: 'MC',
   starRating: 4,
@@ -38,7 +57,13 @@ const MARRIOTT_HOTELBEDS = makeProperty({
 const MARRIOTT_DUFFEL = makeProperty({
   source: { sourceId: 'duffel', sourcePropertyId: 'DUF-NYC-001' },
   propertyName: 'Marriott Marquis New York Times Square',
-  address: { line1: '1535 Broadway', city: 'New York', stateProvince: 'NY', postalCode: '10036', countryCode: 'US' },
+  address: {
+    line1: '1535 Broadway',
+    city: 'New York',
+    stateProvince: 'NY',
+    postalCode: '10036',
+    countryCode: 'US',
+  },
   coordinates: { latitude: 40.7579, longitude: -73.9854 },
   chainCode: 'MC',
   starRating: 4,
@@ -48,8 +73,14 @@ const MARRIOTT_DUFFEL = makeProperty({
 const HILTON_AMADEUS = makeProperty({
   source: { sourceId: 'amadeus', sourcePropertyId: 'AM-002' },
   propertyName: 'Hilton Midtown Manhattan',
-  address: { line1: '1335 Avenue of the Americas', city: 'New York', stateProvince: 'NY', postalCode: '10019', countryCode: 'US' },
-  coordinates: { latitude: 40.7624, longitude: -73.9790 },
+  address: {
+    line1: '1335 Avenue of the Americas',
+    city: 'New York',
+    stateProvince: 'NY',
+    postalCode: '10019',
+    countryCode: 'US',
+  },
+  coordinates: { latitude: 40.7624, longitude: -73.979 },
   chainCode: 'HH',
   starRating: 4,
 });
@@ -57,7 +88,13 @@ const HILTON_AMADEUS = makeProperty({
 const HILTON_HOTELBEDS = makeProperty({
   source: { sourceId: 'hotelbeds', sourcePropertyId: 'HB-65891' },
   propertyName: 'Hilton New York Midtown',
-  address: { line1: '1335 6th Ave', city: 'New York', stateProvince: 'NY', postalCode: '10019', countryCode: 'US' },
+  address: {
+    line1: '1335 6th Ave',
+    city: 'New York',
+    stateProvince: 'NY',
+    postalCode: '10019',
+    countryCode: 'US',
+  },
   coordinates: { latitude: 40.7625, longitude: -73.9791 },
   chainCode: 'HH',
   starRating: 4,
@@ -67,7 +104,13 @@ const HILTON_HOTELBEDS = makeProperty({
 const POD51 = makeProperty({
   source: { sourceId: 'duffel', sourcePropertyId: 'DUF-NYC-004' },
   propertyName: 'Pod 51 Hotel',
-  address: { line1: '230 East 51st Street', city: 'New York', stateProvince: 'NY', postalCode: '10022', countryCode: 'US' },
+  address: {
+    line1: '230 East 51st Street',
+    city: 'New York',
+    stateProvince: 'NY',
+    postalCode: '10022',
+    countryCode: 'US',
+  },
   coordinates: { latitude: 40.7557, longitude: -73.9685 },
   starRating: 3,
 });
@@ -76,7 +119,13 @@ const POD51 = makeProperty({
 const HYATT_AMADEUS = makeProperty({
   source: { sourceId: 'amadeus', sourcePropertyId: 'AM-003' },
   propertyName: 'Hyatt Grand Central New York',
-  address: { line1: '109 East 42nd Street', city: 'New York', stateProvince: 'NY', postalCode: '10017', countryCode: 'US' },
+  address: {
+    line1: '109 East 42nd Street',
+    city: 'New York',
+    stateProvince: 'NY',
+    postalCode: '10017',
+    countryCode: 'US',
+  },
   coordinates: { latitude: 40.7527, longitude: -73.9772 },
   chainCode: 'HY',
   starRating: 4,
@@ -128,8 +177,10 @@ describe('Agent 20.2 — Property Deduplication', () => {
       const result = await agent.execute({
         data: {
           properties: [
-            MARRIOTT_AMADEUS, MARRIOTT_HOTELBEDS,
-            HILTON_AMADEUS, HILTON_HOTELBEDS,
+            MARRIOTT_AMADEUS,
+            MARRIOTT_HOTELBEDS,
+            HILTON_AMADEUS,
+            HILTON_HOTELBEDS,
             POD51,
             HYATT_AMADEUS,
           ],
@@ -223,7 +274,13 @@ describe('Agent 20.2 — Property Deduplication', () => {
       const marriottDowntown = makeProperty({
         source: { sourceId: 'amadeus', sourcePropertyId: 'AM-099' },
         propertyName: 'Marriott Downtown Manhattan',
-        address: { line1: '85 West Street', city: 'New York', stateProvince: 'NY', postalCode: '10006', countryCode: 'US' },
+        address: {
+          line1: '85 West Street',
+          city: 'New York',
+          stateProvince: 'NY',
+          postalCode: '10006',
+          countryCode: 'US',
+        },
         coordinates: { latitude: 40.7095, longitude: -74.0145 }, // Downtown, ~5km from Times Square
         chainCode: 'MC',
         starRating: 4,
@@ -260,9 +317,9 @@ describe('Agent 20.2 — Property Deduplication', () => {
 
     it('throws when not initialized', async () => {
       const uninit = new PropertyDeduplicationAgent();
-      await expect(
-        uninit.execute({ data: { properties: [] } }),
-      ).rejects.toThrow('not been initialized');
+      await expect(uninit.execute({ data: { properties: [] } })).rejects.toThrow(
+        'not been initialized',
+      );
     });
 
     it('reports healthy status', async () => {

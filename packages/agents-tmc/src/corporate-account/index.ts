@@ -5,21 +5,20 @@
  */
 
 import Decimal from 'decimal.js';
-import type {
-  Agent, AgentInput, AgentOutput, AgentHealthStatus,
-} from '@otaip/core';
+import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
 import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type {
-  CorporateAccountInput, CorporateAccountOutput,
-  CorporateAccount, BookingValidationResult, PolicyViolation,
+  CorporateAccountInput,
+  CorporateAccountOutput,
+  CorporateAccount,
+  BookingValidationResult,
+  PolicyViolation,
   CabinClass,
 } from './types.js';
 
 const CABIN_RANK: Record<CabinClass, number> = { economy: 0, business: 1, first: 2 };
 
-export class CorporateAccountAgent
-  implements Agent<CorporateAccountInput, CorporateAccountOutput>
-{
+export class CorporateAccountAgent implements Agent<CorporateAccountInput, CorporateAccountOutput> {
   readonly id = '8.2';
   readonly name = 'Corporate Account';
   readonly version = '0.1.0';
@@ -28,9 +27,13 @@ export class CorporateAccountAgent
   private accounts = new Map<string, CorporateAccount>();
   private nextId = 1;
 
-  getAccounts(): Map<string, CorporateAccount> { return this.accounts; }
+  getAccounts(): Map<string, CorporateAccount> {
+    return this.accounts;
+  }
 
-  async initialize(): Promise<void> { this.initialized = true; }
+  async initialize(): Promise<void> {
+    this.initialized = true;
+  }
 
   async execute(
     input: AgentInput<CorporateAccountInput>,
@@ -41,13 +44,20 @@ export class CorporateAccountAgent
     const now = d.current_date ?? new Date().toISOString();
 
     switch (d.operation) {
-      case 'get_account': return this.handleGet(d);
-      case 'create_account': return this.handleCreate(d, now);
-      case 'update_account': return this.handleUpdate(d, now);
-      case 'validate_booking': return this.handleValidate(d, now);
-      case 'get_policy': return this.handleGetPolicy(d);
-      case 'list_accounts': return this.handleList();
-      case 'get_preferred_suppliers': return this.handlePreferred(d);
+      case 'get_account':
+        return this.handleGet(d);
+      case 'create_account':
+        return this.handleCreate(d, now);
+      case 'update_account':
+        return this.handleUpdate(d, now);
+      case 'validate_booking':
+        return this.handleValidate(d, now);
+      case 'get_policy':
+        return this.handleGetPolicy(d);
+      case 'list_accounts':
+        return this.handleList();
+      case 'get_preferred_suppliers':
+        return this.handlePreferred(d);
       default:
         throw new AgentInputValidationError(this.id, 'operation', 'Invalid operation.');
     }
@@ -58,7 +68,11 @@ export class CorporateAccountAgent
     return { status: 'healthy' };
   }
 
-  destroy(): void { this.initialized = false; this.accounts.clear(); this.nextId = 1; }
+  destroy(): void {
+    this.initialized = false;
+    this.accounts.clear();
+    this.nextId = 1;
+  }
 
   private handleGet(d: CorporateAccountInput): AgentOutput<CorporateAccountOutput> {
     if (!d.account_id) throw new AgentInputValidationError(this.id, 'account_id', 'Required.');
@@ -73,7 +87,11 @@ export class CorporateAccountAgent
     // Duplicate check
     for (const existing of this.accounts.values()) {
       if (existing.company_name === d.account_data.company_name) {
-        throw new AgentInputValidationError(this.id, 'company_name', `DUPLICATE_ACCOUNT:${existing.account_id}`);
+        throw new AgentInputValidationError(
+          this.id,
+          'company_name',
+          `DUPLICATE_ACCOUNT:${existing.account_id}`,
+        );
       }
     }
 
@@ -104,7 +122,11 @@ export class CorporateAccountAgent
     };
 
     this.accounts.set(account.account_id, account);
-    return { data: { account, message: 'Account created.' }, confidence: 1.0, metadata: { agent_id: this.id } };
+    return {
+      data: { account, message: 'Account created.' },
+      confidence: 1.0,
+      metadata: { agent_id: this.id },
+    };
   }
 
   private handleUpdate(d: CorporateAccountInput, now: string): AgentOutput<CorporateAccountOutput> {
@@ -123,10 +145,17 @@ export class CorporateAccountAgent
       negotiated_fares: d.account_data.negotiated_fares ?? existing.negotiated_fares,
     };
     this.accounts.set(updated.account_id, updated);
-    return { data: { account: updated, message: 'Account updated.' }, confidence: 1.0, metadata: { agent_id: this.id } };
+    return {
+      data: { account: updated, message: 'Account updated.' },
+      confidence: 1.0,
+      metadata: { agent_id: this.id },
+    };
   }
 
-  private handleValidate(d: CorporateAccountInput, now: string): AgentOutput<CorporateAccountOutput> {
+  private handleValidate(
+    d: CorporateAccountInput,
+    now: string,
+  ): AgentOutput<CorporateAccountOutput> {
     if (!d.account_id) throw new AgentInputValidationError(this.id, 'account_id', 'Required.');
     if (!d.booking) throw new AgentInputValidationError(this.id, 'booking', 'Required.');
 
@@ -182,9 +211,17 @@ export class CorporateAccountAgent
       const daysAdvance = Math.floor((dep.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
       if (daysAdvance < policy.advance_booking_exception_threshold_days) {
-        violations.push({ rule: 'advance_booking', severity: 'hard', message: `Booked ${daysAdvance} days before departure (exception threshold: ${policy.advance_booking_exception_threshold_days} days).` });
+        violations.push({
+          rule: 'advance_booking',
+          severity: 'hard',
+          message: `Booked ${daysAdvance} days before departure (exception threshold: ${policy.advance_booking_exception_threshold_days} days).`,
+        });
       } else if (daysAdvance < policy.advance_booking_requirement_days) {
-        violations.push({ rule: 'advance_booking', severity: 'soft', message: `Booked ${daysAdvance} days before departure (requirement: ${policy.advance_booking_requirement_days} days).` });
+        violations.push({
+          rule: 'advance_booking',
+          severity: 'soft',
+          message: `Booked ${daysAdvance} days before departure (requirement: ${policy.advance_booking_requirement_days} days).`,
+        });
       }
     }
 
@@ -195,7 +232,10 @@ export class CorporateAccountAgent
     // Negotiated fare check
     const todayStr = now.slice(0, 10);
     const negotiatedFare = account.negotiated_fares.find(
-      (nf) => nf.airline === d.booking!.airline && nf.valid_from <= todayStr && (!nf.valid_to || nf.valid_to >= todayStr),
+      (nf) =>
+        nf.airline === d.booking!.airline &&
+        nf.valid_from <= todayStr &&
+        (!nf.valid_to || nf.valid_to >= todayStr),
     );
 
     const validation: BookingValidationResult = {
@@ -203,12 +243,17 @@ export class CorporateAccountAgent
       blocked,
       requires_approval: requiresApproval,
       violations,
-      preferred_fare_available: negotiatedFare ? {
-        airline: negotiatedFare.airline,
-        fare_basis: negotiatedFare.fare_basis,
-        discount_percent: negotiatedFare.discount_percent,
-        estimated_saving_usd: fareAmount.times(negotiatedFare.discount_percent).dividedBy(100).toFixed(2),
-      } : undefined,
+      preferred_fare_available: negotiatedFare
+        ? {
+            airline: negotiatedFare.airline,
+            fare_basis: negotiatedFare.fare_basis,
+            discount_percent: negotiatedFare.discount_percent,
+            estimated_saving_usd: fareAmount
+              .times(negotiatedFare.discount_percent)
+              .dividedBy(100)
+              .toFixed(2),
+          }
+        : undefined,
     };
 
     return {
@@ -227,19 +272,35 @@ export class CorporateAccountAgent
   }
 
   private handleList(): AgentOutput<CorporateAccountOutput> {
-    return { data: { accounts: [...this.accounts.values()] }, confidence: 1.0, metadata: { agent_id: this.id } };
+    return {
+      data: { accounts: [...this.accounts.values()] },
+      confidence: 1.0,
+      metadata: { agent_id: this.id },
+    };
   }
 
   private handlePreferred(d: CorporateAccountInput): AgentOutput<CorporateAccountOutput> {
     if (!d.account_id) throw new AgentInputValidationError(this.id, 'account_id', 'Required.');
     const account = this.accounts.get(d.account_id);
     if (!account) throw new AgentInputValidationError(this.id, 'account_id', 'ACCOUNT_NOT_FOUND');
-    return { data: { preferred_suppliers: account.policy.preferred_airlines }, confidence: 1.0, metadata: { agent_id: this.id } };
+    return {
+      data: { preferred_suppliers: account.policy.preferred_airlines },
+      confidence: 1.0,
+      metadata: { agent_id: this.id },
+    };
   }
 }
 
 export type {
-  CorporateAccountInput, CorporateAccountOutput, CorporateAccount,
-  TravelPolicy, NegotiatedFare, BookingValidationResult, PolicyViolation,
-  BookingValidationSegment, CabinClass, ViolationSeverity, CorporateOperation,
+  CorporateAccountInput,
+  CorporateAccountOutput,
+  CorporateAccount,
+  TravelPolicy,
+  NegotiatedFare,
+  BookingValidationResult,
+  PolicyViolation,
+  BookingValidationSegment,
+  CabinClass,
+  ViolationSeverity,
+  CorporateOperation,
 } from './types.js';
