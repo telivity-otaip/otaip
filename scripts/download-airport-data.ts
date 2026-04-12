@@ -257,12 +257,38 @@ const PRIMARY_AIRPORTS = new Set([
   'DXB', 'CGK', 'BKK', 'PVG', 'YYZ', 'YUL',
 ]);
 
+async function fetchWithRetry(
+  url: string,
+  { maxAttempts = 3, delayMs = 5_000 }: { maxAttempts?: number; delayMs?: number } = {},
+): Promise<Response> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) return response;
+      // Retry on 5xx / 429; throw immediately on 4xx (except 429)
+      if (response.status < 500 && response.status !== 429) {
+        throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
+      }
+      console.warn(
+        `Attempt ${attempt}/${maxAttempts} failed: ${response.status} ${response.statusText}`,
+      );
+    } catch (err) {
+      if (attempt === maxAttempts) throw err;
+      console.warn(
+        `Attempt ${attempt}/${maxAttempts} failed: ${err instanceof Error ? err.message : err}`,
+      );
+    }
+    if (attempt < maxAttempts) {
+      console.warn(`Retrying in ${delayMs / 1000}s...`);
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  throw new Error(`All ${maxAttempts} attempts failed for ${url}`);
+}
+
 async function fetchCsv(url: string): Promise<string> {
   console.warn(`Downloading: ${url}`);
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
-  }
+  const response = await fetchWithRetry(url);
   return response.text();
 }
 
