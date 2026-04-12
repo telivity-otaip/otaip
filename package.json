@@ -26,6 +26,10 @@
     "data:download": "tsx scripts/download-airport-data.ts",
     "clean": "pnpm -r run clean && rm -rf node_modules"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [],
+    "overrides": {}
+  },
   "devDependencies": {
     "@types/node": "^25.5.0",
     "@typescript-eslint/eslint-plugin": "^8.58.0",
