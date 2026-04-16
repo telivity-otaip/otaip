@@ -76,6 +76,14 @@ export interface OfferEvaluatorRequest {
   traveler_profile?: TravelerProfile;
   scoring_weights?: ScoringWeights;
   chain_confidence?: ChainConfidence;
+  /**
+   * ISO 8601 timestamp to use as the evaluation clock. When provided,
+   * hard filters (offer expiry, departure-date cutoffs) are compared
+   * against this instant instead of wall-clock time. Enables
+   * deterministic tests and replayable evaluations. Defaults to
+   * `new Date()` when omitted.
+   */
+  evaluation_time?: string;
 }
 
 // ---------------------------------------------------------------------------

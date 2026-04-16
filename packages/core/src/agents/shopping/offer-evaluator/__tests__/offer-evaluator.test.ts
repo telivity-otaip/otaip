@@ -1,11 +1,24 @@
 import { describe, it, expect } from 'vitest';
 import { evaluateOffers } from '../index.js';
 import { OfferEvaluatorAgent } from '../index.js';
-import type { EvaluatorOffer, OfferEvaluatorRequest } from '../types.js';
+import type { EvaluatorOffer, EvaluatorResult, OfferEvaluatorRequest } from '../types.js';
 
 // ---------------------------------------------------------------------------
 // Test helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Frozen evaluation clock. The offer fixtures below use dates on
+ * 2026-04-14 with `expires_at` at end-of-day UTC. Pinning the clock to
+ * the morning of that day keeps every offer non-expired regardless of
+ * when the suite runs (in CI, locally, months later).
+ */
+const TEST_EVAL_TIME = '2026-04-14T06:00:00Z';
+
+/** Inject the frozen clock into every evaluator call. */
+function runEval(request: OfferEvaluatorRequest): EvaluatorResult {
+  return evaluateOffers({ evaluation_time: TEST_EVAL_TIME, ...request });
+}
 
 function makeOffer(overrides: Partial<EvaluatorOffer> & { offer_id: string }): EvaluatorOffer {
   return {
@@ -125,7 +138,7 @@ describe('Scenario 1: Demo scenario — LHR-AMS, meeting at 11:00, 45-min buffer
       }),
     );
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers: [...onTimeOffers, ...lateOffers],
       constraints: {
         latest_arrival: '2026-04-14T10:15:00',
@@ -180,7 +193,7 @@ describe('Scenario 2: All offers arrive too late', () => {
       }),
     );
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers,
       constraints: { latest_arrival: '2026-04-14T10:15:00', currency: 'USD' },
     });
@@ -224,7 +237,7 @@ describe('Scenario 3: Direct flight available, prefer_direct=true', () => {
       makeConnectingOffer('connect_140', 140, '2026-04-14T10:45:00', 70, 195, 'GBP'),
     ];
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers,
       constraints: { prefer_direct: true, currency: 'GBP' },
     });
@@ -249,7 +262,7 @@ describe('Scenario 4: Very tight connection in winning offer', () => {
     const offA = makeConnectingOffer('off_A', 150, '2026-04-14T10:00:00', 25, 150);
     const offB = makeConnectingOffer('off_B', 160, '2026-04-14T10:00:00', 75, 150);
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers: [offA, offB],
       constraints: { currency: 'USD', cabin_class: 'economy' },
     });
@@ -310,7 +323,7 @@ describe('Scenario 5: Near-tie — top two offers within 0.010 composite', () =>
       },
     });
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers: [offer1, offer2],
       constraints: { currency: 'USD', cabin_class: 'economy' },
     });
@@ -329,7 +342,7 @@ describe('Scenario 5: Near-tie — top two offers within 0.010 composite', () =>
 // ---------------------------------------------------------------------------
 describe('Scenario 6: No constraints provided', () => {
   it('returns NO_CONSTRAINTS_PROVIDED error', () => {
-    const result = evaluateOffers({
+    const result = runEval({
       offers: [makeOffer({ offer_id: 'any' })],
       constraints: {},
     });
@@ -345,7 +358,7 @@ describe('Scenario 6: No constraints provided', () => {
 // ---------------------------------------------------------------------------
 describe('Scenario 7: Custom scoring_weights that do not sum to 1.0', () => {
   it('returns INVALID_SCORING_WEIGHTS with sum value', () => {
-    const result = evaluateOffers({
+    const result = runEval({
       offers: [makeOffer({ offer_id: 'any' })],
       constraints: { currency: 'USD' },
       scoring_weights: {
@@ -406,7 +419,7 @@ describe('Scenario 8: Single eligible offer after hard filtering', () => {
       }),
     );
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers: [eligible, ...lateOffers],
       constraints: { latest_arrival: '2026-04-14T10:15:00', currency: 'USD' },
     });
@@ -448,7 +461,7 @@ describe('Scenario 9: Upstream chain_confidence low', () => {
       }),
     ];
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers,
       constraints: { currency: 'USD', cabin_class: 'economy' },
       chain_confidence: {
@@ -511,7 +524,7 @@ describe('Scenario 10: Adversarial — offer with historical arrival time', () =
       },
     });
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers: [historicalOffer, validOffer],
       constraints: { latest_arrival: '2026-04-14T10:15:00', currency: 'USD' },
     });
@@ -562,6 +575,7 @@ describe('OfferEvaluatorAgent wrapper', () => {
 
     const result = await agent.execute({
       data: {
+        evaluation_time: TEST_EVAL_TIME,
         offers: [makeOffer({ offer_id: 'test1' })],
         constraints: { currency: 'USD', cabin_class: 'economy' },
       },
@@ -582,7 +596,7 @@ describe('Edge case: prefer_direct=true but no direct flights', () => {
       makeConnectingOffer('conn2', 180, '2026-04-14T10:30:00', 90, 180),
     ];
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers,
       constraints: { prefer_direct: true, currency: 'USD' },
     });
@@ -643,7 +657,7 @@ describe('Edge case: No latest_arrival — weight redistribution', () => {
       }),
     ];
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers,
       constraints: { currency: 'USD', cabin_class: 'economy' },
     });
@@ -668,7 +682,7 @@ describe('Edge case: Mixed currencies without normalization', () => {
       makeOffer({ offer_id: 'gbp', price: { total: 150, currency: 'GBP' } }),
     ];
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers,
       constraints: { currency: 'USD', cabin_class: 'economy' },
     });
@@ -686,7 +700,7 @@ describe('Edge case: Mixed currencies without normalization', () => {
 // ---------------------------------------------------------------------------
 describe('Edge case: Empty offers array', () => {
   it('returns NO_OFFERS_PROVIDED', () => {
-    const result = evaluateOffers({
+    const result = runEval({
       offers: [],
       constraints: { currency: 'USD' },
     });
@@ -728,7 +742,7 @@ describe('Price scoring: 15% band softening', () => {
       }),
     ];
 
-    const result = evaluateOffers({
+    const result = runEval({
       offers,
       constraints: { currency: 'USD', cabin_class: 'economy' },
     });
