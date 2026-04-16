@@ -82,3 +82,18 @@ export type {
 // Pipeline stubs (types only — implementations are stubs)
 export type { BookingPipelineConfig, BookingPipelineStep } from './pipeline/booking-flow.js';
 export type { PaymentHandoffConfig, PaymentHandoffResult } from './pipeline/payment-handoff.js';
+
+// Channel capability registry (Step 3a).
+// Type definitions live in @otaip/core — re-export for convenience.
+export { CapabilityRegistry } from './capability-registry.js';
+export type {
+  ChannelCapability,
+  ChannelFunction,
+  ChannelType,
+  ResolvedCapability,
+} from '@otaip/core';
+export { amadeusCapabilities } from './suppliers/amadeus/capabilities.js';
+export { sabreCapabilities } from './suppliers/sabre/capabilities.js';
+export { navitaireCapabilities } from './suppliers/navitaire/capabilities.js';
+export { tripproCapabilities } from './suppliers/trippro/capabilities.js';
+export { haipCapabilities } from './suppliers/haip/capabilities.js';

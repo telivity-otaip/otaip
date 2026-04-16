@@ -13,6 +13,11 @@ export type {
   SortField,
   SortOrder,
 } from './availability-search/index.js';
+export { availabilitySearchContract } from './availability-search/contract.js';
+export {
+  availabilitySearchInputSchema,
+  availabilitySearchOutputSchema,
+} from './availability-search/schema.js';
 
 export { ScheduleLookup } from './schedule-lookup/index.js';
 export type {

@@ -36,6 +36,11 @@ export type {
   NdcOrderFormat,
   NdcOfferItem,
 } from './gds-ndc-router/index.js';
+export { gdsNdcRouterContract } from './gds-ndc-router/contract.js';
+export {
+  gdsNdcRouterInputSchema,
+  gdsNdcRouterOutputSchema,
+} from './gds-ndc-router/schema.js';
 
 export { PnrBuilder } from './pnr-builder/index.js';
 export type {
@@ -51,6 +56,11 @@ export type {
   PnrGdsSystem,
   SsrCode,
 } from './pnr-builder/index.js';
+export { pnrBuilderContract } from './pnr-builder/contract.js';
+export {
+  pnrBuilderInputSchema,
+  pnrBuilderOutputSchema,
+} from './pnr-builder/schema.js';
 
 export { PnrValidation } from './pnr-validation/index.js';
 export type {

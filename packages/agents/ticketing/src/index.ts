@@ -17,6 +17,11 @@ export type {
   CommissionData,
   BspReportingFields,
 } from './ticket-issuance/index.js';
+export { ticketIssuanceContract } from './ticket-issuance/contract.js';
+export {
+  ticketIssuanceInputSchema,
+  ticketIssuanceOutputSchema,
+} from './ticket-issuance/schema.js';
 
 export { EmdManagement, RFIC_DESCRIPTIONS } from './emd-management/index.js';
 export type {

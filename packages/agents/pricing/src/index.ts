@@ -18,6 +18,11 @@ export type {
   BlackoutPeriod,
   MoneyAmount,
 } from './fare-rule-agent/index.js';
+export { fareRuleAgentContract } from './fare-rule-agent/contract.js';
+export {
+  fareRuleInputSchema,
+  fareRuleOutputSchema,
+} from './fare-rule-agent/schema.js';
 
 export { FareConstruction } from './fare-construction/index.js';
 export type {
@@ -61,6 +66,11 @@ export type {
   OfferStatus,
   OfferOperation,
 } from './offer-builder/index.js';
+export { offerBuilderAgentContract } from './offer-builder/contract.js';
+export {
+  offerBuilderInputSchema,
+  offerBuilderOutputSchema,
+} from './offer-builder/schema.js';
 
 export { CorporatePolicyValidationAgent } from './corporate-policy-validation/index.js';
 export type {
