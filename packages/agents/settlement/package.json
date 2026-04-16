@@ -1,6 +1,6 @@
 {
   "name": "@otaip/agents-settlement",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "OTAIP Stage 6 agents — refund processing, ADM prevention",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
