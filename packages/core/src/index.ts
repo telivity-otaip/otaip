@@ -100,3 +100,62 @@ export type {
   PriceResponse,
   DistributionAdapter,
 } from './types/distribution.js';
+
+// Channel capability types (CapabilityRegistry class lives in @otaip/connect).
+export type {
+  ChannelCapability,
+  ChannelFunction,
+  ChannelType,
+  ResolvedCapability,
+} from './types/capabilities.js';
+
+// Pipeline validator — the platform contract layer.
+export type {
+  ActionType,
+  AgentContract,
+  AgentInvocation,
+  AirlineRef,
+  AirportRef,
+  FareBasisRef,
+  GateName,
+  GateResult,
+  JSONSchema,
+  PipelineIntent,
+  PipelineOrchestratorConfig,
+  PipelineSession,
+  ReferenceDataProvider,
+  ReferenceStrictOptions,
+  RunAgentFailureReason,
+  RunAgentResult,
+  SemanticIssue,
+  SemanticValidationResult,
+  ValidationContext,
+  ZodToJsonSchemaOptions,
+  ApprovalPolicy,
+  ConfidenceCheckInput,
+  GateFailureReason,
+  GateRunResult,
+  RunGatesConfig,
+} from './pipeline-validator/index.js';
+export {
+  CONFIDENCE_FLOORS,
+  DEFAULT_APPROVAL_POLICY,
+  PipelineOrchestrator,
+  REFERENCE_CONFIDENCE_FLOOR,
+  captureOutputContract,
+  checkActionClassification,
+  checkConfidence,
+  checkCrossAgentConsistency,
+  checkIntentDrift,
+  checkIntentRelevance,
+  makeInvocation,
+  resolveAirlineStrict,
+  resolveAirportStrict,
+  resolveFareBasisStrict,
+  resolveFloor,
+  runGates,
+  validateFutureDate,
+  validateIataCode,
+  validateThresholdAgainstFloor,
+  zodToJsonSchema,
+} from './pipeline-validator/index.js';

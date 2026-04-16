@@ -82,3 +82,24 @@ export type {
   RestrictionLevel,
   RegulatoryOperation,
 } from './country-regulatory-resolver/index.js';
+
+// Pipeline validator bindings — wraps Stage 0 agents as a ReferenceDataProvider.
+export { ReferenceAgentDataProvider } from './pipeline-bindings.js';
+export type { ReferenceAgentDataProviderOptions } from './pipeline-bindings.js';
+
+// Pipeline contracts for Stage 0 reference agents.
+export { airportCodeResolverContract } from './airport-code-resolver/contract.js';
+export {
+  airportCodeResolverInputSchema,
+  airportCodeResolverOutputSchema,
+} from './airport-code-resolver/schema.js';
+export { airlineCodeMapperContract } from './airline-code-mapper/contract.js';
+export {
+  airlineCodeMapperInputSchema,
+  airlineCodeMapperOutputSchema,
+} from './airline-code-mapper/schema.js';
+export { fareBasisDecoderContract } from './fare-basis-decoder/contract.js';
+export {
+  fareBasisDecoderInputSchema,
+  fareBasisDecoderOutputSchema,
+} from './fare-basis-decoder/schema.js';
