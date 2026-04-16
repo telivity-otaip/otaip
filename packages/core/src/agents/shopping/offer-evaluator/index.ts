@@ -65,7 +65,10 @@ const AUTO_EXECUTE_THRESHOLD = 0.65;
 
 export function evaluateOffers(request: OfferEvaluatorRequest): EvaluatorResult {
   const startTime = performance.now();
-  const evaluationTime = new Date();
+  // Clock is injectable for deterministic tests and replayable evaluations.
+  // Falling back to `new Date()` preserves existing caller behaviour.
+  const evaluationTime =
+    request.evaluation_time !== undefined ? new Date(request.evaluation_time) : new Date();
 
   // Step 1: Validate inputs
   const validationError = validateInputs(request);
