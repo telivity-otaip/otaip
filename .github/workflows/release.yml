@@ -63,54 +63,35 @@ jobs:
         if: steps.check.outputs.exists == 'false'
         id: notes
         run: |
-          TAG="${{ steps.version.outputs.tag }}"
+          VERSION=$(node -p "require('./package.json').version")
           AGENT_COUNT="${{ steps.agents.outputs.count }}"
           TEST_COUNT="${{ steps.tests.outputs.count }}"
           TEST_FILES="${{ steps.tests.outputs.files }}"
 
-          # Collect commits since last tag, grouped by conventional-commit type
-          FEATS=$(git log "${TAG}..HEAD" --pretty=format:"- %s" --grep="^feat" 2>/dev/null || true)
-          FIXES=$(git log "${TAG}..HEAD" --pretty=format:"- %s" --grep="^fix" 2>/dev/null || true)
-          DOCS=$(git log "${TAG}..HEAD" --pretty=format:"- %s" --grep="^docs" 2>/dev/null || true)
-          CI=$(git log "${TAG}..HEAD" --pretty=format:"- %s" --grep="^ci" 2>/dev/null || true)
-          OTHER=$(git log "${TAG}..HEAD" --pretty=format:"- %s" --invert-grep --grep="^feat" --grep="^fix" --grep="^docs" --grep="^ci" 2>/dev/null || true)
+          # Extract the current version's section from CHANGELOG.md.
+          # Matches '## <version> — ...' through the next '## <digit>...' or EOF.
+          # Require ' — ' after the version so '0.3.2' doesn't match '0.3.2.1'.
+          CHANGELOG_BODY=$(node -e "
+            const fs = require('fs');
+            const version = process.argv[1];
+            try {
+              const content = fs.readFileSync('CHANGELOG.md', 'utf8');
+              const escaped = version.replace(/\./g, '\\\\.');
+              const re = new RegExp('## ' + escaped + ' — [^\\\\n]*\\\\n([\\\\s\\\\S]*?)(?=\\\\n## \\\\d|\$)');
+              const m = content.match(re);
+              if (m) process.stdout.write(m[1].trim());
+            } catch (e) { /* CHANGELOG missing — fall through */ }
+          " "$VERSION")
 
           {
-            echo "${AGENT_COUNT} agents. ${TEST_COUNT} tests passing across ${TEST_FILES} files."
-            echo ""
-
-            if [ -n "$FEATS" ]; then
-              echo "### Features"
-              echo "$FEATS"
+            if [ -n "$CHANGELOG_BODY" ]; then
+              # CHANGELOG has an entry for this version — use it verbatim.
+              echo "$CHANGELOG_BODY"
+              echo ""
+              echo "---"
               echo ""
             fi
-
-            if [ -n "$FIXES" ]; then
-              echo "### Fixes"
-              echo "$FIXES"
-              echo ""
-            fi
-
-            if [ -n "$DOCS" ]; then
-              echo "### Docs"
-              echo "$DOCS"
-              echo ""
-            fi
-
-            if [ -n "$CI" ]; then
-              echo "### CI / Infra"
-              echo "$CI"
-              echo ""
-            fi
-
-            if [ -n "$OTHER" ]; then
-              echo "### Other"
-              echo "$OTHER"
-              echo ""
-            fi
-
-            echo "---"
-            echo "Apache 2.0 · Full travel transaction lifecycle"
+            echo "${AGENT_COUNT} agents · ${TEST_COUNT} tests passing across ${TEST_FILES} files · Apache 2.0"
           } > /tmp/release-notes.md
 
       - name: Create release
