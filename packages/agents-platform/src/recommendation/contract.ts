@@ -16,7 +16,7 @@ export const recommendationContract: AgentContract<
   typeof recommendationInputSchema,
   typeof recommendationOutputSchema
 > = {
-  agentId: '9.7',
+  agentId: '9.8',
   inputSchema: recommendationInputSchema,
   outputSchema: recommendationOutputSchema,
   actionType: 'query',

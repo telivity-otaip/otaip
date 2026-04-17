@@ -46,7 +46,7 @@ describe('RoutingAuditAgent (Agent 9.6)', () => {
   });
 
   it('has correct id, name, version', () => {
-    expect(agent.id).toBe('9.6');
+    expect(agent.id).toBe('9.7');
     expect(agent.name).toBe('Routing Audit');
     expect(agent.version).toBe('0.1.0');
   });

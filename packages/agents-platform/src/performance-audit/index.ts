@@ -15,7 +15,7 @@ import { computePerformanceReport } from './audit-engine.js';
 export class PerformanceAuditAgent
   implements Agent<PerformanceAuditInput, PerformanceAuditOutput>
 {
-  readonly id = '9.5';
+  readonly id = '9.6';
   readonly name = 'Performance Audit';
   readonly version = '0.1.0';
 

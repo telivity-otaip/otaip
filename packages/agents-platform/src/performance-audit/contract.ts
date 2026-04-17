@@ -17,7 +17,7 @@ export const performanceAuditContract: AgentContract<
   typeof performanceAuditInputSchema,
   typeof performanceAuditOutputSchema
 > = {
-  agentId: '9.5',
+  agentId: '9.6',
   inputSchema: performanceAuditInputSchema,
   outputSchema: performanceAuditOutputSchema,
   actionType: 'query',

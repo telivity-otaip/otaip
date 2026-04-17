@@ -15,7 +15,7 @@ import { computeAlerts } from './alert-engine.js';
 export class AlertAgent
   implements Agent<AlertInput, AlertOutput>
 {
-  readonly id = '9.8';
+  readonly id = '9.9';
   readonly name = 'Alert';
   readonly version = '0.1.0';
 
