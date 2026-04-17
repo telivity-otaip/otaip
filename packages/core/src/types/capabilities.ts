@@ -34,6 +34,10 @@ export interface ChannelCapability {
   readonly costScore?: number;
   /** Per-carrier overrides — narrows capabilities for specific carriers. */
   readonly carrier_restrictions?: Readonly<Record<string, Partial<ChannelCapability>>>;
+  /** Whether this channel supports the ONE Order / Offers & Orders model. */
+  readonly supportsOrders?: boolean;
+  /** Which AIDM 24.1 order operations this channel supports. */
+  readonly orderOperations?: readonly ('create' | 'retrieve' | 'change' | 'cancel')[];
   /** ISO timestamp stamped on the manifest when it was last reviewed. */
   readonly updatedAt: string;
 }

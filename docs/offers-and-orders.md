@@ -120,10 +120,22 @@ import { zodToJsonSchema } from '@otaip/core';
 const jsonSchema = zodToJsonSchema(orderSchema);
 ```
 
-## Future: Sprint H
+## Sprint H: OOSD Adapter Support (completed)
 
-Sprint H adds Order-native adapter support:
-- Navitaire adapter upgraded to use `OrderOperations` natively (they're ONE Order certified)
-- Duffel adapter bridges its order model to OTAIP's `Order` types
-- `ChannelCapabilities` gains `supportsOrders: boolean` flag
-- `GdsNdcRouter` uses this to decide PNR vs Order path per channel
+Sprint H delivered Order-native adapter support for two channels:
+
+### Navitaire — `NavitaireOrderOperations`
+
+Navitaire is ONE Order certified. The `NavitaireOrderOperations` class implements `OrderOperations` natively, mapping dotREZ order endpoints to AIDM 24.1 operations. Orders get `NAV-ORD-*` IDs and full event history tracking. See `docs/adapters/oosd-navitaire.md` for details.
+
+### Duffel — `DuffelOrderBridge`
+
+Duffel already uses orders as its booking primitive. The `DuffelOrderBridge` bridges Duffel's native order model to OTAIP's `Order` types. Orders get `DFL-ORD-*` IDs.
+
+### Channel capabilities
+
+Both adapters now declare `supportsOrders: true` and `orderOperations: ['create', 'retrieve', 'change', 'cancel']` in their capability manifests. The `GdsNdcRouter` uses this flag to decide PNR vs Order path per channel.
+
+### Multi-adapter search
+
+Sprint H also added `MultiSearchService` in `examples/ota/` which fans out search requests to multiple `DistributionAdapter` instances in parallel, merges results with source attribution, and sorts by price. Configure via `ADAPTERS` env var (comma-separated).

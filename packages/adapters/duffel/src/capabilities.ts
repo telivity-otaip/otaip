@@ -26,5 +26,7 @@ export const duffelCapabilities: ChannelCapability = {
   reliabilityScore: 0.9,
   latencyScore: 0.78,
   costScore: 0.65,
+  supportsOrders: true,
+  orderOperations: ['create', 'retrieve', 'change', 'cancel'],
   updatedAt: '2026-04-16',
 };
