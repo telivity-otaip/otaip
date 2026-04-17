@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.5.1 — Sprint G: ONE Order Ready — PNR + Orders Coexist
+
+Native Offers & Orders data model in `@otaip/core`, aligned with IATA AIDM 24.1 terminology. PNR and Order models coexist through a unified `BookingReference` bridge — agents accept either and let the adapter decide the underlying model.
+
+### Added
+
+- **Order/Offer types** — `Offer`, `OfferItem`, `Order`, `OrderItem`, `Service` (atomic unit: flight, seat, baggage, meal, lounge, insurance, ancillary), `OrderPassenger` with `TravelDocument` + `LoyaltyInfo`, `TicketDocument` (ET, EMD-A, EMD-S), `OrderPayment`, `Money` (decimal string + ISO 4217)
+- **AIDM 24.1 message names** — `OrderCreate`, `OrderRetrieve`, `OrderChange`, `OrderCancel` on the `OrderOperations` interface. Adapters that support ONE Order implement this directly.
+- **OrderEvent** — event-driven status changes for Orders (`order.created`, `order.confirmed`, `order.ticketed`, `order.changed`, `order.cancelled`, `order.payment_received`, `order.payment_failed`, `order.refunded`). Queue management stays PNR-only.
+- **BookingReference bridge** — `PnrReference | OrderReference` union type with constructors (`createPnrReference`, `createOrderReference`), type guards (`isPnrReference`, `isOrderReference`), accessors (`getBookingIdentifier`, `getBookingOwner`), and `pnrPassengerToOrderPassenger()` converter.
+- **Zod schemas** for every Order/Offer type — ready for `zodToJsonSchema()` LLM tool generation.
+- **docs/offers-and-orders.md** — explains the dual model, AIDM alignment, bridge utilities, and Sprint H roadmap (Navitaire as OOSD adapter target).
+
+### Design decisions
+
+- JSON, not XML. AIDM concepts, not the AIDM XML schema.
+- Queue management stays PNR-only. Orders use `OrderEvent`.
+- No agent modifications in this release — types and bridge only. Agent integration via `BookingReference` lands in Sprint H.
+- Navitaire is the target OOSD adapter for Sprint H — they're ONE Order certified and the adapter already exists.
+
+### Tests
+
+- 47 new tests (30 schema validation + 17 bridge utilities). 2952 total passing, 0 failing.
+
 ## 0.5.0 — Sprint F: Reference OTA — Book, Pay, Fly
 
 The reference OTA is now a complete booking application. Users can search flights, select an offer, enter passenger details, pay, and receive a ticket — the full travel e-commerce lifecycle running on OTAIP agents.
