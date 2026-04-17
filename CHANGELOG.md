@@ -1,5 +1,7 @@
 # Changelog
 
+> **Versioning policy:** Pre-v1.0, every release is a patch bump (`0.6.0 → 0.6.1 → 0.6.2 → …`). See [VERSIONING.md](VERSIONING.md) for the full policy and an explanation of the early-history version jumps (0.3.4 → 0.5.0 → 0.5.1 → 0.6.0) that predate this rule.
+
 ## 0.6.0 — Sprint H: Multi-Adapter, OOSD-Native, Full Distribution
 
 The mid-term build plan is complete. Navitaire gains native ONE Order operations, Duffel bridges its order model to OTAIP's AIDM-aligned types, and the Reference OTA searches multiple adapters in parallel with source attribution.
