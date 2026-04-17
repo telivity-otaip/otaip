@@ -99,6 +99,9 @@ importers:
       '@otaip/agents-search':
         specifier: workspace:*
         version: link:../search
+      '@otaip/connect':
+        specifier: workspace:*
+        version: link:../../connect
       '@otaip/core':
         specifier: workspace:*
         version: link:../../core

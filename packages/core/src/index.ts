@@ -28,6 +28,21 @@ export type {
 export type { ToolDefinition, ValidationIssue, ValidationResult } from './tool-interface/index.js';
 export { validateToolInput, validateToolOutput } from './tool-interface/index.js';
 export { ToolRegistry } from './tool-interface/index.js';
+export {
+  AGENT_TOOL_NAMES,
+  AgentToolError,
+  agentToTool,
+  registerAgentTools,
+  generateCatalog,
+  generateMcpTools,
+  generateOpenAiFunctions,
+} from './tool-interface/index.js';
+export type {
+  AgentToolBridgeOptions,
+  CatalogEntry,
+  McpToolEntry,
+  OpenAiFunctionEntry,
+} from './tool-interface/index.js';
 
 export type { RetryConfig, IsRetryable } from './retry/index.js';
 export { DEFAULT_RETRY_CONFIG, withRetry, computeDelay } from './retry/index.js';
@@ -159,3 +174,20 @@ export {
   validateThresholdAgainstFloor,
   zodToJsonSchema,
 } from './pipeline-validator/index.js';
+
+// Event store — persistent event and outcome logging.
+export type {
+  AdapterHealthEvent,
+  AgentExecutedEvent,
+  AggregateResult,
+  BookingCompletedEvent,
+  BookingFailedEvent,
+  EventFilter,
+  EventStore,
+  OtaipEvent,
+  OtaipEventType,
+  RoutingDecidedEvent,
+  RoutingOutcomeEvent,
+  TimeWindow,
+} from './event-store/index.js';
+export { InMemoryEventStore } from './event-store/index.js';
