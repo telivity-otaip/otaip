@@ -1,6 +1,6 @@
 {
   "name": "@otaip/connect",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "OTAIP Connect — universal supplier adapter framework for travel booking APIs",
   "type": "module",
   "main": "./dist/index.js",

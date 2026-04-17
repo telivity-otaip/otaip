@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.3.4 — Sprint D+E: Docs Overhaul + Reference OTA
+
+Two sprints shipped together: Sprint D rewrites all documentation so the platform's scope is visible at a glance. Sprint E ships a deployable reference OTA that proves OTAIP works end to end — fork it, add your Duffel token, search real flights.
+
+### Sprint D — Documentation Overhaul
+
+- **README.md rewrite** — 6-adapter comparison table with exact test counts (456 total), 75-agent domain overview across 12 stages, pipeline contract system explanation, CLI usage examples, "Build on OTAIP" section
+- **docs/architecture.md** — 4 Mermaid diagrams: high-level architecture, pipeline gate sequence, tool bridge flow, EventStore integration
+- **docs/agents.md** — complete table of all 75 agents with ID, class name, description, contract status (14 contracted)
+- **docs/getting-started.md** — clone to working demo in 5 minutes
+- **docs/adapters/{amadeus,sabre,navitaire,trippro,duffel,haip}.md** — 6 adapter docs with capabilities, auth, config, usage, test counts, limitations
+- **Agent ID collision fix** — PluginManager keeps 9.5, governance agents renumbered to 9.6-9.9
+
+### Sprint E — Reference OTA: Search Flow
+
+- **Fastify server** (`examples/ota/`) — `POST /api/search`, `GET /api/offers/:id`, `GET /health`
+- **Services** — SearchService orchestrates AirportCodeResolver → AvailabilitySearch; OfferService caches offer details
+- **Adapter config** — DuffelAdapter when `DUFFEL_API_TOKEN` is set, MockDuffelAdapter when not (works out of the box with zero config)
+- **Frontend** — plain HTML + vanilla JS + Pico CSS via CDN. Search form with IATA validation, results page with sort-by-price/duration/departure, offer details with price breakdown. No React, no build step.
+- **10 integration tests** using Fastify inject + MockDuffelAdapter
+
+### Monorepo fix
+
+- **exports.types → src/index.ts** — 14 packages had `exports["."].types` pointing to `./dist/index.d.ts` (only exists after build). Changed all to `./src/index.ts` matching `@otaip/core`'s pattern. `pnpm -r run typecheck` now works without a prior build step.
+
+### Tests
+
+- 2891 total passing (10 new OTA tests + 2881 existing), 0 failing
+
 ## 0.3.3 — Sprint C: Governance Agents, Fallback Chain, CLI
 
 The OTAIP build plan is now complete. Sprint C ships the final three steps: the fallback chain engine for automatic channel recovery, four governance agents that monitor the platform's own performance, and a CLI tool for zero-code developer access.

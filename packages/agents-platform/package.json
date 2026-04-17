@@ -1,6 +1,6 @@
 {
   "name": "@otaip/agents-platform",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "OTAIP Stage 9 agents — orchestration, knowledge, monitoring, audit, plugins",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
