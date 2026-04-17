@@ -16,6 +16,7 @@ export default defineConfig({
       '@otaip/agents-lodging': resolve(__dirname, 'packages/agents/lodging/src/index.ts'),
       '@otaip/agents-tmc': resolve(__dirname, 'packages/agents-tmc/src/index.ts'),
       '@otaip/agents-platform': resolve(__dirname, 'packages/agents-platform/src/index.ts'),
+      '@otaip/connect': resolve(__dirname, 'packages/connect/src/index.ts'),
       '@otaip/adapter-duffel': resolve(__dirname, 'packages/adapters/duffel/src/index.ts'),
     },
   },

@@ -41,6 +41,7 @@ export {
   gdsNdcRouterInputSchema,
   gdsNdcRouterOutputSchema,
 } from './gds-ndc-router/schema.js';
+export { buildCarrierCapabilities } from './gds-ndc-router/registry-adapter.js';
 
 export { PnrBuilder } from './pnr-builder/index.js';
 export type {
@@ -128,3 +129,21 @@ export type {
   GetPaymentRecordData,
   BuildGDSFOPStringData,
 } from './payment-processing/index.js';
+
+export { PnrRetrieval } from './pnr-retrieval/index.js';
+export type {
+  PnrRetrievalInput,
+  PnrRetrievalOutput,
+  RetrievedPassenger,
+  RetrievedSegment,
+  RetrievedContact,
+  RetrievedTicketing,
+  RetrievalSource,
+  BookingStatus as PnrRetrievalBookingStatus,
+  PnrRetrievalSegmentStatus,
+} from './pnr-retrieval/index.js';
+export { pnrRetrievalContract } from './pnr-retrieval/contract.js';
+export {
+  pnrRetrievalInputSchema,
+  pnrRetrievalOutputSchema,
+} from './pnr-retrieval/schema.js';

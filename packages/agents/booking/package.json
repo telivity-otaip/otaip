@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@otaip/core": "workspace:*",
+    "@otaip/connect": "workspace:*",
     "@otaip/agents-reference": "workspace:*",
     "@otaip/agents-search": "workspace:*",
     "@otaip/agents-pricing": "workspace:*",

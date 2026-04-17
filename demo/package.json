@@ -5,6 +5,7 @@
   "description": "LLM booking demo - Claude tool_use as intelligent booking agent via OTAIP -> Duffel sandbox",
   "type": "module",
   "scripts": {
+    "book:full": "tsx book-flight-full.ts",
     "book": "tsx book-flight.ts",
     "book:sabre": "tsx book-flight-sabre.ts",
     "book:direct": "tsx book-flight-direct.ts",
@@ -12,7 +13,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
+    "@otaip/core": "workspace:*",
     "@otaip/adapter-duffel": "workspace:*",
+    "@otaip/agents-search": "workspace:*",
+    "@otaip/agents-pricing": "workspace:*",
+    "@otaip/agents-booking": "workspace:*",
     "dotenv": "^17.4.0"
   },
   "devDependencies": {
