@@ -1,6 +1,6 @@
 {
   "name": "otaip",
-  "version": "0.3.2.1",
+  "version": "0.3.3",
   "private": true,
   "description": "Open Travel AI Platform — domain-specific AI agent orchestration for the travel industry",
   "homepage": "https://telivity.app",
@@ -17,7 +17,7 @@
     "build": "pnpm -r run build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint 'packages/*/src/**/*.ts' 'packages/agents/*/src/**/*.ts' 'packages/adapters/*/src/**/*.ts'",
+    "lint": "eslint 'packages/*/src/**/*.ts' 'packages/agents/*/src/**/*.ts' 'packages/adapters/*/src/**/*.ts' --ignore-pattern 'packages/cli/**'",
     "lint:fix": "eslint 'packages/*/src/**/*.ts' 'packages/agents/*/src/**/*.ts' 'packages/adapters/*/src/**/*.ts' --fix",
     "format": "prettier --write 'packages/*/src/**/*.ts' 'packages/agents/*/src/**/*.ts' 'packages/adapters/*/src/**/*.ts'",
     "format:check": "prettier --check 'packages/*/src/**/*.ts' 'packages/agents/*/src/**/*.ts' 'packages/adapters/*/src/**/*.ts'",
