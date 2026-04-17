@@ -191,6 +191,12 @@ docs/                       Architecture, agents, adapters, getting started
 
 ---
 
+## Versioning
+
+Pre-v1.0, every release is a patch bump (`0.6.0 → 0.6.1 → 0.6.2 → …`). See [VERSIONING.md](VERSIONING.md) for the policy and the history of the early version jumps.
+
+---
+
 ## Contributing
 
 Apache 2.0 licensed. PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
