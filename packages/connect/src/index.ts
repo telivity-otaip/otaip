@@ -46,6 +46,7 @@ export type { SabreConfig } from './suppliers/sabre/config.js';
 
 // Navitaire adapter
 export { NavitaireAdapter } from './suppliers/navitaire/index.js';
+export { NavitaireOrderOperations } from './suppliers/navitaire/order-operations.js';
 export type { NavitaireConfig } from './suppliers/navitaire/config.js';
 
 // Amadeus adapter

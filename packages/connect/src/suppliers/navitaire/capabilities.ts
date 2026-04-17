@@ -18,5 +18,7 @@ export const navitaireCapabilities: ChannelCapability = {
   reliabilityScore: 0.88,
   latencyScore: 0.8,
   costScore: 0.7,
+  supportsOrders: true,
+  orderOperations: ['create', 'retrieve', 'change', 'cancel'],
   updatedAt: '2026-04-16',
 };

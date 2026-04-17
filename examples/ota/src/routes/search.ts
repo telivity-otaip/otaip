@@ -1,9 +1,13 @@
 /**
  * POST /api/search — flight search endpoint.
+ *
+ * Sprint H: supports optional MultiSearchService for multi-adapter search.
+ * When multiSearch is provided, results include per-source attribution.
  */
 
 import type { FastifyInstance } from 'fastify';
 import type { SearchService } from '../services/search-service.js';
+import type { MultiSearchService } from '../services/multi-search-service.js';
 
 // ---------------------------------------------------------------------------
 // Request body schema
@@ -29,6 +33,7 @@ const VALID_CABINS = new Set(['economy', 'premium_economy', 'business', 'first']
 export function registerSearchRoute(
   app: FastifyInstance,
   searchService: SearchService,
+  multiSearch?: MultiSearchService,
 ): void {
   app.post<{ Body: SearchBody }>('/api/search', async (request, reply) => {
     const body = request.body as SearchBody | undefined;
@@ -79,6 +84,23 @@ export function registerSearchRoute(
     }
 
     try {
+      // Sprint H: if multi-adapter is configured and query param requests it,
+      // use the multi-search service for aggregated results.
+      if (multiSearch && request.query && (request.query as Record<string, string>)['multi'] === 'true') {
+        const multiResult = await multiSearch.search({
+          segments: [
+            {
+              origin: body.origin.toUpperCase(),
+              destination: body.destination.toUpperCase(),
+              departure_date: body.date,
+            },
+          ],
+          passengers: [{ type: 'ADT', count: body.passengers }],
+          cabin_class: body.cabinClass,
+        });
+        return reply.send(multiResult);
+      }
+
       const result = await searchService.search({
         origin: body.origin.toUpperCase(),
         destination: body.destination.toUpperCase(),
