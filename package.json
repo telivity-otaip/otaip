@@ -28,7 +28,9 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [],
-    "overrides": {}
+    "overrides": {
+      "hono": ">=4.12.14"
+    }
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
