@@ -1,0 +1,29 @@
+{
+  "name": "@otaip/ota-example",
+  "version": "0.3.4",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsup src/server.ts --format esm --clean",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@otaip/core": "workspace:*",
+    "@otaip/agents-reference": "workspace:*",
+    "@otaip/agents-search": "workspace:*",
+    "@otaip/agents-pricing": "workspace:*",
+    "@otaip/adapter-duffel": "workspace:*",
+    "fastify": "^5.3.3",
+    "@fastify/static": "^8.2.0",
+    "dotenv": "^17.4.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "tsup": "^8.5.1"
+  },
+  "engines": {
+    "node": ">=24.14.1"
+  }
+}

@@ -4,3 +4,4 @@ packages:
   - "packages/adapters/*"
   - "packages/cli"
   - "demo"
+  - "examples/*"

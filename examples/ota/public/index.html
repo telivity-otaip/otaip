@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OTAIP Reference OTA — Flight Search</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    :root { --pico-font-size: 16px; }
+    .search-form { max-width: 600px; margin: 0 auto; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .brand { text-align: center; margin-bottom: 2rem; }
+    .brand h1 { margin-bottom: 0.25rem; }
+    .brand p { color: var(--pico-muted-color); }
+    .error-box { background: var(--pico-del-color); color: #fff; padding: 1rem; border-radius: var(--pico-border-radius); margin-bottom: 1rem; }
+    .spinner { display: none; text-align: center; margin: 2rem 0; }
+    .spinner[aria-busy="true"] { display: block; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div class="brand">
+      <h1>OTAIP Reference OTA</h1>
+      <p>Flight search powered by the Open Travel AI Platform</p>
+    </div>
+
+    <div id="error-container"></div>
+
+    <form id="search-form" class="search-form">
+      <div class="form-row">
+        <label>
+          Origin (IATA code)
+          <input type="text" id="origin" name="origin" placeholder="JFK" maxlength="3"
+                 pattern="[A-Za-z]{3}" required autocomplete="off" />
+        </label>
+        <label>
+          Destination (IATA code)
+          <input type="text" id="destination" name="destination" placeholder="LAX" maxlength="3"
+                 pattern="[A-Za-z]{3}" required autocomplete="off" />
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label>
+          Departure date
+          <input type="date" id="date" name="date" required />
+        </label>
+        <label>
+          Return date (optional)
+          <input type="date" id="returnDate" name="returnDate" />
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label>
+          Passengers
+          <input type="number" id="passengers" name="passengers" min="1" max="9" value="1" required />
+        </label>
+        <label>
+          Cabin class
+          <select id="cabinClass" name="cabinClass">
+            <option value="economy">Economy</option>
+            <option value="premium_economy">Premium Economy</option>
+            <option value="business">Business</option>
+            <option value="first">First</option>
+          </select>
+        </label>
+      </div>
+
+      <button type="submit">Search Flights</button>
+    </form>
+
+    <div id="spinner" class="spinner" aria-busy="false">Searching flights...</div>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    document.getElementById('search-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+      showSpinner(true);
+
+      const params = {
+        origin: document.getElementById('origin').value.toUpperCase(),
+        destination: document.getElementById('destination').value.toUpperCase(),
+        date: document.getElementById('date').value,
+        returnDate: document.getElementById('returnDate').value || undefined,
+        passengers: Number(document.getElementById('passengers').value),
+        cabinClass: document.getElementById('cabinClass').value,
+      };
+
+      try {
+        const result = await searchFlights(params);
+
+        // Store results and navigate
+        sessionStorage.setItem('searchResults', JSON.stringify(result));
+        sessionStorage.setItem('searchParams', JSON.stringify(params));
+        window.location.href = '/results.html';
+      } catch (err) {
+        showError(err.message || 'Search failed');
+      } finally {
+        showSpinner(false);
+      }
+    });
+  </script>
+</body>
+</html>
