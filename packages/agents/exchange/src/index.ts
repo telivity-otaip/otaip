@@ -59,3 +59,25 @@ export {
   rebookingOutputSchema,
 } from './self-service-rebooking/schema.js';
 export { WaitlistManagementAgent } from './waitlist-management/index.js';
+export type {
+  WaitlistInput,
+  WaitlistOutput,
+  WaitlistOperation,
+  WaitlistEntry,
+  WaitlistSegment,
+  StatusTier,
+  FareClassType,
+  AddEntryInput,
+  ClearInput,
+  ClearResult,
+  QueryStatusInput,
+  QueryStatusResult,
+  ExpireInput,
+  ExpireResult,
+  ClearanceRateMap,
+} from './waitlist-management/index.js';
+export { waitlistManagementContract } from './waitlist-management/contract.js';
+export {
+  waitlistInputSchema,
+  waitlistOutputSchema,
+} from './waitlist-management/schema.js';
