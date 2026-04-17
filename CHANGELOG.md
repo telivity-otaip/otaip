@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.3.3 — Sprint C: Governance Agents, Fallback Chain, CLI
+
+The OTAIP build plan is now complete. Sprint C ships the final three steps: the fallback chain engine for automatic channel recovery, four governance agents that monitor the platform's own performance, and a CLI tool for zero-code developer access.
+
+### Added
+
+- **Fallback chain engine** (`executeFallbackChain()`) — when the primary routing channel fails, automatically tries each fallback in order. Skips channels whose circuit breaker is open (integrates with ApiAbstraction agent 3.5). Returns a full audit trail of every attempt with durations and error details. 6 tests.
+- **Performance Audit Agent (9.5)** — reads EventStore `agent.executed` events, computes success rate, error rate, avg/p95/p99 latency, identifies degraded agents (error rate >15% or p95 >8000ms). AgentContract from day one. 10 tests.
+- **Routing Audit Agent (9.6)** — reads `routing.decided` + `routing.outcome` events, correlates by session, computes per-channel success rates and fallback frequency. AgentContract from day one. 7 tests.
+- **Recommendation Agent (9.7)** — takes performance + routing audit reports as input, applies deterministic rules, produces typed recommendations (`route_adjustment`, `adapter_health`, `capacity`, `config_update`). All `auto_applicable: false` in v1. Confidence based on data volume. AgentContract from day one. 10 tests.
+- **Alert Agent (9.8)** — configurable threshold monitoring with defaults from the master plan: GDS error rate 5%/15% (warning/critical), NDC 10%/25%, adapter latency p95 >8000ms, 3+ consecutive failures, pipeline rejection rate >20%. AgentContract from day one. 13 tests.
+- **CLI tool** (`@otaip/cli`) — new package with 6 commands: `otaip search`, `otaip price`, `otaip book`, `otaip adapters`, `otaip agents` (lists all 75 agents with contract status), `otaip validate` (dry-run pipeline validation). Table format by default, `--json` for machine output, `--verbose` for gate details.
+
+### Fixed
+
+- **Semver compliance** — version `0.3.2.1` (4-part, not valid semver) broke pnpm's `workspace:*` matching. All packages now use proper 3-part semver `0.3.3`.
+- **Unused import** in `chain-engine.ts` (`FallbackStatus`).
+- **CLI ESLint config** — typescript-eslint can't resolve workspace deps when CWD is a nested package. CLI excluded from root lint glob; covered by `pnpm typecheck` instead.
+
+### Tests
+
+- 46 net new tests across 5 files (2881 total passing, 0 failing)
+
+### Build plan status
+
+All six steps from the master plan are now shipped:
+
+| Step | Deliverable | Sprint |
+|---|---|---|
+| 1 | Pipeline validator (6 gates) | A (v0.3.2) |
+| 2 | LLM tool layer (bridge + catalog) | B (v0.3.2.1) |
+| 3 | Routing (capability registry + fallback chain) | A + C |
+| 4 | EventStore | B (v0.3.2.1) |
+| 5 | Governance agents (4 agents) | C (v0.3.3) |
+| 6 | CLI tool | C (v0.3.3) |
+
 ## 0.3.2.1 — Sprint B: LLM Tool Layer + EventStore
 
 The pipeline validator can now talk to LLMs. Sprint B connects the contract infrastructure (shipped in v0.3.2) to the tool-dispatch layer, adds persistent event logging, ships a new agent, and delivers the first demo that runs the full architecture end-to-end.
