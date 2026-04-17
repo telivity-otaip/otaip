@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.5.0 — Sprint F: Reference OTA — Book, Pay, Fly
+
+The reference OTA is now a complete booking application. Users can search flights, select an offer, enter passenger details, pay, and receive a ticket — the full travel e-commerce lifecycle running on OTAIP agents.
+
+### Added
+
+- **Booking flow** — `POST /api/book` creates a booking from a search offer with passenger details (title, name, DOB, gender) and contact info. Validates the offer exists in the search cache before booking. Returns a booking reference.
+- **Payment flow** — `POST /api/pay` processes a mock payment against a booking reference. Structured for future Stripe integration (PaymentService abstraction) but ships with a mock that always succeeds. No external payment SDK dependency.
+- **Ticketing flow (Option B)** — `POST /api/ticket` checks booking status first. If already ticketed, returns existing ticket numbers (idempotent). If not, generates mock 13-digit ticket numbers and updates status. Ticketed bookings cannot be cancelled.
+- **Booking management** — `GET /api/booking/:ref` retrieves booking details. `POST /api/cancel` cancels confirmed (not yet ticketed) bookings.
+- **4 frontend pages** — passenger details form (`book.html`), payment summary + Pay Now (`payment.html`), full confirmation with tickets + itinerary (`confirmation.html`), booking lookup + cancel (`manage.html`). Plain HTML + vanilla JS + Pico CSS.
+- **OtaAdapter interface** — extends `DistributionAdapter` with `book()`, `getBooking()`, `cancelBooking()`. MockOtaAdapter extends MockDuffelAdapter with in-memory booking store, reference generation, and status lifecycle (confirmed → ticketed/cancelled).
+- **14 integration tests** — booking CRUD, payment, idempotent ticketing, cancellation rules, 2 full end-to-end flows (search → book → pay → ticket, search → book → cancel).
+
+### Tests
+
+- 2905 total passing (14 new + 2891 existing), 0 failing
+
 ## 0.3.4 — Sprint D+E: Docs Overhaul + Reference OTA
 
 Two sprints shipped together: Sprint D rewrites all documentation so the platform's scope is visible at a glance. Sprint E ships a deployable reference OTA that proves OTAIP works end to end — fork it, add your Duffel token, search real flights.

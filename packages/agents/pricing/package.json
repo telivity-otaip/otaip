@@ -1,6 +1,6 @@
 {
   "name": "@otaip/agents-pricing",
-  "version": "0.3.4",
+  "version": "0.5.0",
   "description": "OTAIP Stage 2 agents — fare rules, fare construction, and tax calculation",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
