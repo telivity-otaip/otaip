@@ -15,7 +15,7 @@ import { computeRecommendations } from './recommendation-engine.js';
 export class RecommendationAgent
   implements Agent<RecommendationInput, RecommendationOutput>
 {
-  readonly id = '9.7';
+  readonly id = '9.8';
   readonly name = 'Recommendation';
   readonly version = '0.1.0';
 

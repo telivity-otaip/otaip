@@ -16,7 +16,7 @@ export const alertContract: AgentContract<
   typeof alertInputSchema,
   typeof alertOutputSchema
 > = {
-  agentId: '9.8',
+  agentId: '9.9',
   inputSchema: alertInputSchema,
   outputSchema: alertOutputSchema,
   actionType: 'query',

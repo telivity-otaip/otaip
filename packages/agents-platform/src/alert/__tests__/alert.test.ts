@@ -47,7 +47,7 @@ describe('AlertAgent (Agent 9.8)', () => {
   });
 
   it('has correct id, name, version', () => {
-    expect(agent.id).toBe('9.8');
+    expect(agent.id).toBe('9.9');
     expect(agent.name).toBe('Alert');
     expect(agent.version).toBe('0.1.0');
   });

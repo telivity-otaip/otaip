@@ -15,7 +15,7 @@ import { computeRoutingReport } from './audit-engine.js';
 export class RoutingAuditAgent
   implements Agent<RoutingAuditInput, RoutingAuditOutput>
 {
-  readonly id = '9.6';
+  readonly id = '9.7';
   readonly name = 'Routing Audit';
   readonly version = '0.1.0';
 

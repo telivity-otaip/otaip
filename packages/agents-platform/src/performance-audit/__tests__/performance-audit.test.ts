@@ -30,7 +30,7 @@ describe('PerformanceAuditAgent (Agent 9.5)', () => {
   });
 
   it('has correct id, name, version', () => {
-    expect(agent.id).toBe('9.5');
+    expect(agent.id).toBe('9.6');
     expect(agent.name).toBe('Performance Audit');
     expect(agent.version).toBe('0.1.0');
   });

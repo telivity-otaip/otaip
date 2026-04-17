@@ -16,7 +16,7 @@ export const routingAuditContract: AgentContract<
   typeof routingAuditInputSchema,
   typeof routingAuditOutputSchema
 > = {
-  agentId: '9.6',
+  agentId: '9.7',
   inputSchema: routingAuditInputSchema,
   outputSchema: routingAuditOutputSchema,
   actionType: 'query',
