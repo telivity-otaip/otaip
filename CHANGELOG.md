@@ -2,6 +2,21 @@
 
 > **Versioning policy:** Pre-v1.0, every release is a patch bump (`0.6.0 → 0.6.1 → 0.6.2 → …`). See [VERSIONING.md](VERSIONING.md) for the full policy and an explanation of the early-history version jumps (0.3.4 → 0.5.0 → 0.5.1 → 0.6.0) that predate this rule.
 
+## 0.6.1 — Stub Replacements: HotelCarSearch, AITravelAdvisor, SelfServiceRebooking, WaitlistManagement
+
+Four stub agents replaced with real implementations. No new agents; no breaking changes to public interfaces. Existing imports continue to work.
+
+### Changed
+
+- **Agent 1.7 `HotelCarSearchAgent`** — Aggregator over injectable hotel/car adapters. `Promise.allSettled` fan-out with per-adapter timeouts, filters, and sort. Partial-failure tolerant (returns available results with per-source status). New Zod schemas + `AgentContract`.
+- **Agent 1.8 `AITravelAdvisorAgent`** — Rule-based recommender (NOT LLM). Orchestrates `AvailabilitySearch` + `FareShopping`, scores offers on price / schedule / airline / connections with business/leisure/default weight profiles. `LLMProvider` / `MockLLMProvider` types removed.
+- **Agent 5.5 `SelfServiceRebookingAgent`** — Rebooking orchestrator over `AvailabilitySearch` + `ChangeManagement`. Ranks priced alternatives by `changeFee + fareDifference + taxDifference`. Involuntary reasons (schedule change / missed connection / cancellation) waive the change fee.
+- **Agent 5.6 `WaitlistManagementAgent`** — Stateful in-memory queue (reference implementation, not durable). Four operations: `addEntry`, `clear`, `queryStatus`, `expire`. Priority = status tier + fare class type + recency bonus; ties broken by earliest `requestedAt`. Clearance probability estimated as `rate^position` with per-booking-class overrides.
+
+### Tests
+
+- 77 new tests across the four agents (19 + 20 + 17 + 21). **3022 total passing**, 0 failing.
+
 ## 0.6.0 — Sprint H: Multi-Adapter, OOSD-Native, Full Distribution
 
 The mid-term build plan is complete. Navitaire gains native ONE Order operations, Duffel bridges its order model to OTAIP's AIDM-aligned types, and the Reference OTA searches multiple adapters in parallel with source attribution.

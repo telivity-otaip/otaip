@@ -1,109 +1,166 @@
 /**
  * AI Travel Advisor — Agent 1.8
  *
- * Natural language travel query understanding with injectable LLM provider.
- * Parses user queries into structured search parameters that other Stage 1
- * agents can consume.
+ * Rule-based flight recommendation engine. Orchestrates AvailabilitySearch
+ * (1.1) to gather candidate offers, optionally expands the search to
+ * flexible dates (±3 days), applies preference-weighted scoring, and
+ * returns ranked recommendations with deterministic explanations.
  *
- * Bring your own LLM: inject any LLMProvider implementation.
- * For testing, use MockLLMProvider.
+ * NOT an LLM agent. All decisions come from pure scoring functions in
+ * ./scoring.ts — no external model calls.
  */
 
-import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
-import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
 import type {
-  TravelAdvisorInput,
-  TravelAdvisorOutput,
-  LLMProvider,
-  ExtractedSearchParameters,
-  TravelIntent,
-  AITravelAdvisorConfig,
+  Agent,
+  AgentHealthStatus,
+  AgentInput,
+  AgentOutput,
+  SearchOffer,
+} from '@otaip/core';
+import { AgentInputValidationError, AgentNotInitializedError } from '@otaip/core';
+import { AvailabilitySearch } from '../availability-search/index.js';
+import type {
+  AvailabilitySearchInput,
+  CabinClass as AvailabilityCabinClass,
+} from '../availability-search/types.js';
+import {
+  composite,
+  expandDates,
+  explain,
+  passesBudget,
+  passesCabin,
+  passesConnections,
+  resolvePreferences,
+  scoreOffer,
+} from './scoring.js';
+import type {
+  AdvisorInput,
+  AdvisorOutput,
+  Recommendation,
+  SearchSummary,
 } from './types.js';
 
-const EXTRACTION_PROMPT_PREFIX = `You are a travel search assistant. Given a user's natural language travel query, extract structured search parameters as JSON. Include: intent (flight_search, hotel_search, destination_recommendation, price_check, trip_planning, or unknown), origin (3-letter IATA code if mentioned), destination (3-letter IATA code if mentioned), tripType (one_way, round_trip, or multi_city), cabinClass (economy, premium_economy, business, or first), flexibleDates (boolean), and a brief summary of the interpreted query.
+export interface AITravelAdvisorAgentOptions {
+  /** Injected search agent. Required — the advisor orchestrates it. */
+  availabilitySearch: AvailabilitySearch;
+}
 
-User query: `;
+const IATA_RE = /^[A-Z]{3}$/;
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export class AITravelAdvisorAgent implements Agent<TravelAdvisorInput, TravelAdvisorOutput> {
+export class AITravelAdvisorAgent implements Agent<AdvisorInput, AdvisorOutput> {
   readonly id = '1.8';
   readonly name = 'AI Travel Advisor';
   readonly version = '0.2.0';
 
   private initialized = false;
-  private readonly llmProvider: LLMProvider;
-  private readonly maxTokens: number;
-  private readonly temperature: number;
+  private readonly search: AvailabilitySearch;
 
-  constructor(config: AITravelAdvisorConfig) {
-    this.llmProvider = config.llmProvider;
-    this.maxTokens = config.maxTokens ?? 500;
-    this.temperature = config.temperature ?? 0.1;
+  constructor(options: AITravelAdvisorAgentOptions) {
+    this.search = options.availabilitySearch;
   }
 
   async initialize(): Promise<void> {
+    await this.search.initialize();
     this.initialized = true;
   }
 
-  async execute(
-    input: AgentInput<TravelAdvisorInput>,
-  ): Promise<AgentOutput<TravelAdvisorOutput>> {
+  async execute(input: AgentInput<AdvisorInput>): Promise<AgentOutput<AdvisorOutput>> {
     if (!this.initialized) throw new AgentNotInitializedError(this.id);
+    const d = input.data;
 
-    const { query, travelerContext } = input.data;
-    if (!query || query.trim().length === 0) {
-      throw new AgentInputValidationError(this.id, 'query', 'Query must not be empty.');
+    this.validateInput(d);
+
+    const resolved = resolvePreferences(d.preferences);
+    const datesToSearch = expandDates(d.departureDate, d.flexibleDates ?? false);
+
+    // Fan out one availability search per date. Same origin/destination for
+    // all of them — flexibleDates only expands the departure date window.
+    const searchInputs: AvailabilitySearchInput[] = datesToSearch.map((date) =>
+      this.buildSearchInput(d, resolved, date),
+    );
+
+    const searchResults = await Promise.all(
+      searchInputs.map((si) => this.search.execute({ data: si }).catch(() => null)),
+    );
+
+    const allOffers: SearchOffer[] = [];
+    const adapterSet = new Set<string>();
+    let totalRaw = 0;
+
+    for (const result of searchResults) {
+      if (!result) continue;
+      const offers = result.data.offers;
+      totalRaw += result.data.total_raw_offers;
+      for (const offer of offers) {
+        allOffers.push(offer);
+        adapterSet.add(offer.source);
+      }
     }
 
-    const prompt = EXTRACTION_PROMPT_PREFIX + query;
-    const rawResponse = await this.llmProvider.complete(prompt, {
-      maxTokens: this.maxTokens,
-      temperature: this.temperature,
+    // Apply filters BEFORE scoring: budget, cabin, connections.
+    const eligible = allOffers.filter(
+      (o) => passesBudget(o, resolved) && passesCabin(o, resolved) && passesConnections(o, resolved),
+    );
+
+    const searchSummary: SearchSummary = {
+      totalOffersFound: totalRaw,
+      totalOffersEligible: eligible.length,
+      dateRangeSearched: datesToSearch,
+      adaptersUsed: [...adapterSet].sort(),
+    };
+
+    if (eligible.length === 0) {
+      return {
+        data: {
+          recommendations: [],
+          searchSummary,
+          appliedPreferences: resolved,
+        },
+        confidence: 0.5,
+        metadata: { agent_id: this.id, offerCount: 0 },
+      };
+    }
+
+    // Compute cheapest / most expensive within eligible set.
+    const prices = eligible.map((o) => o.price.total);
+    const cheapest = Math.min(...prices);
+    const mostExpensive = Math.max(...prices);
+
+    // Score every eligible offer, sort descending by composite score.
+    const scored = eligible.map((offer) => {
+      const breakdown = scoreOffer(offer, cheapest, mostExpensive, resolved);
+      const score = composite(breakdown, resolved.weights);
+      return { offer, breakdown, score };
     });
+    scored.sort((a, b) => b.score - a.score);
 
-    const parsed = this.parseResponse(rawResponse);
+    const maxN = d.maxRecommendations ?? 5;
+    const top = scored.slice(0, maxN);
 
-    const str = (key: string): string | undefined => {
-      const v = parsed[key];
-      return typeof v === 'string' ? v : undefined;
-    };
-    const bool = (key: string): boolean | undefined => {
-      const v = parsed[key];
-      return typeof v === 'boolean' ? v : undefined;
-    };
-
-    // Merge traveler context preferences into extracted parameters
-    const searchParameters: ExtractedSearchParameters = {
-      origin: str('origin'),
-      destination: str('destination'),
-      departureDate: str('departureDate'),
-      returnDate: str('returnDate'),
-      tripType: str('tripType') as ExtractedSearchParameters['tripType'],
-      cabinClass:
-        (str('cabinClass') as ExtractedSearchParameters['cabinClass']) ??
-        travelerContext?.cabinPreference,
-      flexibleDates: bool('flexibleDates'),
-      passengers: travelerContext
-        ? {
-            adults: travelerContext.adults ?? 1,
-            children: travelerContext.children ?? 0,
-            infants: travelerContext.infants ?? 0,
-          }
-        : { adults: 1, children: 0, infants: 0 },
-    };
-
-    const intent: TravelIntent = (str('intent') as TravelIntent) ?? 'unknown';
-    const summary: string = str('summary') ?? 'Query processed.';
-    const confidence = intent === 'unknown' ? 0.3 : searchParameters.origin ? 0.9 : 0.6;
+    const recommendations: Recommendation[] = top.map((s, i) => ({
+      rank: i + 1,
+      offer: s.offer,
+      score: s.score,
+      scoreBreakdown: s.breakdown,
+      explanation: explain(i + 1, s.offer, s.breakdown, cheapest, resolved, d.departureDate),
+    }));
 
     return {
-      data: { searchParameters, summary, intent },
-      confidence,
-      metadata: { agent_id: this.id },
+      data: {
+        recommendations,
+        searchSummary,
+        appliedPreferences: resolved,
+      },
+      confidence: 1.0,
+      metadata: { agent_id: this.id, offerCount: recommendations.length },
     };
   }
 
   async health(): Promise<AgentHealthStatus> {
     if (!this.initialized) return { status: 'unhealthy', details: 'Not initialized.' };
+    const inner = await this.search.health();
+    if (inner.status !== 'healthy') return inner;
     return { status: 'healthy' };
   }
 
@@ -111,28 +168,95 @@ export class AITravelAdvisorAgent implements Agent<TravelAdvisorInput, TravelAdv
     this.initialized = false;
   }
 
-  private parseResponse(raw: string): Record<string, unknown> {
-    try {
-      // Try to extract JSON from the response (LLMs sometimes wrap in markdown)
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-      }
-      return {};
-    } catch {
-      return {};
+  // ─────────────────────────────────────────────────────────────────────────
+
+  private validateInput(d: AdvisorInput): void {
+    if (!IATA_RE.test(d.origin)) {
+      throw new AgentInputValidationError(
+        this.id,
+        'origin',
+        'Must be a 3-letter IATA code.',
+      );
     }
+    if (!IATA_RE.test(d.destination)) {
+      throw new AgentInputValidationError(
+        this.id,
+        'destination',
+        'Must be a 3-letter IATA code.',
+      );
+    }
+    if (d.origin === d.destination) {
+      throw new AgentInputValidationError(
+        this.id,
+        'destination',
+        'Must differ from origin.',
+      );
+    }
+    if (!ISO_DATE_RE.test(d.departureDate)) {
+      throw new AgentInputValidationError(
+        this.id,
+        'departureDate',
+        'Must be YYYY-MM-DD.',
+      );
+    }
+    if (d.returnDate !== undefined && !ISO_DATE_RE.test(d.returnDate)) {
+      throw new AgentInputValidationError(
+        this.id,
+        'returnDate',
+        'Must be YYYY-MM-DD.',
+      );
+    }
+    if (d.maxRecommendations !== undefined && d.maxRecommendations < 1) {
+      throw new AgentInputValidationError(
+        this.id,
+        'maxRecommendations',
+        'Must be >= 1.',
+      );
+    }
+  }
+
+  private buildSearchInput(
+    d: AdvisorInput,
+    resolved: ReturnType<typeof resolvePreferences>,
+    date: string,
+  ): AvailabilitySearchInput {
+    const passengers: AvailabilitySearchInput['passengers'] = [];
+    if (resolved.passengers.adults > 0) {
+      passengers.push({ type: 'ADT', count: resolved.passengers.adults });
+    }
+    if (resolved.passengers.children > 0) {
+      passengers.push({ type: 'CHD', count: resolved.passengers.children });
+    }
+    if (resolved.passengers.infants > 0) {
+      passengers.push({ type: 'INF', count: resolved.passengers.infants });
+    }
+
+    const si: AvailabilitySearchInput = {
+      origin: d.origin,
+      destination: d.destination,
+      departure_date: date,
+      passengers,
+      max_connections: resolved.maxConnections,
+    };
+    if (d.returnDate !== undefined) si.return_date = d.returnDate;
+    if (resolved.cabinClass !== undefined) {
+      si.cabin_class = resolved.cabinClass as AvailabilityCabinClass;
+    }
+    if (resolved.currency !== undefined) si.currency = resolved.currency;
+    return si;
   }
 }
 
 export type {
-  TravelAdvisorInput,
-  TravelAdvisorOutput,
-  LLMProvider,
-  LLMOptions,
-  TravelerContext,
-  ExtractedSearchParameters,
-  TravelIntent,
-  AITravelAdvisorConfig,
+  AdvisorInput,
+  AdvisorOutput,
+  CabinClass,
+  PassengerCounts,
+  Recommendation,
+  ResolvedPreferences,
+  ScoreBreakdown,
+  ScoringWeights,
+  SearchSummary,
+  TravelerPreferences,
+  TripPurpose,
 } from './types.js';
-export { MockLLMProvider } from './mock-llm-provider.js';

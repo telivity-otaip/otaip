@@ -163,6 +163,9 @@ importers:
 
   packages/agents/exchange:
     dependencies:
+      '@otaip/agents-search':
+        specifier: workspace:*
+        version: link:../search
       '@otaip/agents-ticketing':
         specifier: workspace:*
         version: link:../ticketing

@@ -83,28 +83,45 @@ export type {
 
 export { HotelCarSearchAgent } from './hotel-car-search/index.js';
 export type {
-  HotelCarSearchInput,
-  HotelCarSearchOutput,
-  HotelSearchInput,
-  HotelSearchOutput,
-  HotelOffer,
-  HotelAdapter,
-  CarSearchInput,
-  CarSearchOutput,
-  CarOffer,
+  AdapterSummary as HotelCarAdapterSummary,
   CarAdapter,
   CarCategory,
+  CarOffer,
+  CarSearchInput,
+  CarSearchOutput,
+  CarSortBy,
+  HotelAdapter,
   HotelCarOperation,
+  HotelCarSearchAgentOptions,
+  HotelCarSearchInput,
+  HotelCarSearchOutput,
+  HotelOffer,
+  HotelSearchInput,
+  HotelSearchOutput,
+  HotelSortBy,
 } from './hotel-car-search/index.js';
+export { hotelCarSearchAgentContract } from './hotel-car-search/contract.js';
+export {
+  hotelCarSearchInputSchema,
+  hotelCarSearchOutputSchema,
+} from './hotel-car-search/schema.js';
 
-export { AITravelAdvisorAgent, MockLLMProvider } from './ai-travel-advisor/index.js';
+export { AITravelAdvisorAgent } from './ai-travel-advisor/index.js';
 export type {
-  TravelAdvisorInput,
-  TravelAdvisorOutput,
-  LLMProvider,
-  LLMOptions,
-  TravelerContext,
-  ExtractedSearchParameters,
-  TravelIntent,
-  AITravelAdvisorConfig,
+  AdvisorInput,
+  AdvisorOutput,
+  CabinClass as AdvisorCabinClass,
+  PassengerCounts,
+  Recommendation,
+  ResolvedPreferences,
+  ScoreBreakdown,
+  ScoringWeights,
+  SearchSummary as AdvisorSearchSummary,
+  TravelerPreferences,
+  TripPurpose,
 } from './ai-travel-advisor/index.js';
+export { aiTravelAdvisorContract } from './ai-travel-advisor/contract.js';
+export {
+  advisorInputSchema,
+  advisorOutputSchema,
+} from './ai-travel-advisor/schema.js';
