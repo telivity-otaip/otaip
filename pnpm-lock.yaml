@@ -47,6 +47,18 @@ importers:
       '@otaip/adapter-duffel':
         specifier: workspace:*
         version: link:../packages/adapters/duffel
+      '@otaip/agents-booking':
+        specifier: workspace:*
+        version: link:../packages/agents/booking
+      '@otaip/agents-pricing':
+        specifier: workspace:*
+        version: link:../packages/agents/pricing
+      '@otaip/agents-search':
+        specifier: workspace:*
+        version: link:../packages/agents/search
+      '@otaip/core':
+        specifier: workspace:*
+        version: link:../packages/core
       dotenv:
         specifier: ^17.4.0
         version: 17.4.0
