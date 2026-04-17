@@ -45,4 +45,17 @@ export type {
 
 export { DisruptionResponseAgent } from './disruption-response/index.js';
 export { SelfServiceRebookingAgent } from './self-service-rebooking/index.js';
+export type {
+  Money as RebookingMoney,
+  OriginalFarePolicy,
+  RebookingAlternative,
+  RebookingInput,
+  RebookingOutput,
+  RebookingReason,
+} from './self-service-rebooking/index.js';
+export { selfServiceRebookingContract } from './self-service-rebooking/contract.js';
+export {
+  rebookingInputSchema,
+  rebookingOutputSchema,
+} from './self-service-rebooking/schema.js';
 export { WaitlistManagementAgent } from './waitlist-management/index.js';
