@@ -12,7 +12,6 @@ import type {
   FallbackAttempt,
   FallbackChainInput,
   FallbackChainOutput,
-  FallbackStatus,
 } from './types.js';
 import type { DistributionChannel } from '../gds-ndc-router/types.js';
 

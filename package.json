@@ -17,7 +17,7 @@
     "build": "pnpm -r run build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint 'packages/*/src/**/*.ts' 'packages/agents/*/src/**/*.ts' 'packages/adapters/*/src/**/*.ts'",
+    "lint": "eslint 'packages/*/src/**/*.ts' 'packages/agents/*/src/**/*.ts' 'packages/adapters/*/src/**/*.ts' --ignore-pattern 'packages/cli/**'",
     "lint:fix": "eslint 'packages/*/src/**/*.ts' 'packages/agents/*/src/**/*.ts' 'packages/adapters/*/src/**/*.ts' --fix",
     "format": "prettier --write 'packages/*/src/**/*.ts' 'packages/agents/*/src/**/*.ts' 'packages/adapters/*/src/**/*.ts'",
     "format:check": "prettier --check 'packages/*/src/**/*.ts' 'packages/agents/*/src/**/*.ts' 'packages/adapters/*/src/**/*.ts'",
