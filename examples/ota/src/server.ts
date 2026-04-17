@@ -1,8 +1,9 @@
 /**
  * OTAIP Reference OTA — Fastify server.
  *
- * A reference flight search application that proves OTAIP works end to end.
- * Sprint E covers search only; booking is Sprint F.
+ * A reference flight booking application that proves OTAIP works end to end.
+ * Sprint E: search + offer details.
+ * Sprint F: booking, payment, ticketing, and management.
  */
 
 import 'dotenv/config';
@@ -11,11 +12,21 @@ import { dirname, join } from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { createAdapter } from './config/adapters.js';
+import type { OtaAdapter } from './types.js';
+import type { MockOtaAdapter } from './mock-ota-adapter.js';
 import { SearchService } from './services/search-service.js';
 import { OfferService } from './services/offer-service.js';
+import { BookingService } from './services/booking-service.js';
+import { PaymentService } from './services/payment-service.js';
+import { TicketingService } from './services/ticketing-service.js';
+import { ManageService } from './services/manage-service.js';
 import { registerSearchRoute } from './routes/search.js';
 import { registerOffersRoute } from './routes/offers.js';
 import { registerHealthRoute } from './routes/health.js';
+import { registerBookRoute } from './routes/book.js';
+import { registerPayRoute } from './routes/pay.js';
+import { registerTicketRoute } from './routes/ticket.js';
+import { registerManageRoutes } from './routes/manage.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -25,8 +36,8 @@ const __dirname = dirname(__filename);
 // ---------------------------------------------------------------------------
 
 export interface BuildAppOptions {
-  /** Override the adapter (useful for testing with MockDuffelAdapter). */
-  adapter?: import('@otaip/core').DistributionAdapter;
+  /** Override the adapter (useful for testing with MockOtaAdapter). */
+  adapter?: OtaAdapter;
   /** Whether to initialize the airport resolver. Defaults to true. */
   initResolver?: boolean;
 }
@@ -45,16 +56,26 @@ export async function buildApp(options: BuildAppOptions = {}) {
   // Build services
   const searchService = new SearchService(adapter);
   const offerService = new OfferService(searchService);
+  const bookingService = new BookingService(adapter as MockOtaAdapter, searchService);
+  const paymentService = new PaymentService(adapter as MockOtaAdapter);
+  const ticketingService = new TicketingService(adapter as MockOtaAdapter);
+  const manageService = new ManageService(adapter as MockOtaAdapter);
 
   // Optionally initialize airport code resolver
   if (options.initResolver !== false) {
     await searchService.initializeResolver();
   }
 
-  // Register routes
+  // Register routes — Sprint E
   registerSearchRoute(app, searchService);
   registerOffersRoute(app, offerService);
   registerHealthRoute(app, adapter);
+
+  // Register routes — Sprint F
+  registerBookRoute(app, bookingService);
+  registerPayRoute(app, paymentService);
+  registerTicketRoute(app, ticketingService);
+  registerManageRoutes(app, manageService);
 
   return app;
 }

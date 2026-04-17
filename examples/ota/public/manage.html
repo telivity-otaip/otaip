@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OTAIP Reference OTA — Manage Booking</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    :root { --pico-font-size: 16px; }
+    .lookup-form { max-width: 500px; margin: 0 auto 2rem; }
+    .booking-detail { max-width: 700px; margin: 0 auto; }
+    .detail-card { border: 1px solid var(--pico-muted-border-color); border-radius: var(--pico-border-radius); padding: 1.25rem; margin-bottom: 1rem; }
+    .detail-card h3 { margin-top: 0; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .detail-grid dt { color: var(--pico-muted-color); font-size: 0.9rem; }
+    .detail-grid dd { margin: 0 0 0.75rem 0; font-weight: 500; }
+    .status-badge { display: inline-block; padding: 0.2rem 0.75rem; border-radius: 0.25rem; font-weight: bold; }
+    .status-confirmed { background: #d4edda; color: #155724; }
+    .status-ticketed { background: #cce5ff; color: #004085; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+    .cancel-section { text-align: center; margin-top: 1.5rem; }
+    .error-box { background: var(--pico-del-color); color: #fff; padding: 1rem; border-radius: var(--pico-border-radius); margin-bottom: 1rem; }
+    .success-box { background: #155724; color: #fff; padding: 1rem; border-radius: var(--pico-border-radius); margin-bottom: 1rem; }
+    .spinner { display: none; text-align: center; margin: 2rem 0; }
+    .spinner[aria-busy="true"] { display: block; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <nav>
+      <ul><li><a href="/">Home</a></li></ul>
+      <ul><li><strong>OTAIP Reference OTA</strong></li></ul>
+    </nav>
+
+    <h2>Manage Booking</h2>
+
+    <div id="error-container"></div>
+    <div id="spinner" class="spinner" aria-busy="false">Loading...</div>
+
+    <div id="lookup-container" class="lookup-form">
+      <form id="lookup-form">
+        <label>
+          Booking Reference
+          <input type="text" id="ref-input" name="ref" placeholder="OTA-ABC123" required />
+        </label>
+        <button type="submit">Look Up</button>
+      </form>
+    </div>
+
+    <div id="booking-container" class="booking-detail"></div>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    const refParam = getParam('ref');
+
+    if (refParam) {
+      document.getElementById('ref-input').value = refParam;
+      loadBooking(refParam);
+    }
+
+    document.getElementById('lookup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+      const ref = document.getElementById('ref-input').value.trim();
+      if (ref) {
+        loadBooking(ref);
+      }
+    });
+
+    async function loadBooking(ref) {
+      showSpinner(true);
+      clearError();
+      document.getElementById('booking-container').innerHTML = '';
+
+      try {
+        const booking = await getBooking(ref);
+        renderBooking(booking);
+      } catch (err) {
+        showError(err.message || 'Booking not found');
+      } finally {
+        showSpinner(false);
+      }
+    }
+
+    function renderBooking(booking) {
+      const statusClass = `status-${booking.status}`;
+
+      let html = `
+        <div class="detail-card">
+          <h3>Booking ${escapeHtml(booking.bookingReference)}</h3>
+          <span class="status-badge ${statusClass}">${escapeHtml(booking.status.toUpperCase())}</span>
+          <dl class="detail-grid" style="margin-top:1rem">
+            <div><dt>Created</dt><dd>${formatDateTime(booking.createdAt)}</dd></div>
+            <div><dt>Total</dt><dd>${escapeHtml(booking.currency)} ${escapeHtml(booking.totalAmount)}</dd></div>
+          </dl>
+        </div>
+      `;
+
+      // Passengers
+      if (booking.passengers && booking.passengers.length > 0) {
+        html += '<div class="detail-card"><h3>Passengers</h3>';
+        for (const p of booking.passengers) {
+          html += `<div>${escapeHtml(p.title.toUpperCase())} ${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</div>`;
+        }
+        html += '</div>';
+      }
+
+      // Tickets
+      if (booking.ticketNumbers && booking.ticketNumbers.length > 0) {
+        html += '<div class="detail-card"><h3>Tickets</h3>';
+        for (const tn of booking.ticketNumbers) {
+          html += `<div style="font-family:monospace;font-size:1.1rem;margin-bottom:0.25rem">${escapeHtml(tn)}</div>`;
+        }
+        html += '</div>';
+      }
+
+      // Contact
+      html += `
+        <div class="detail-card"><h3>Contact</h3>
+          <dl class="detail-grid">
+            <div><dt>Email</dt><dd>${escapeHtml(booking.contactEmail)}</dd></div>
+            <div><dt>Phone</dt><dd>${escapeHtml(booking.contactPhone)}</dd></div>
+          </dl>
+        </div>
+      `;
+
+      // Cancel button (only if confirmed, not ticketed/cancelled)
+      if (booking.status === 'confirmed') {
+        html += `
+          <div class="cancel-section">
+            <button id="cancel-btn" class="secondary" onclick="handleCancel('${escapeHtml(booking.bookingReference)}')">Cancel Booking</button>
+          </div>
+        `;
+      }
+
+      document.getElementById('booking-container').innerHTML = html;
+    }
+
+    async function handleCancel(ref) {
+      if (!confirm('Are you sure you want to cancel this booking?')) return;
+
+      clearError();
+      showSpinner(true);
+
+      try {
+        const result = await cancelBooking({ bookingReference: ref });
+        showSuccess(result.message);
+        // Reload to show updated status
+        await loadBooking(ref);
+      } catch (err) {
+        showError(err.message || 'Cancellation failed');
+      } finally {
+        showSpinner(false);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -134,8 +134,8 @@
           rulesHtml = `<div class="fare-info"><h3>Fare Rules</h3><p>${data.fareRules.message}</p></div>`;
         }
 
-        // Booking notice
-        const bookingHtml = '<div class="booking-notice">Booking is not available yet. Sprint F will add booking functionality.</div>';
+        // Book button
+        const bookingHtml = `<div style="margin-top:1.5rem;text-align:center"><button onclick="window.location.href='/book.html?offerId=${encodeURIComponent(offerId)}'" style="font-size:1.1rem;padding:0.75rem 2rem">Book This Flight</button></div>`;
 
         container.innerHTML = segmentsHtml + priceHtml + fareHtml + rulesHtml + bookingHtml;
 
