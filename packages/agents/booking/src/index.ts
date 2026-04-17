@@ -147,3 +147,13 @@ export {
   pnrRetrievalInputSchema,
   pnrRetrievalOutputSchema,
 } from './pnr-retrieval/schema.js';
+
+export { executeFallbackChain } from './fallback-chain/index.js';
+export type {
+  ChannelExecutor,
+  CircuitChecker,
+  FallbackAttempt,
+  FallbackChainInput,
+  FallbackChainOutput,
+  FallbackStatus,
+} from './fallback-chain/index.js';
