@@ -44,6 +44,102 @@ async function getOffer(id) {
   return res.json();
 }
 
+/**
+ * Create a booking.
+ * @param {{ offerId: string, passengers: Array, email: string, phone: string }} params
+ * @returns {Promise<object>}
+ */
+async function bookFlight(params) {
+  const res = await fetch('/api/book', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Booking failed' }));
+    throw new Error(err.error || err.message || `HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
+
+/**
+ * Process payment for a booking.
+ * @param {{ bookingReference: string, paymentMethodId?: string }} params
+ * @returns {Promise<object>}
+ */
+async function processPayment(params) {
+  const res = await fetch('/api/pay', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Payment failed' }));
+    throw new Error(err.error || err.message || `HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
+
+/**
+ * Issue tickets for a booking.
+ * @param {{ bookingReference: string }} params
+ * @returns {Promise<object>}
+ */
+async function issueTicket(params) {
+  const res = await fetch('/api/ticket', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Ticketing failed' }));
+    throw new Error(err.error || err.message || `HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
+
+/**
+ * Retrieve a booking by reference.
+ * @param {string} reference
+ * @returns {Promise<object>}
+ */
+async function getBooking(reference) {
+  const res = await fetch(`/api/booking/${encodeURIComponent(reference)}`);
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to load booking' }));
+    throw new Error(err.error || err.message || `HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
+
+/**
+ * Cancel a booking.
+ * @param {{ bookingReference: string }} params
+ * @returns {Promise<object>}
+ */
+async function cancelBooking(params) {
+  const res = await fetch('/api/cancel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Cancellation failed' }));
+    throw new Error(err.error || err.message || `HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
+
 // ---------------------------------------------------------------------------
 // UI helpers
 // ---------------------------------------------------------------------------
@@ -69,6 +165,14 @@ function clearError() {
   const container = document.getElementById('error-container');
   if (container) {
     container.innerHTML = '';
+  }
+}
+
+/** Display a success message. */
+function showSuccess(message) {
+  const container = document.getElementById('error-container');
+  if (container) {
+    container.innerHTML = `<div class="success-box">${escapeHtml(message)}</div>`;
   }
 }
 

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OTAIP Reference OTA — Booking Confirmation</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    :root { --pico-font-size: 16px; }
+    .confirmation { max-width: 700px; margin: 0 auto; }
+    .confirmation-header { text-align: center; padding: 2rem 0; }
+    .confirmation-header h2 { color: #155724; margin-bottom: 0.5rem; }
+    .confirmation-header .ref { font-size: 1.3rem; font-weight: bold; }
+    .detail-card { border: 1px solid var(--pico-muted-border-color); border-radius: var(--pico-border-radius); padding: 1.25rem; margin-bottom: 1rem; }
+    .detail-card h3 { margin-top: 0; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .detail-grid dt { color: var(--pico-muted-color); font-size: 0.9rem; }
+    .detail-grid dd { margin: 0 0 0.75rem 0; font-weight: 500; }
+    .ticket-number { font-family: monospace; font-size: 1.1rem; background: var(--pico-card-background-color); padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
+    .actions { text-align: center; margin-top: 2rem; }
+    .actions a { margin: 0 0.5rem; }
+    .error-box { background: var(--pico-del-color); color: #fff; padding: 1rem; border-radius: var(--pico-border-radius); margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <nav>
+      <ul><li><a href="/">Home</a></li></ul>
+      <ul><li><strong>OTAIP Reference OTA</strong></li></ul>
+    </nav>
+
+    <div id="error-container"></div>
+    <div id="confirmation-container" class="confirmation"></div>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    const ref = getParam('ref');
+
+    if (!ref) {
+      showError('No booking reference provided.');
+    } else {
+      (async () => {
+        try {
+          const booking = await getBooking(ref);
+          const offer = JSON.parse(sessionStorage.getItem('selectedOffer') || 'null');
+          const payment = JSON.parse(sessionStorage.getItem('paymentResult') || 'null');
+
+          let html = `
+            <div class="confirmation-header">
+              <h2>Booking Confirmed</h2>
+              <div class="ref">${escapeHtml(booking.bookingReference)}</div>
+              <div style="color:var(--pico-muted-color);margin-top:0.5rem">Status: ${escapeHtml(booking.status)}</div>
+            </div>
+          `;
+
+          // Passengers
+          html += '<div class="detail-card"><h3>Passengers</h3>';
+          if (booking.passengers) {
+            for (const p of booking.passengers) {
+              html += `<div>${escapeHtml(p.title.toUpperCase())} ${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</div>`;
+            }
+          }
+          html += '</div>';
+
+          // Flight itinerary
+          if (offer) {
+            html += '<div class="detail-card"><h3>Itinerary</h3>';
+            for (const seg of offer.itinerary.segments) {
+              html += `
+                <dl class="detail-grid">
+                  <div><dt>Flight</dt><dd>${seg.carrier} ${seg.flight_number}</dd></div>
+                  <div><dt>Route</dt><dd>${seg.origin} &rarr; ${seg.destination}</dd></div>
+                  <div><dt>Departure</dt><dd>${formatDateTime(seg.departure_time)}</dd></div>
+                  <div><dt>Arrival</dt><dd>${formatDateTime(seg.arrival_time)}</dd></div>
+                </dl>
+              `;
+            }
+            html += '</div>';
+          }
+
+          // Tickets
+          if (booking.ticketNumbers && booking.ticketNumbers.length > 0) {
+            html += '<div class="detail-card"><h3>Tickets</h3>';
+            for (const tn of booking.ticketNumbers) {
+              html += `<div class="ticket-number">${escapeHtml(tn)}</div>`;
+            }
+            html += '</div>';
+          }
+
+          // Payment
+          html += `
+            <div class="detail-card"><h3>Payment</h3>
+              <dl class="detail-grid">
+                <div><dt>Total Paid</dt><dd>${escapeHtml(booking.currency)} ${escapeHtml(booking.totalAmount)}</dd></div>
+          `;
+          if (payment) {
+            html += `<div><dt>Payment ID</dt><dd style="font-family:monospace;font-size:0.85rem">${escapeHtml(payment.paymentId)}</dd></div>`;
+          }
+          html += '</dl></div>';
+
+          // Contact
+          html += `
+            <div class="detail-card"><h3>Contact</h3>
+              <dl class="detail-grid">
+                <div><dt>Email</dt><dd>${escapeHtml(booking.contactEmail)}</dd></div>
+                <div><dt>Phone</dt><dd>${escapeHtml(booking.contactPhone)}</dd></div>
+              </dl>
+            </div>
+          `;
+
+          // Actions
+          html += `
+            <div class="actions">
+              <a href="/manage.html?ref=${encodeURIComponent(ref)}" role="button" class="outline">Manage Booking</a>
+              <a href="/" role="button">New Search</a>
+            </div>
+          `;
+
+          document.getElementById('confirmation-container').innerHTML = html;
+        } catch (err) {
+          showError('Could not load booking: ' + err.message);
+        }
+      })();
+    }
+  </script>
+</body>
+</html>

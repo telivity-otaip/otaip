@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OTAIP Reference OTA — Book Flight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    :root { --pico-font-size: 16px; }
+    .offer-summary { background: var(--pico-card-background-color); border: 1px solid var(--pico-muted-border-color); border-radius: var(--pico-border-radius); padding: 1.25rem; margin-bottom: 1.5rem; }
+    .offer-summary .route { font-size: 1.2rem; font-weight: bold; }
+    .offer-summary .price { font-size: 1.3rem; font-weight: bold; color: var(--pico-primary); }
+    .offer-summary .details { color: var(--pico-muted-color); font-size: 0.9rem; margin-top: 0.5rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .passenger-block { border: 1px solid var(--pico-muted-border-color); border-radius: var(--pico-border-radius); padding: 1.25rem; margin-bottom: 1rem; }
+    .passenger-block h4 { margin-top: 0; }
+    .error-box { background: var(--pico-del-color); color: #fff; padding: 1rem; border-radius: var(--pico-border-radius); margin-bottom: 1rem; }
+    .spinner { display: none; text-align: center; margin: 2rem 0; }
+    .spinner[aria-busy="true"] { display: block; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <nav>
+      <ul><li><a href="javascript:history.back()">Back</a></li></ul>
+      <ul><li><strong>OTAIP Reference OTA</strong></li></ul>
+    </nav>
+
+    <h2>Book Flight</h2>
+
+    <div id="error-container"></div>
+    <div id="spinner" class="spinner" aria-busy="false">Processing...</div>
+
+    <div id="offer-summary"></div>
+
+    <form id="book-form">
+      <h3>Passenger Details</h3>
+      <div id="passengers-container">
+        <div class="passenger-block" data-index="0">
+          <h4>Passenger 1</h4>
+          <div class="form-row-3">
+            <label>
+              Title
+              <select name="title_0" required>
+                <option value="mr">Mr</option>
+                <option value="ms">Ms</option>
+                <option value="mrs">Mrs</option>
+                <option value="miss">Miss</option>
+                <option value="dr">Dr</option>
+              </select>
+            </label>
+            <label>
+              First Name
+              <input type="text" name="firstName_0" required placeholder="John" />
+            </label>
+            <label>
+              Last Name
+              <input type="text" name="lastName_0" required placeholder="Doe" />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              Date of Birth
+              <input type="date" name="dob_0" required />
+            </label>
+            <label>
+              Gender
+              <select name="gender_0" required>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <h3>Contact Information</h3>
+      <div class="form-row">
+        <label>
+          Email
+          <input type="email" id="email" name="email" required placeholder="john@example.com" />
+        </label>
+        <label>
+          Phone
+          <input type="tel" id="phone" name="phone" required placeholder="+1 555 123 4567" />
+        </label>
+      </div>
+
+      <button type="submit">Continue to Payment</button>
+    </form>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    const offerId = getParam('offerId');
+    if (!offerId) {
+      showError('No offer selected. Please search and select a flight first.');
+      document.getElementById('book-form').style.display = 'none';
+    } else {
+      // Load and display offer summary
+      (async () => {
+        try {
+          const data = await getOffer(offerId);
+          const offer = data.offer;
+          const seg = offer.itinerary.segments[0];
+          const lastSeg = offer.itinerary.segments[offer.itinerary.segments.length - 1];
+
+          document.getElementById('offer-summary').innerHTML = `
+            <div class="offer-summary">
+              <div class="route">${seg.origin} &rarr; ${lastSeg.destination}</div>
+              <div class="details">
+                ${seg.carrier} ${seg.flight_number}
+                &middot; ${formatDateTime(seg.departure_time)} &rarr; ${formatDateTime(lastSeg.arrival_time)}
+                &middot; ${formatDuration(offer.itinerary.total_duration_minutes)}
+                &middot; ${offer.itinerary.connection_count === 0 ? 'Direct' : offer.itinerary.connection_count + ' stop(s)'}
+              </div>
+              <div class="price">${offer.price.currency} ${offer.price.total.toFixed(2)}</div>
+            </div>
+          `;
+
+          // Store offer data for the payment page
+          sessionStorage.setItem('selectedOffer', JSON.stringify(offer));
+        } catch (err) {
+          showError('Could not load offer details: ' + err.message);
+        }
+      })();
+    }
+
+    document.getElementById('book-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+      showSpinner(true);
+
+      const form = e.target;
+
+      // Collect passenger data
+      const passengerBlocks = document.querySelectorAll('.passenger-block');
+      const passengers = [];
+
+      for (const block of passengerBlocks) {
+        const idx = block.dataset.index;
+        passengers.push({
+          title: form[`title_${idx}`].value,
+          firstName: form[`firstName_${idx}`].value,
+          lastName: form[`lastName_${idx}`].value,
+          dateOfBirth: form[`dob_${idx}`].value,
+          gender: form[`gender_${idx}`].value,
+        });
+      }
+
+      try {
+        const result = await bookFlight({
+          offerId,
+          passengers,
+          email: form.email.value,
+          phone: form.phone.value,
+        });
+
+        // Store booking result and go to payment
+        sessionStorage.setItem('currentBooking', JSON.stringify(result));
+        window.location.href = `/payment.html?ref=${encodeURIComponent(result.bookingReference)}`;
+      } catch (err) {
+        showError(err.message || 'Booking failed');
+      } finally {
+        showSpinner(false);
+      }
+    });
+  </script>
+</body>
+</html>

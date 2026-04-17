@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OTAIP Reference OTA — Payment</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    :root { --pico-font-size: 16px; }
+    .booking-summary { background: var(--pico-card-background-color); border: 1px solid var(--pico-muted-border-color); border-radius: var(--pico-border-radius); padding: 1.25rem; margin-bottom: 1.5rem; }
+    .booking-summary .ref { font-size: 1.1rem; font-weight: bold; }
+    .booking-summary .amount { font-size: 1.5rem; font-weight: bold; color: var(--pico-primary); margin-top: 0.5rem; }
+    .booking-summary .status { color: var(--pico-muted-color); }
+    .payment-box { border: 2px solid var(--pico-primary); border-radius: var(--pico-border-radius); padding: 2rem; text-align: center; max-width: 500px; margin: 0 auto; }
+    .payment-box p { color: var(--pico-muted-color); }
+    .error-box { background: var(--pico-del-color); color: #fff; padding: 1rem; border-radius: var(--pico-border-radius); margin-bottom: 1rem; }
+    .success-box { background: #155724; color: #fff; padding: 1rem; border-radius: var(--pico-border-radius); margin-bottom: 1rem; }
+    .spinner { display: none; text-align: center; margin: 2rem 0; }
+    .spinner[aria-busy="true"] { display: block; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <nav>
+      <ul><li><a href="/">Home</a></li></ul>
+      <ul><li><strong>OTAIP Reference OTA</strong></li></ul>
+    </nav>
+
+    <h2>Payment</h2>
+
+    <div id="error-container"></div>
+    <div id="spinner" class="spinner" aria-busy="false">Processing payment...</div>
+
+    <div id="booking-summary"></div>
+    <div id="payment-container"></div>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    const bookingRef = getParam('ref');
+
+    if (!bookingRef) {
+      showError('No booking reference. Please start from search.');
+    } else {
+      const bookingData = JSON.parse(sessionStorage.getItem('currentBooking') || 'null');
+      const offerData = JSON.parse(sessionStorage.getItem('selectedOffer') || 'null');
+
+      if (bookingData) {
+        renderSummary(bookingData, offerData);
+        renderPaymentForm();
+      } else {
+        // Try to load from API
+        (async () => {
+          try {
+            const data = await getBooking(bookingRef);
+            renderSummary(data, offerData);
+            renderPaymentForm();
+          } catch (err) {
+            showError('Could not load booking: ' + err.message);
+          }
+        })();
+      }
+    }
+
+    function renderSummary(booking, offer) {
+      let html = `
+        <div class="booking-summary">
+          <div class="ref">Booking: ${escapeHtml(booking.bookingReference)}</div>
+          <div class="status">Status: ${escapeHtml(booking.status)}</div>
+          <div class="amount">${escapeHtml(booking.currency)} ${escapeHtml(booking.totalAmount)}</div>
+      `;
+
+      if (offer) {
+        const seg = offer.itinerary.segments[0];
+        const lastSeg = offer.itinerary.segments[offer.itinerary.segments.length - 1];
+        html += `<div style="margin-top:0.5rem;color:var(--pico-muted-color)">${seg.origin} &rarr; ${lastSeg.destination} &middot; ${seg.carrier} ${seg.flight_number}</div>`;
+      }
+
+      if (booking.passengers && booking.passengers.length > 0) {
+        html += '<div style="margin-top:0.5rem;font-size:0.9rem">';
+        for (const p of booking.passengers) {
+          html += `${escapeHtml(p.title.toUpperCase())} ${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}<br>`;
+        }
+        html += '</div>';
+      }
+
+      html += '</div>';
+      document.getElementById('booking-summary').innerHTML = html;
+    }
+
+    function renderPaymentForm() {
+      document.getElementById('payment-container').innerHTML = `
+        <div class="payment-box">
+          <h3>Mock Payment</h3>
+          <p>This is a reference app. No real payment is processed.</p>
+          <button id="pay-btn" style="font-size:1.1rem;padding:0.75rem 2rem">Pay Now</button>
+        </div>
+      `;
+
+      document.getElementById('pay-btn').addEventListener('click', async () => {
+        clearError();
+        showSpinner(true);
+        document.getElementById('pay-btn').disabled = true;
+
+        try {
+          // Process payment
+          const payResult = await processPayment({ bookingReference: bookingRef });
+
+          // Auto-trigger ticketing after payment
+          const ticketResult = await issueTicket({ bookingReference: bookingRef });
+
+          // Store final booking state and redirect to confirmation
+          sessionStorage.setItem('paymentResult', JSON.stringify(payResult));
+          sessionStorage.setItem('ticketResult', JSON.stringify(ticketResult));
+
+          window.location.href = `/confirmation.html?ref=${encodeURIComponent(bookingRef)}`;
+        } catch (err) {
+          showError(err.message || 'Payment failed');
+          document.getElementById('pay-btn').disabled = false;
+        } finally {
+          showSpinner(false);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
