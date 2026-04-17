@@ -1,6 +1,6 @@
 {
   "name": "@otaip/agents-reconciliation",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "OTAIP Stage 7 agents — BSP and ARC reconciliation",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.6.0 — Sprint H: Multi-Adapter, OOSD-Native, Full Distribution
+
+The mid-term build plan is complete. Navitaire gains native ONE Order operations, Duffel bridges its order model to OTAIP's AIDM-aligned types, and the Reference OTA searches multiple adapters in parallel with source attribution.
+
+### Added
+
+- **Navitaire OrderOperations** — `NavitaireOrderOperations` class implements the full AIDM 24.1 `OrderOperations` interface: `orderCreate`, `orderRetrieve`, `orderChange`, `orderCancel`, `orderViewHistory`. Mock in-memory implementation with `NAV-ORD-*` IDs, status lifecycle, and `OrderEvent` tracking. Navitaire is ONE Order certified; this lets OTAIP speak to them natively.
+- **Duffel Order Bridge** — `DuffelOrderBridge` class bridges Duffel's native order model to OTAIP's AIDM-aligned `Order` types. `DFL-ORD-*` IDs, double-cancel prevention, passenger/payment/offer-item mapping.
+- **ChannelCapability Order fields** — `supportsOrders?: boolean` and `orderOperations?: ('create' | 'retrieve' | 'change' | 'cancel')[]` on `ChannelCapability`. `GdsNdcRouter` can use these to decide PNR vs Order path per channel.
+- **Multi-adapter search in Reference OTA** — `MultiSearchService` fans out search requests to multiple `DistributionAdapter` instances via `Promise.allSettled`, merges results with `adapterSource` attribution, includes per-source status with timing and error reporting. Activated via `ADAPTERS` env var (comma-separated) or `?multi=true` query param.
+- **Updated capability manifests** — Navitaire and Duffel now declare `supportsOrders: true` and the full set of order operations.
+- **docs/adapters/oosd-navitaire.md** — Navitaire ONE Order adapter documentation.
+- **docs/offers-and-orders.md** — updated with Sprint H completion section.
+
+### Tests
+
+- 33 new tests (15 Navitaire + 10 Duffel + 8 multi-search). 2985 total passing, 0 failing.
+
+### Build plan complete
+
+| Sprint | Version | Delivered |
+|---|---|---|
+| A | v0.3.2 | Pipeline validator, 9 agent contracts, capability registry |
+| B | v0.3.2.1 | Tool bridge, catalog generator, EventStore, PnrRetrieval |
+| C | v0.3.3 | Fallback chain, governance agents, CLI |
+| D+E | v0.3.4 | Docs overhaul, Reference OTA search flow |
+| F | v0.5.0 | Reference OTA booking, payment, ticketing |
+| G | v0.5.1 | Offers & Orders data model (AIDM 24.1) |
+| H | v0.6.0 | OOSD-native adapters, multi-adapter search |
+
+Final stats: **76 agents, 2985 tests, 16 workspace packages, 6 adapters, 14 contracted agents, 2 OOSD-native adapters.**
+
 ## 0.5.1 — Sprint G: ONE Order Ready — PNR + Orders Coexist
 
 Native Offers & Orders data model in `@otaip/core`, aligned with IATA AIDM 24.1 terminology. PNR and Order models coexist through a unified `BookingReference` bridge — agents accept either and let the adapter decide the underlying model.
