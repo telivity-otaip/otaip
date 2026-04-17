@@ -83,19 +83,28 @@ export type {
 
 export { HotelCarSearchAgent } from './hotel-car-search/index.js';
 export type {
-  HotelCarSearchInput,
-  HotelCarSearchOutput,
-  HotelSearchInput,
-  HotelSearchOutput,
-  HotelOffer,
-  HotelAdapter,
-  CarSearchInput,
-  CarSearchOutput,
-  CarOffer,
+  AdapterSummary as HotelCarAdapterSummary,
   CarAdapter,
   CarCategory,
+  CarOffer,
+  CarSearchInput,
+  CarSearchOutput,
+  CarSortBy,
+  HotelAdapter,
   HotelCarOperation,
+  HotelCarSearchAgentOptions,
+  HotelCarSearchInput,
+  HotelCarSearchOutput,
+  HotelOffer,
+  HotelSearchInput,
+  HotelSearchOutput,
+  HotelSortBy,
 } from './hotel-car-search/index.js';
+export { hotelCarSearchAgentContract } from './hotel-car-search/contract.js';
+export {
+  hotelCarSearchInputSchema,
+  hotelCarSearchOutputSchema,
+} from './hotel-car-search/schema.js';
 
 export { AITravelAdvisorAgent, MockLLMProvider } from './ai-travel-advisor/index.js';
 export type {
