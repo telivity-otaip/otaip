@@ -106,14 +106,22 @@ export {
   hotelCarSearchOutputSchema,
 } from './hotel-car-search/schema.js';
 
-export { AITravelAdvisorAgent, MockLLMProvider } from './ai-travel-advisor/index.js';
+export { AITravelAdvisorAgent } from './ai-travel-advisor/index.js';
 export type {
-  TravelAdvisorInput,
-  TravelAdvisorOutput,
-  LLMProvider,
-  LLMOptions,
-  TravelerContext,
-  ExtractedSearchParameters,
-  TravelIntent,
-  AITravelAdvisorConfig,
+  AdvisorInput,
+  AdvisorOutput,
+  CabinClass as AdvisorCabinClass,
+  PassengerCounts,
+  Recommendation,
+  ResolvedPreferences,
+  ScoreBreakdown,
+  ScoringWeights,
+  SearchSummary as AdvisorSearchSummary,
+  TravelerPreferences,
+  TripPurpose,
 } from './ai-travel-advisor/index.js';
+export { aiTravelAdvisorContract } from './ai-travel-advisor/contract.js';
+export {
+  advisorInputSchema,
+  advisorOutputSchema,
+} from './ai-travel-advisor/schema.js';

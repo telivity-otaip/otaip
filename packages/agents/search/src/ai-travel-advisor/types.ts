@@ -1,90 +1,109 @@
 /**
  * AI Travel Advisor — Agent 1.8 Types
  *
- * Provider-agnostic LLM integration for natural language travel search.
+ * Rule-based recommendation engine (NOT an LLM agent). Takes structured
+ * traveler preferences, orchestrates AvailabilitySearch, applies
+ * preference-weighted scoring, returns ranked recommendations with
+ * explanations.
  */
 
-/** Injectable LLM provider interface. Bring your own LLM. */
-export interface LLMProvider {
-  complete(prompt: string, options?: LLMOptions): Promise<string>;
-}
+import type { SearchOffer } from '@otaip/core';
 
-export interface LLMOptions {
-  maxTokens?: number;
-  temperature?: number;
-  model?: string;
-}
+export type CabinClass = 'economy' | 'premium_economy' | 'business' | 'first';
+export type TripPurpose = 'business' | 'leisure';
 
-/** Input to the AI Travel Advisor agent. */
-export interface TravelAdvisorInput {
-  /** Natural language travel query from the user. */
-  query: string;
-
-  /** Optional context about the traveler (preferences, constraints). */
-  travelerContext?: TravelerContext;
-}
-
-export interface TravelerContext {
-  /** Preferred cabin class. */
-  cabinPreference?: 'economy' | 'premium_economy' | 'business' | 'first';
-  /** Budget constraint in the traveler's currency. */
-  maxBudget?: number;
-  /** Budget currency (ISO 4217). */
-  budgetCurrency?: string;
-  /** Preferred airlines (IATA codes). */
-  preferredAirlines?: string[];
-  /** Number of adult travelers. */
-  adults?: number;
-  /** Number of child travelers. */
+export interface PassengerCounts {
+  adults: number;
   children?: number;
-  /** Number of infant travelers. */
   infants?: number;
 }
 
-/** Output from the AI Travel Advisor agent. */
-export interface TravelAdvisorOutput {
-  /** Structured search parameters extracted from the query. */
-  searchParameters: ExtractedSearchParameters;
-  /** Natural language summary of the interpreted query. */
-  summary: string;
-  /** Intent classification. */
-  intent: TravelIntent;
+export interface ScoringWeights {
+  price: number;
+  schedule: number;
+  airline: number;
+  connections: number;
 }
 
-export interface ExtractedSearchParameters {
-  /** Origin airport/city code, if identified. */
-  origin?: string;
-  /** Destination airport/city code, if identified. */
-  destination?: string;
-  /** Departure date (ISO 8601), if identified. */
-  departureDate?: string;
-  /** Return date (ISO 8601), if identified. */
+export interface TravelerPreferences {
+  /** Minimum budget in preferred currency (corporate floor, etc.). */
+  budgetMin?: number;
+  /** Maximum budget in preferred currency. */
+  budgetMax?: number;
+  /** Currency for budget comparisons. Default 'USD'. */
+  currency?: string;
+  /** Desired cabin class. Non-matching offers are excluded. */
+  cabinClass?: CabinClass;
+  /** Preferred marketing carriers (IATA codes). Boosts matching offers. */
+  preferredAirlines?: string[];
+  /** Business trips prioritize schedule; leisure prioritizes price. */
+  tripPurpose?: TripPurpose;
+  /** Passenger counts. Default 1 ADT. */
+  passengers?: PassengerCounts;
+  /** Max connections per itinerary. Default 1. */
+  maxConnections?: number;
+  /** Override the default scoring weights. */
+  scoringWeights?: ScoringWeights;
+}
+
+export interface ResolvedPreferences {
+  currency: string;
+  passengers: { adults: number; children: number; infants: number };
+  maxConnections: number;
+  weights: ScoringWeights;
+  tripPurpose?: TripPurpose;
+  cabinClass?: CabinClass;
+  preferredAirlines: string[];
+  budgetMin?: number;
+  budgetMax?: number;
+}
+
+export interface AdvisorInput {
+  /** Origin airport IATA code (3 letters). */
+  origin: string;
+  /** Destination airport IATA code (3 letters). */
+  destination: string;
+  /** Departure date (ISO 8601 YYYY-MM-DD). */
+  departureDate: string;
+  /** Return date for round-trip. Omit for one-way. */
   returnDate?: string;
-  /** Trip type inferred from query. */
-  tripType?: 'one_way' | 'round_trip' | 'multi_city';
-  /** Cabin class preference. */
-  cabinClass?: 'economy' | 'premium_economy' | 'business' | 'first';
-  /** Number of passengers by type. */
-  passengers?: { adults: number; children: number; infants: number };
-  /** Whether dates are flexible. */
+  /** Search ±3 days around departureDate when true. */
   flexibleDates?: boolean;
+  /** Traveler preferences. All fields optional — defaults applied. */
+  preferences?: TravelerPreferences;
+  /** Max recommendations to return. Default 5. */
+  maxRecommendations?: number;
 }
 
-export type TravelIntent =
-  | 'flight_search'
-  | 'hotel_search'
-  | 'destination_recommendation'
-  | 'price_check'
-  | 'trip_planning'
-  | 'unknown';
+export interface ScoreBreakdown {
+  price: number;
+  schedule: number;
+  airline: number;
+  connections: number;
+}
 
-export interface AITravelAdvisorConfig {
-  /** LLM provider for natural language understanding. */
-  llmProvider: LLMProvider;
+export interface Recommendation {
+  rank: number;
+  offer: SearchOffer;
+  score: number;
+  scoreBreakdown: ScoreBreakdown;
+  /** Human-readable reason for this rank, deterministic from breakdown. */
+  explanation: string;
+}
 
-  /** Maximum tokens for LLM response. Default: 500. */
-  maxTokens?: number;
+export interface SearchSummary {
+  /** Total offers returned by AvailabilitySearch across all dates. */
+  totalOffersFound: number;
+  /** Offers that passed budget + cabin + connections filters. */
+  totalOffersEligible: number;
+  /** Dates searched (one entry unless flexibleDates). */
+  dateRangeSearched: string[];
+  /** Adapters that contributed to the results. */
+  adaptersUsed: string[];
+}
 
-  /** LLM temperature. Default: 0.1 (low for structured extraction). */
-  temperature?: number;
+export interface AdvisorOutput {
+  recommendations: Recommendation[];
+  searchSummary: SearchSummary;
+  appliedPreferences: ResolvedPreferences;
 }
