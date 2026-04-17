@@ -1,0 +1,103 @@
+/**
+ * POST /api/search — flight search endpoint.
+ */
+
+import type { FastifyInstance } from 'fastify';
+import type { SearchService } from '../services/search-service.js';
+
+// ---------------------------------------------------------------------------
+// Request body schema
+// ---------------------------------------------------------------------------
+
+interface SearchBody {
+  origin: string;
+  destination: string;
+  date: string;
+  returnDate?: string;
+  passengers: number;
+  cabinClass?: 'economy' | 'premium_economy' | 'business' | 'first';
+}
+
+const IATA_CODE_RE = /^[A-Z]{3}$/;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const VALID_CABINS = new Set(['economy', 'premium_economy', 'business', 'first']);
+
+// ---------------------------------------------------------------------------
+// Route registration
+// ---------------------------------------------------------------------------
+
+export function registerSearchRoute(
+  app: FastifyInstance,
+  searchService: SearchService,
+): void {
+  app.post<{ Body: SearchBody }>('/api/search', async (request, reply) => {
+    const body = request.body as SearchBody | undefined;
+
+    if (!body) {
+      return reply.status(400).send({ error: 'Request body is required' });
+    }
+
+    // Validate required fields
+    const errors: string[] = [];
+
+    if (!body.origin || typeof body.origin !== 'string') {
+      errors.push('origin is required and must be a string');
+    } else if (!IATA_CODE_RE.test(body.origin.toUpperCase())) {
+      errors.push('origin must be a 3-letter IATA airport code');
+    }
+
+    if (!body.destination || typeof body.destination !== 'string') {
+      errors.push('destination is required and must be a string');
+    } else if (!IATA_CODE_RE.test(body.destination.toUpperCase())) {
+      errors.push('destination must be a 3-letter IATA airport code');
+    }
+
+    if (!body.date || typeof body.date !== 'string') {
+      errors.push('date is required and must be a string');
+    } else if (!DATE_RE.test(body.date)) {
+      errors.push('date must be in YYYY-MM-DD format');
+    }
+
+    if (body.returnDate !== undefined && body.returnDate !== null) {
+      if (typeof body.returnDate !== 'string' || !DATE_RE.test(body.returnDate)) {
+        errors.push('returnDate must be in YYYY-MM-DD format');
+      }
+    }
+
+    if (body.passengers === undefined || body.passengers === null) {
+      errors.push('passengers is required');
+    } else if (typeof body.passengers !== 'number' || body.passengers < 1 || body.passengers > 9) {
+      errors.push('passengers must be a number between 1 and 9');
+    }
+
+    if (body.cabinClass !== undefined && !VALID_CABINS.has(body.cabinClass)) {
+      errors.push('cabinClass must be one of: economy, premium_economy, business, first');
+    }
+
+    if (errors.length > 0) {
+      return reply.status(400).send({ error: 'Validation failed', details: errors });
+    }
+
+    try {
+      const result = await searchService.search({
+        origin: body.origin.toUpperCase(),
+        destination: body.destination.toUpperCase(),
+        date: body.date,
+        returnDate: body.returnDate,
+        passengers: body.passengers,
+        cabinClass: body.cabinClass,
+      });
+
+      return reply.send(result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+
+      if (message.startsWith('Invalid airport')) {
+        return reply.status(400).send({ error: message });
+      }
+
+      request.log.error({ err }, 'Search failed');
+      return reply.status(500).send({ error: 'Search failed', message });
+    }
+  });
+}

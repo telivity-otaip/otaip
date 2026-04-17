@@ -1,0 +1,82 @@
+/**
+ * OTAIP Reference OTA — Fastify server.
+ *
+ * A reference flight search application that proves OTAIP works end to end.
+ * Sprint E covers search only; booking is Sprint F.
+ */
+
+import 'dotenv/config';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import Fastify from 'fastify';
+import fastifyStatic from '@fastify/static';
+import { createAdapter } from './config/adapters.js';
+import { SearchService } from './services/search-service.js';
+import { OfferService } from './services/offer-service.js';
+import { registerSearchRoute } from './routes/search.js';
+import { registerOffersRoute } from './routes/offers.js';
+import { registerHealthRoute } from './routes/health.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// ---------------------------------------------------------------------------
+// App factory (exported for testing)
+// ---------------------------------------------------------------------------
+
+export interface BuildAppOptions {
+  /** Override the adapter (useful for testing with MockDuffelAdapter). */
+  adapter?: import('@otaip/core').DistributionAdapter;
+  /** Whether to initialize the airport resolver. Defaults to true. */
+  initResolver?: boolean;
+}
+
+export async function buildApp(options: BuildAppOptions = {}) {
+  const adapter = options.adapter ?? createAdapter();
+
+  const app = Fastify({ logger: true });
+
+  // Serve static frontend files
+  await app.register(fastifyStatic, {
+    root: join(__dirname, '..', 'public'),
+    prefix: '/',
+  });
+
+  // Build services
+  const searchService = new SearchService(adapter);
+  const offerService = new OfferService(searchService);
+
+  // Optionally initialize airport code resolver
+  if (options.initResolver !== false) {
+    await searchService.initializeResolver();
+  }
+
+  // Register routes
+  registerSearchRoute(app, searchService);
+  registerOffersRoute(app, offerService);
+  registerHealthRoute(app, adapter);
+
+  return app;
+}
+
+// ---------------------------------------------------------------------------
+// Start server (only when run directly, not imported)
+// ---------------------------------------------------------------------------
+
+const isMainModule =
+  process.argv[1] &&
+  (process.argv[1].endsWith('server.ts') || process.argv[1].endsWith('server.js'));
+
+if (isMainModule) {
+  const port = Number(process.env['PORT'] ?? 3000);
+
+  const app = await buildApp();
+
+  try {
+    await app.listen({ port, host: '0.0.0.0' });
+    console.log(`\n  OTAIP Reference OTA running at http://localhost:${port}\n`);
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+}

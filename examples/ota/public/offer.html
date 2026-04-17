@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OTAIP Reference OTA — Offer Details</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    :root { --pico-font-size: 16px; }
+    .segment-card { border: 1px solid var(--pico-muted-border-color); border-radius: var(--pico-border-radius); padding: 1.25rem; margin-bottom: 1rem; }
+    .segment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .segment-header .flight { font-weight: bold; font-size: 1.1rem; }
+    .segment-detail { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .segment-detail dt { color: var(--pico-muted-color); font-size: 0.85rem; margin-bottom: 0.15rem; }
+    .segment-detail dd { margin: 0 0 0.75rem 0; font-weight: 500; }
+    .price-summary { background: var(--pico-card-background-color); border: 2px solid var(--pico-primary); border-radius: var(--pico-border-radius); padding: 1.5rem; }
+    .price-summary .total { font-size: 1.5rem; font-weight: bold; color: var(--pico-primary); }
+    .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem; }
+    .price-grid dt { color: var(--pico-muted-color); }
+    .price-grid dd { margin: 0; text-align: right; }
+    .fare-info { margin-top: 1.5rem; }
+    .fare-info dt { color: var(--pico-muted-color); font-size: 0.85rem; }
+    .fare-info dd { margin: 0 0 0.5rem 0; }
+    .error-box { background: var(--pico-del-color); color: #fff; padding: 1rem; border-radius: var(--pico-border-radius); margin-bottom: 1rem; }
+    .spinner { display: none; text-align: center; margin: 2rem 0; }
+    .spinner[aria-busy="true"] { display: block; }
+    .booking-notice { margin-top: 1.5rem; padding: 1rem; background: var(--pico-muted-border-color); border-radius: var(--pico-border-radius); text-align: center; color: var(--pico-muted-color); }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <nav>
+      <ul><li><a href="javascript:history.back()">Back to Results</a></li></ul>
+      <ul><li><strong>OTAIP Reference OTA</strong></li></ul>
+    </nav>
+
+    <div id="error-container"></div>
+    <div id="spinner" class="spinner" aria-busy="false">Loading offer details...</div>
+
+    <div id="offer-container"></div>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    (async () => {
+      const offerId = getParam('id');
+      if (!offerId) {
+        showError('No offer ID provided');
+        return;
+      }
+
+      showSpinner(true);
+
+      try {
+        const data = await getOffer(offerId);
+
+        const offer = data.offer;
+        const container = document.getElementById('offer-container');
+
+        // Segments
+        let segmentsHtml = '<h2>Itinerary</h2>';
+        for (const seg of offer.itinerary.segments) {
+          segmentsHtml += `
+            <div class="segment-card">
+              <div class="segment-header">
+                <span class="flight">${seg.carrier} ${seg.flight_number}</span>
+                <span>${seg.cabin_class || 'economy'}</span>
+              </div>
+              <dl class="segment-detail">
+                <div>
+                  <dt>Departure</dt>
+                  <dd>${seg.origin} &middot; ${formatDateTime(seg.departure_time)}</dd>
+                </div>
+                <div>
+                  <dt>Arrival</dt>
+                  <dd>${seg.destination} &middot; ${formatDateTime(seg.arrival_time)}</dd>
+                </div>
+                <div>
+                  <dt>Duration</dt>
+                  <dd>${formatDuration(seg.duration_minutes)}</dd>
+                </div>
+                <div>
+                  <dt>Aircraft</dt>
+                  <dd>${seg.aircraft || 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt>Booking Class</dt>
+                  <dd>${seg.booking_class || 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt>Stops</dt>
+                  <dd>${seg.stops === 0 ? 'Direct' : seg.stops}</dd>
+                </div>
+              </dl>
+            </div>
+          `;
+        }
+
+        // Price
+        let priceHtml = `
+          <div class="price-summary">
+            <div class="total">${offer.price.currency} ${offer.price.total.toFixed(2)}</div>
+            <dl class="price-grid">
+              <dt>Base fare</dt><dd>${offer.price.currency} ${offer.price.base_fare.toFixed(2)}</dd>
+              <dt>Taxes & fees</dt><dd>${offer.price.currency} ${offer.price.taxes.toFixed(2)}</dd>
+              <dt>Total</dt><dd>${offer.price.currency} ${offer.price.total.toFixed(2)}</dd>
+            </dl>
+        `;
+
+        if (offer.price.per_passenger && offer.price.per_passenger.length > 0) {
+          priceHtml += '<h4 style="margin-top:1rem">Per passenger</h4>';
+          for (const pp of offer.price.per_passenger) {
+            priceHtml += `<dl class="price-grid">
+              <dt>${pp.type}</dt><dd>${offer.price.currency} ${pp.total.toFixed(2)}</dd>
+            </dl>`;
+          }
+        }
+        priceHtml += '</div>';
+
+        // Fare info
+        let fareHtml = '<div class="fare-info"><h3>Fare Details</h3><dl>';
+        fareHtml += `<dt>Fare basis</dt><dd>${offer.fare_basis ? offer.fare_basis.join(', ') : 'N/A'}</dd>`;
+        fareHtml += `<dt>Booking classes</dt><dd>${offer.booking_classes ? offer.booking_classes.join(', ') : 'N/A'}</dd>`;
+        fareHtml += `<dt>Source</dt><dd>${offer.source}</dd>`;
+        fareHtml += `<dt>Offer ID</dt><dd><code>${offer.offer_id}</code></dd>`;
+        if (offer.expires_at) {
+          fareHtml += `<dt>Expires</dt><dd>${formatDateTime(offer.expires_at)}</dd>`;
+        }
+        fareHtml += '</dl></div>';
+
+        // Fare rules
+        let rulesHtml = '';
+        if (data.fareRules) {
+          rulesHtml = `<div class="fare-info"><h3>Fare Rules</h3><p>${data.fareRules.message}</p></div>`;
+        }
+
+        // Booking notice
+        const bookingHtml = '<div class="booking-notice">Booking is not available yet. Sprint F will add booking functionality.</div>';
+
+        container.innerHTML = segmentsHtml + priceHtml + fareHtml + rulesHtml + bookingHtml;
+
+      } catch (err) {
+        showError(err.message || 'Failed to load offer details');
+      } finally {
+        showSpinner(false);
+      }
+    })();
+  </script>
+</body>
+</html>

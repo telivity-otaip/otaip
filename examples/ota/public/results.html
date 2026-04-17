@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OTAIP Reference OTA — Search Results</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    :root { --pico-font-size: 16px; }
+    .results-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .results-header h2 { margin: 0; }
+    .sort-controls select { min-width: 150px; margin: 0; }
+    .offer-card { border: 1px solid var(--pico-muted-border-color); border-radius: var(--pico-border-radius); padding: 1.5rem; margin-bottom: 1rem; cursor: pointer; transition: box-shadow 0.2s; }
+    .offer-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+    .offer-row { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 1rem; align-items: center; }
+    .carrier-info { font-weight: bold; font-size: 1.1rem; }
+    .flight-times { text-align: center; }
+    .flight-times .times { font-size: 1.2rem; font-weight: 600; }
+    .flight-times .meta { color: var(--pico-muted-color); font-size: 0.85rem; }
+    .price-info { text-align: right; }
+    .price-info .total { font-size: 1.3rem; font-weight: bold; color: var(--pico-primary); }
+    .price-info .breakdown { color: var(--pico-muted-color); font-size: 0.85rem; }
+    .stops-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; }
+    .stops-badge.direct { background: #d4edda; color: #155724; }
+    .stops-badge.connecting { background: #fff3cd; color: #856404; }
+    .no-results { text-align: center; padding: 3rem; }
+    .source-info { color: var(--pico-muted-color); font-size: 0.85rem; margin-top: 1rem; }
+    .error-box { background: var(--pico-del-color); color: #fff; padding: 1rem; border-radius: var(--pico-border-radius); margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <nav>
+      <ul><li><a href="/">Back to Search</a></li></ul>
+      <ul><li><strong>OTAIP Reference OTA</strong></li></ul>
+    </nav>
+
+    <div id="error-container"></div>
+
+    <div class="results-header">
+      <h2 id="results-title">Search Results</h2>
+      <div class="sort-controls">
+        <select id="sort-by" aria-label="Sort results">
+          <option value="price">Sort by Price</option>
+          <option value="duration">Sort by Duration</option>
+          <option value="departure">Sort by Departure</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="results-container"></div>
+    <div id="source-info" class="source-info"></div>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    const raw = sessionStorage.getItem('searchResults');
+    const paramsRaw = sessionStorage.getItem('searchParams');
+
+    if (!raw) {
+      window.location.href = '/';
+    } else {
+      const data = JSON.parse(raw);
+      const params = paramsRaw ? JSON.parse(paramsRaw) : {};
+
+      document.getElementById('results-title').textContent =
+        `${params.origin || '???'} → ${params.destination || '???'} — ${data.totalFound} offer${data.totalFound === 1 ? '' : 's'}`;
+
+      let offers = data.offers || [];
+
+      function renderOffers(offerList) {
+        const container = document.getElementById('results-container');
+
+        if (offerList.length === 0) {
+          container.innerHTML = '<div class="no-results"><p>No flights found for this route.</p><p><a href="/">Try another search</a></p></div>';
+          return;
+        }
+
+        container.innerHTML = offerList.map(offer => {
+          const seg = offer.itinerary.segments[0];
+          const lastSeg = offer.itinerary.segments[offer.itinerary.segments.length - 1];
+          const depTime = formatTime(seg.departure_time);
+          const arrTime = formatTime(lastSeg.arrival_time);
+          const duration = formatDuration(offer.itinerary.total_duration_minutes);
+          const stops = offer.itinerary.connection_count;
+          const stopsLabel = stops === 0 ? 'Direct' : `${stops} stop${stops > 1 ? 's' : ''}`;
+          const stopsClass = stops === 0 ? 'direct' : 'connecting';
+
+          return `
+            <article class="offer-card" onclick="viewOffer('${offer.offer_id}')">
+              <div class="offer-row">
+                <div class="carrier-info">
+                  <div>${seg.carrier} ${seg.flight_number}</div>
+                  <div style="font-size:0.85rem;color:var(--pico-muted-color)">${seg.aircraft || ''}</div>
+                  <span class="stops-badge ${stopsClass}">${stopsLabel}</span>
+                </div>
+                <div class="flight-times">
+                  <div class="times">${depTime} → ${arrTime}</div>
+                  <div class="meta">${duration} &middot; ${seg.origin} → ${lastSeg.destination}</div>
+                  <div class="meta">${offer.fare_basis ? offer.fare_basis.join(', ') : ''}</div>
+                </div>
+                <div class="price-info">
+                  <div class="total">${offer.price.currency} ${offer.price.total.toFixed(2)}</div>
+                  <div class="breakdown">Base: ${offer.price.base_fare.toFixed(2)} + Tax: ${offer.price.taxes.toFixed(2)}</div>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      renderOffers(offers);
+
+      // Source info
+      if (data.sources && data.sources.length > 0) {
+        document.getElementById('source-info').textContent =
+          `Sources: ${data.sources.join(', ')}`;
+      }
+
+      // Sorting
+      document.getElementById('sort-by').addEventListener('change', (e) => {
+        const sortedOffers = [...offers];
+        switch (e.target.value) {
+          case 'price':
+            sortedOffers.sort((a, b) => a.price.total - b.price.total);
+            break;
+          case 'duration':
+            sortedOffers.sort((a, b) => a.itinerary.total_duration_minutes - b.itinerary.total_duration_minutes);
+            break;
+          case 'departure':
+            sortedOffers.sort((a, b) => {
+              const aTime = new Date(a.itinerary.segments[0].departure_time).getTime();
+              const bTime = new Date(b.itinerary.segments[0].departure_time).getTime();
+              return aTime - bTime;
+            });
+            break;
+        }
+        renderOffers(sortedOffers);
+      });
+    }
+
+    function viewOffer(id) {
+      window.location.href = `/offer.html?id=${encodeURIComponent(id)}`;
+    }
+  </script>
+</body>
+</html>
