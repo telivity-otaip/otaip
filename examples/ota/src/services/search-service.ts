@@ -38,6 +38,12 @@ export interface SearchResult {
 export class SearchService {
   private readonly adapter: DistributionAdapter;
   private readonly offerCache = new Map<string, SearchOffer>();
+  /**
+   * Tracks which adapter produced each cached offer, keyed by `offer_id`.
+   * Only populated for offers returned by multi-adapter search; single-adapter
+   * search leaves it empty so the default adapter is used for booking.
+   */
+  private readonly offerAdapterSource = new Map<string, string>();
   private airportResolver: AirportCodeResolver | null = null;
 
   constructor(adapter: DistributionAdapter) {
@@ -58,6 +64,52 @@ export class SearchService {
   /** Get a cached offer by ID. */
   getOffer(offerId: string): SearchOffer | undefined {
     return this.offerCache.get(offerId);
+  }
+
+  /**
+   * Get the adapter source that produced a cached offer, if known.
+   *
+   * Returns `undefined` for offers from the single-adapter path — callers
+   * should then fall back to the default adapter. Set for offers returned
+   * by the multi-adapter search path (which tags them with `adapterSource`).
+   */
+  getOfferAdapterSource(offerId: string): string | undefined {
+    return this.offerAdapterSource.get(offerId);
+  }
+
+  /**
+   * Cache offers returned from any search path (single- or multi-adapter).
+   *
+   * Used by the multi-adapter search route so follow-up lookups
+   * (`GET /api/offers/:id`, BookingService.createBooking) find the offer
+   * rather than 404ing. Idempotent — re-caching the same ID overwrites.
+   *
+   * When an offer carries an `adapterSource` tag (from MultiSearchService),
+   * the source is recorded so BookingService can route the booking back
+   * to the same adapter. When an offer is re-cached WITHOUT an
+   * `adapterSource` (e.g. a later single-adapter search returns the same
+   * `offer_id`), any previously-recorded source is cleared so the booking
+   * falls back to the default adapter instead of silently routing to a
+   * stale source.
+   *
+   * **`offer_id` collision semantics (deliberate):** within a single
+   * `MultiSearchService.search()` call, two adapters returning the same
+   * `offer_id` overwrite each other — last write wins. The Reference OTA
+   * tolerates this because offer IDs are opaque to the app and collisions
+   * between distinct suppliers are vanishingly rare in practice. Production
+   * deployments that want stronger guarantees should namespace IDs with
+   * the `adapterSource` prefix at the MultiSearchService boundary.
+   */
+  cacheOffers(offers: Iterable<SearchOffer & { adapterSource?: string }>): void {
+    for (const offer of offers) {
+      this.offerCache.set(offer.offer_id, offer);
+      if (offer.adapterSource !== undefined) {
+        this.offerAdapterSource.set(offer.offer_id, offer.adapterSource);
+      } else {
+        // Clear any stale source tag so the default adapter is used.
+        this.offerAdapterSource.delete(offer.offer_id);
+      }
+    }
   }
 
   /** Search for flight offers. */
@@ -97,10 +149,11 @@ export class SearchService {
       (a, b) => a.price.total - b.price.total,
     );
 
-    // Cache offers for detail lookup
-    for (const offer of sortedOffers) {
-      this.offerCache.set(offer.offer_id, offer);
-    }
+    // Cache offers for detail lookup. Route through cacheOffers() so the
+    // stale-source clearing logic (see cacheOffers docs) applies here too —
+    // a single-adapter search after a multi-adapter search must not leave
+    // an offerAdapterSource entry behind.
+    this.cacheOffers(sortedOffers);
 
     // Collect unique sources
     const sources = [...new Set(sortedOffers.map((o) => o.source))];

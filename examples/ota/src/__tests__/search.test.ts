@@ -6,8 +6,23 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
+import type {
+  DistributionAdapter,
+  SearchOffer,
+  SearchRequest,
+  SearchResponse,
+} from '@otaip/core';
 import { MockDuffelAdapter } from '@otaip/adapter-duffel';
-import { buildApp } from '../server.js';
+import { buildApp, filterBookingAdapters } from '../server.js';
+import { MultiSearchService } from '../services/multi-search-service.js';
+import { SearchService } from '../services/search-service.js';
+import type {
+  BookingRequest,
+  BookingResult,
+  CancelResult,
+  OtaAdapter,
+  PassengerDetail,
+} from '../types.js';
 
 let app: FastifyInstance;
 const mockAdapter = new MockDuffelAdapter();
@@ -217,5 +232,456 @@ describe('GET /health', () => {
     expect(body.agents).toBeDefined();
     expect(body.agents.initialized).toBe(true);
     expect(body.adapter).toBe('duffel');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Sprint H multi-adapter integration tests — cover the 3 bugs Codex found:
+//   1) buildApp() never wired multiSearchService into the search route
+//   2) multi=true branch bypassed the SearchService offer cache (follow-up
+//      GET /api/offers/:id 404'd; BookingService.createBooking likewise)
+//   3) multi=true branch dropped body.returnDate (round-trip collapsed to
+//      one-way before hitting the adapters)
+// ---------------------------------------------------------------------------
+
+interface RecordingAdapter extends DistributionAdapter {
+  lastRequest: SearchRequest | null;
+}
+
+function makeOffer(id: string, total: number, source: string): SearchOffer {
+  return {
+    offer_id: id,
+    source,
+    itinerary: {
+      source_id: `itin-${id}`,
+      source,
+      segments: [
+        {
+          carrier: 'UA',
+          flight_number: '100',
+          origin: 'JFK',
+          destination: 'LAX',
+          departure_time: '2026-07-01T08:00:00-04:00',
+          arrival_time: '2026-07-01T11:30:00-07:00',
+          duration_minutes: 330,
+          stops: 0,
+        },
+      ],
+      total_duration_minutes: 330,
+      connection_count: 0,
+    },
+    price: {
+      base_fare: total - 45,
+      taxes: 45,
+      total,
+      currency: 'USD',
+      per_passenger: [{ type: 'ADT', base_fare: total - 45, taxes: 45, total }],
+    },
+    fare_basis: ['Y26NR'],
+    booking_classes: ['Y'],
+    instant_ticketing: true,
+  };
+}
+
+function createRecordingAdapter(name: string, offers: SearchOffer[]): RecordingAdapter {
+  const stub: RecordingAdapter = {
+    name,
+    lastRequest: null,
+    async search(request: SearchRequest): Promise<SearchResponse> {
+      stub.lastRequest = request;
+      return { offers, truncated: false };
+    },
+    async isAvailable(): Promise<boolean> {
+      return true;
+    },
+  };
+  return stub;
+}
+
+describe('POST /api/search?multi=true — Sprint H bugfixes', () => {
+  let multiApp: FastifyInstance;
+  let adapterA: RecordingAdapter;
+  let adapterB: RecordingAdapter;
+
+  beforeAll(async () => {
+    adapterA = createRecordingAdapter('source-a', [
+      makeOffer('offer-a-1', 250, 'source-a'),
+      makeOffer('offer-a-2', 400, 'source-a'),
+    ]);
+    adapterB = createRecordingAdapter('source-b', [
+      makeOffer('offer-b-1', 175, 'source-b'),
+    ]);
+    const multiSearch = new MultiSearchService({
+      adapters: new Map<string, DistributionAdapter>([
+        ['source-a', adapterA],
+        ['source-b', adapterB],
+      ]),
+    });
+    multiApp = await buildApp({
+      adapter: new MockDuffelAdapter(),
+      initResolver: false,
+      multiSearch,
+    });
+    await multiApp.ready();
+  });
+
+  afterAll(async () => {
+    await multiApp.close();
+  });
+
+  // Bug 1 — multiSearch is actually reachable
+  it('routes ?multi=true to the aggregated multi-search response', async () => {
+    const res = await multiApp.inject({
+      method: 'POST',
+      url: '/api/search?multi=true',
+      payload: { origin: 'JFK', destination: 'LAX', date: '2026-07-01', passengers: 1 },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.totalFound).toBe(3);
+    expect(body.offers).toHaveLength(3);
+    // Aggregated shape: sources is an array of per-adapter status records.
+    expect(Array.isArray(body.sources)).toBe(true);
+    expect(body.sources[0]).toHaveProperty('adapter');
+    expect(body.sources[0]).toHaveProperty('success');
+  });
+
+  // Bug 1 — single-adapter path is NOT routed through MultiSearchService when
+  // `multi=true` is absent. (Response shape divergence proves the branch.)
+  it('leaves single-adapter search untouched when multi=true is not set', async () => {
+    const res = await multiApp.inject({
+      method: 'POST',
+      url: '/api/search',
+      payload: { origin: 'JFK', destination: 'LAX', date: '2026-07-01', passengers: 1 },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    // Single-adapter path returns `sources: string[]` (unique source names).
+    expect(Array.isArray(body.sources)).toBe(true);
+    if (body.sources.length > 0) {
+      expect(typeof body.sources[0]).toBe('string');
+    }
+  });
+
+  // Bug 2 — multi-search offers are cached so detail lookup doesn't 404
+  it('caches multi-search offers for GET /api/offers/:id', async () => {
+    const searchRes = await multiApp.inject({
+      method: 'POST',
+      url: '/api/search?multi=true',
+      payload: { origin: 'JFK', destination: 'LAX', date: '2026-07-01', passengers: 1 },
+    });
+    expect(searchRes.statusCode).toBe(200);
+    const offers = searchRes.json().offers as Array<{ offer_id: string; adapterSource: string }>;
+    const firstOfferId = offers[0]!.offer_id;
+
+    const detailRes = await multiApp.inject({
+      method: 'GET',
+      url: `/api/offers/${firstOfferId}`,
+    });
+    expect(detailRes.statusCode).toBe(200);
+    expect(detailRes.json().offer.offer_id).toBe(firstOfferId);
+  });
+
+  // Bug 2 — offers from ANY aggregated adapter are retrievable (not just the
+  // first one). A plausible regression would only cache one adapter's offers.
+  it('caches offers from every aggregated adapter, not just the first', async () => {
+    await multiApp.inject({
+      method: 'POST',
+      url: '/api/search?multi=true',
+      payload: { origin: 'JFK', destination: 'LAX', date: '2026-07-01', passengers: 1 },
+    });
+    const detailA = await multiApp.inject({ method: 'GET', url: '/api/offers/offer-a-2' });
+    const detailB = await multiApp.inject({ method: 'GET', url: '/api/offers/offer-b-1' });
+    expect(detailA.statusCode).toBe(200);
+    expect(detailB.statusCode).toBe(200);
+  });
+
+  // Bug 3 — round-trip request reaches adapters with 2 segments
+  it('forwards returnDate as a second segment on the multi-adapter path', async () => {
+    const res = await multiApp.inject({
+      method: 'POST',
+      url: '/api/search?multi=true',
+      payload: {
+        origin: 'JFK',
+        destination: 'LAX',
+        date: '2026-07-01',
+        returnDate: '2026-07-08',
+        passengers: 2,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    // Each aggregated adapter must have received the full round-trip.
+    for (const adapter of [adapterA, adapterB]) {
+      expect(adapter.lastRequest).not.toBeNull();
+      expect(adapter.lastRequest!.segments).toHaveLength(2);
+      expect(adapter.lastRequest!.segments[0]).toEqual({
+        origin: 'JFK',
+        destination: 'LAX',
+        departure_date: '2026-07-01',
+      });
+      expect(adapter.lastRequest!.segments[1]).toEqual({
+        origin: 'LAX',
+        destination: 'JFK',
+        departure_date: '2026-07-08',
+      });
+      expect(adapter.lastRequest!.passengers[0]!.count).toBe(2);
+    }
+  });
+
+  // Bug 3 — one-way request still forwards only one segment (no regression)
+  it('forwards a single segment when returnDate is absent', async () => {
+    adapterA.lastRequest = null;
+    adapterB.lastRequest = null;
+    const res = await multiApp.inject({
+      method: 'POST',
+      url: '/api/search?multi=true',
+      payload: { origin: 'JFK', destination: 'LAX', date: '2026-07-01', passengers: 1 },
+    });
+    expect(res.statusCode).toBe(200);
+    for (const adapter of [adapterA, adapterB]) {
+      expect(adapter.lastRequest!.segments).toHaveLength(1);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Sprint H adapter-aware booking routing — Codex follow-up to #71:
+//   After a multi-search, bookings must route back to the adapter that
+//   produced the offer. Offers from a search-only adapter (no `book()`)
+//   must be rejected with a clear error, not silently routed elsewhere.
+// ---------------------------------------------------------------------------
+
+interface RecordingOtaAdapter extends RecordingAdapter {
+  lastBookRequest: BookingRequest | null;
+  book(request: BookingRequest): Promise<BookingResult>;
+  getBooking(reference: string): Promise<BookingResult | null>;
+  cancelBooking(reference: string): Promise<CancelResult>;
+}
+
+function createRecordingOtaAdapter(
+  name: string,
+  offers: SearchOffer[],
+): RecordingOtaAdapter {
+  let counter = 0;
+  const stub: RecordingOtaAdapter = {
+    name,
+    lastRequest: null,
+    lastBookRequest: null,
+    async search(request: SearchRequest): Promise<SearchResponse> {
+      stub.lastRequest = request;
+      return { offers, truncated: false };
+    },
+    async isAvailable(): Promise<boolean> {
+      return true;
+    },
+    async book(request: BookingRequest): Promise<BookingResult> {
+      stub.lastBookRequest = request;
+      counter += 1;
+      return {
+        bookingReference: `${name.toUpperCase()}-${counter}`,
+        status: 'confirmed',
+        offerId: request.offerId,
+        passengers: request.passengers,
+        contactEmail: request.contactEmail,
+        contactPhone: request.contactPhone,
+        totalAmount: '0.00',
+        currency: 'USD',
+        createdAt: new Date().toISOString(),
+      };
+    },
+    async getBooking(): Promise<BookingResult | null> {
+      return null;
+    },
+    async cancelBooking(): Promise<CancelResult> {
+      return { success: false, message: 'not implemented', bookingReference: '' };
+    },
+  };
+  return stub;
+}
+
+const SAMPLE_PASSENGER: PassengerDetail = {
+  title: 'mr',
+  firstName: 'Test',
+  lastName: 'Passenger',
+  dateOfBirth: '1985-04-12',
+  gender: 'male',
+};
+
+describe('POST /api/book after multi-search — adapter-aware routing', () => {
+  let bookApp: FastifyInstance;
+  let adapterA: RecordingOtaAdapter;
+  let adapterB: RecordingAdapter; // search-only — no book()
+  let adapterC: RecordingOtaAdapter;
+  let defaultAdapter: RecordingOtaAdapter; // injected as single-path fallback
+
+  beforeAll(async () => {
+    adapterA = createRecordingOtaAdapter('source-a', [
+      makeOffer('offer-a-1', 250, 'source-a'),
+    ]);
+    adapterB = createRecordingAdapter('source-b', [
+      makeOffer('offer-b-1', 175, 'source-b'),
+    ]);
+    adapterC = createRecordingOtaAdapter('source-c', [
+      makeOffer('offer-c-1', 300, 'source-c'),
+    ]);
+    defaultAdapter = createRecordingOtaAdapter('default', []);
+
+    const multiSearch = new MultiSearchService({
+      adapters: new Map<string, DistributionAdapter>([
+        ['source-a', adapterA],
+        ['source-b', adapterB],
+        ['source-c', adapterC],
+      ]),
+    });
+    // Only source-a and source-c implement book(); source-b is search-only.
+    const bookingAdapters = new Map<string, OtaAdapter>([
+      ['source-a', adapterA],
+      ['source-c', adapterC],
+    ]);
+    bookApp = await buildApp({
+      adapter: defaultAdapter,
+      initResolver: false,
+      multiSearch,
+      bookingAdapters,
+    });
+    await bookApp.ready();
+  });
+
+  afterAll(async () => {
+    await bookApp.close();
+  });
+
+  it('routes booking to the adapter that produced the offer (not the default)', async () => {
+    await bookApp.inject({
+      method: 'POST',
+      url: '/api/search?multi=true',
+      payload: { origin: 'JFK', destination: 'LAX', date: '2026-07-01', passengers: 1 },
+    });
+    const bookRes = await bookApp.inject({
+      method: 'POST',
+      url: '/api/book',
+      payload: {
+        offerId: 'offer-c-1',
+        passengers: [SAMPLE_PASSENGER],
+        email: 'buyer@example.com',
+        phone: '+15551234567',
+      },
+    });
+    expect(bookRes.statusCode).toBe(200);
+    // Adapter C must have received book(); A and default must not.
+    expect(adapterC.lastBookRequest).not.toBeNull();
+    expect(adapterC.lastBookRequest!.offerId).toBe('offer-c-1');
+    expect(adapterA.lastBookRequest).toBeNull();
+    expect(defaultAdapter.lastBookRequest).toBeNull();
+    // Booking reference should come from adapter C, not the default.
+    expect(bookRes.json().bookingReference).toMatch(/^SOURCE-C-/);
+  });
+
+  it('rejects booking an offer from a non-bookable adapter with 409', async () => {
+    await bookApp.inject({
+      method: 'POST',
+      url: '/api/search?multi=true',
+      payload: { origin: 'JFK', destination: 'LAX', date: '2026-07-01', passengers: 1 },
+    });
+    // Reset so we can prove no booking was routed anywhere.
+    adapterA.lastBookRequest = null;
+    adapterC.lastBookRequest = null;
+    defaultAdapter.lastBookRequest = null;
+
+    const bookRes = await bookApp.inject({
+      method: 'POST',
+      url: '/api/book',
+      payload: {
+        offerId: 'offer-b-1', // from search-only source-b
+        passengers: [SAMPLE_PASSENGER],
+        email: 'buyer@example.com',
+        phone: '+15551234567',
+      },
+    });
+    expect(bookRes.statusCode).toBe(409);
+    const body = bookRes.json();
+    expect(body.error).toMatch(/source-b/);
+    expect(body.adapterSource).toBe('source-b');
+    // No adapter should have been called.
+    expect(adapterA.lastBookRequest).toBeNull();
+    expect(adapterC.lastBookRequest).toBeNull();
+    expect(defaultAdapter.lastBookRequest).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Codex round-2 follow-ups:
+//   - offerAdapterSource stale-entry bug: a later single-adapter cache of
+//     the same offer_id must clear any previously-recorded source.
+//   - filterBookingAdapters() unit coverage — previously only exercised via
+//     buildApp() + HTTP, so the derivation was not pinned directly.
+// ---------------------------------------------------------------------------
+
+describe('SearchService.cacheOffers — stale adapterSource clearing', () => {
+  function adapterStub(): DistributionAdapter {
+    return {
+      name: 'noop',
+      async search(): Promise<SearchResponse> {
+        return { offers: [], truncated: false };
+      },
+      async isAvailable(): Promise<boolean> {
+        return true;
+      },
+    };
+  }
+
+  it('clears a previously-recorded adapterSource when re-cached without one', () => {
+    const svc = new SearchService(adapterStub());
+    // First cache: offer tagged with source-x (multi-adapter path).
+    svc.cacheOffers([{ ...makeOffer('offer-1', 200, 'source-x'), adapterSource: 'source-x' }]);
+    expect(svc.getOfferAdapterSource('offer-1')).toBe('source-x');
+    // Second cache: same ID, no adapterSource (single-adapter path).
+    svc.cacheOffers([makeOffer('offer-1', 200, 'source-x')]);
+    // Must be cleared so the booking falls back to the default adapter.
+    expect(svc.getOfferAdapterSource('offer-1')).toBeUndefined();
+  });
+
+  it('keeps the adapterSource when re-cached with the same source', () => {
+    const svc = new SearchService(adapterStub());
+    svc.cacheOffers([{ ...makeOffer('offer-2', 200, 'src'), adapterSource: 'src' }]);
+    svc.cacheOffers([{ ...makeOffer('offer-2', 200, 'src'), adapterSource: 'src' }]);
+    expect(svc.getOfferAdapterSource('offer-2')).toBe('src');
+  });
+});
+
+describe('filterBookingAdapters — only retains adapters that implement book()', () => {
+  it('drops search-only DistributionAdapters', () => {
+    const searchOnly: DistributionAdapter = {
+      name: 'search-only',
+      async search(): Promise<SearchResponse> {
+        return { offers: [], truncated: false };
+      },
+      async isAvailable(): Promise<boolean> {
+        return true;
+      },
+    };
+    const bookable = createRecordingOtaAdapter('bookable', []);
+    const mixed = new Map<string, DistributionAdapter>([
+      ['search-only', searchOnly],
+      ['bookable', bookable],
+    ]);
+    const filtered = filterBookingAdapters(mixed);
+    expect(filtered.has('bookable')).toBe(true);
+    expect(filtered.has('search-only')).toBe(false);
+    expect(filtered.size).toBe(1);
+  });
+
+  it('returns an empty map when no adapters are bookable', () => {
+    const searchOnly: DistributionAdapter = {
+      name: 'search-only',
+      async search(): Promise<SearchResponse> {
+        return { offers: [], truncated: false };
+      },
+      async isAvailable(): Promise<boolean> {
+        return true;
+      },
+    };
+    const filtered = filterBookingAdapters(new Map([['search-only', searchOnly]]));
+    expect(filtered.size).toBe(0);
   });
 });
