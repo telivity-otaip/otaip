@@ -17,12 +17,22 @@ pnpm --version   # 10.x.x
 ```bash
 git clone https://github.com/telivity-otaip/otaip.git
 cd otaip
-pnpm install
+pnpm install --frozen-lockfile
 ```
 
 This installs all workspace packages: `@otaip/core`, `@otaip/connect`, `@otaip/duffel`, and all agent packages.
 
-## 2. Build the Project
+> **Note**: lifecycle scripts are disabled (`ignore-scripts=true` in `.npmrc`) for supply-chain safety. No `postinstall` hooks run.
+
+## 2. Download Reference Data
+
+```bash
+pnpm run data:download
+```
+
+Fetches airport reference data into `data/reference/`. Required for the airport-code resolver and any agent that depends on it. Re-run whenever the upstream OurAirports dataset is updated.
+
+## 3. Build the Project
 
 ```bash
 pnpm build
@@ -30,13 +40,13 @@ pnpm build
 
 Builds all packages with `tsup` in the correct dependency order.
 
-## 3. Run Tests to Verify
+## 4. Run Tests to Verify
 
 ```bash
 pnpm test
 ```
 
-You should see 2,881 tests pass across all packages. The adapter tests (456 tests) use mocked HTTP -- no live API calls.
+You should see 3,092 tests pass across all packages. The adapter tests (456 tests) use mocked HTTP -- no live API calls.
 
 ## 4. Set Up Duffel Sandbox (Optional)
 

@@ -50,9 +50,12 @@ describe('discoverAgents', () => {
       '7': 'reconciliation',
       '20': 'lodging',
     };
+    // 1.9 (OfferEvaluator) lives in @otaip/core for circular-dep reasons,
+    // so its stage is 'core' rather than 'search'. Carve it out.
+    const idStageOverrides: Record<string, string> = { '1.9': 'core' };
     for (const a of agents) {
       const prefix = a.id.split('.')[0]!;
-      const expected = expectedStage[prefix];
+      const expected = idStageOverrides[a.id] ?? expectedStage[prefix];
       if (!expected) continue; // 8.x → tmc, 9.x → platform handled separately
       expect(a.stage, `agent ${a.id} ${a.name}`).toBe(expected);
     }
