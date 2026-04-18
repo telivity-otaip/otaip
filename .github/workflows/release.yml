@@ -25,11 +25,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run tests and capture count
+      - name: Run tests
+        run: pnpm test 2>&1 | tee /tmp/test-output.log
+
+      - name: Capture test counts
         id: tests
         run: |
-          OUTPUT=$(pnpm test 2>&1 || true)
-          CLEAN=$(echo "$OUTPUT" | sed 's/\x1b\[[0-9;]*m//g')
+          CLEAN=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/test-output.log)
           TEST_COUNT=$(echo "$CLEAN" | sed -n 's/.*Tests  *\([0-9][0-9]*\) passed.*/\1/p' | tail -1)
           TEST_FILES=$(echo "$CLEAN" | sed -n 's/.*Test Files  *\([0-9][0-9]*\) passed.*/\1/p' | tail -1)
           echo "count=${TEST_COUNT:-0}" >> "$GITHUB_OUTPUT"
