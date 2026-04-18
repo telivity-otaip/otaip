@@ -108,19 +108,7 @@ export class ApiClient {
       );
     }
 
-    // Check rate limit
-    const rlStatus = this.checkRateLimit(provider);
-    if (rlStatus.exceeded) {
-      return this.buildErrorOutput(
-        provider.id,
-        'RATE_LIMITED',
-        `Rate limit exceeded for ${provider.id}: ${rlStatus.request_count}/${rlStatus.max_requests}`,
-        'RATE_LIMIT_EXCEEDED',
-        true,
-      );
-    }
-
-    // Check circuit breaker
+    // Check circuit breaker (no per-attempt outbound traffic if open).
     if (!input.force) {
       const cbState = this.getCircuitState(provider);
       if (cbState.state === 'open') {
@@ -134,10 +122,10 @@ export class ApiClient {
       }
     }
 
-    // Increment rate limit counter
-    this.incrementRateLimit(provider);
-
-    // Execute with retry
+    // Execute with retry — rate-limit check + counter increment happen
+    // PER ATTEMPT. The previous implementation incremented once before
+    // the loop, so retries to the upstream provider went uncounted and
+    // we under-reported traffic against provider quotas.
     const maxRetries = input.max_retries ?? provider.max_retries;
     const timeoutMs = input.timeout_ms ?? provider.timeout_ms;
 
@@ -145,6 +133,24 @@ export class ApiClient {
     let retries = 0;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      // Per-attempt rate-limit guard.
+      const rlStatus = this.checkRateLimit(provider);
+      if (rlStatus.exceeded) {
+        // If we've already issued at least one outbound attempt, surface
+        // the prior failure (if any). Otherwise return the rate-limit
+        // error directly.
+        if (lastError) {
+          break;
+        }
+        return this.buildErrorOutput(
+          provider.id,
+          'RATE_LIMITED',
+          `Rate limit exceeded for ${provider.id}: ${rlStatus.request_count}/${rlStatus.max_requests}`,
+          'RATE_LIMIT_EXCEEDED',
+          true,
+        );
+      }
+
       try {
         // Exponential backoff (skip for first attempt)
         if (attempt > 0) {
@@ -152,6 +158,11 @@ export class ApiClient {
           await this.sleep(backoffMs);
           retries = attempt;
         }
+
+        // Count this outbound attempt against the provider's quota
+        // BEFORE the call so concurrent attempts cannot race past the
+        // limit, and so retries are correctly accounted for.
+        this.incrementRateLimit(provider);
 
         const response = await this.requestHandler(provider, input.request, timeoutMs);
 

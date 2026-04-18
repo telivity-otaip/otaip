@@ -380,6 +380,27 @@ describe('API Abstraction', () => {
       expect(client.getRateLimitStatus(amadeus).request_count).toBe(1);
       expect(client.getRateLimitStatus(sabre).request_count).toBe(0);
     });
+
+    it('counts each retry against the rate limit (not just the first attempt)', async () => {
+      // Previously the counter incremented once per execute() call, so
+      // retries to the upstream provider went uncounted and we under-
+      // reported traffic against provider quotas.
+      let calls = 0;
+      const flakyHandler: RequestHandler = (): Promise<ApiResponse> => {
+        calls++;
+        return Promise.reject(new Error('ECONNRESET — upstream socket reset'));
+      };
+      const client = new ApiClient(flakyHandler);
+      const provider = client.getProvider('NDC_BA')!;
+
+      await client.execute({
+        request: { provider_id: 'NDC_BA', method: 'GET', path: '/test' },
+        max_retries: 2,
+      });
+
+      expect(calls).toBe(3); // 1 initial + 2 retries
+      expect(client.getRateLimitStatus(provider).request_count).toBe(3);
+    });
   });
 
   describe('Error normalization', () => {

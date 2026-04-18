@@ -4,6 +4,7 @@ export {
   AgentNotInitializedError,
   AgentInputValidationError,
   AgentDataUnavailableError,
+  UnimplementedDomainInputError,
 } from './errors/agent-errors.js';
 
 export { OfferEvaluatorAgent, evaluateOffers } from './agents/shopping/index.js';
