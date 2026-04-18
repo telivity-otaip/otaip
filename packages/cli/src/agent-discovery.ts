@@ -52,6 +52,8 @@ function repoRoot(): string {
 const STAGE_ROOTS: ReadonlyArray<AgentRoot> = [
   { path: 'packages/agents-platform/src', stage: 'platform' },
   { path: 'packages/agents-tmc/src', stage: 'tmc' },
+  // OfferEvaluator (1.9) lives in @otaip/core for circular-dep reasons.
+  { path: 'packages/core/src/agents/shopping', stage: 'core' },
 ];
 
 const NESTED_STAGE_ROOT = 'packages/agents';

@@ -40,7 +40,11 @@ jobs:
       - name: Count agents
         id: agents
         run: |
-          AGENT_COUNT=$(find packages/agents packages/adapters packages/core/src/agents -name 'index.ts' -path '*/src/*' ! -name '__tests__' | wc -l | tr -d ' ')
+          # Single source of truth: scripts/count-agents.ts walks the
+          # workspace exactly the same way the CLI's discoverAgents() does.
+          # The previous `find` undercounted by skipping agents-platform
+          # and agents-tmc.
+          AGENT_COUNT=$(pnpm tsx scripts/count-agents.ts --json | node -e "let s=''; process.stdin.on('data',c=>s+=c).on('end',()=>console.log(JSON.parse(s).total))")
           echo "count=${AGENT_COUNT}" >> "$GITHUB_OUTPUT"
 
       - name: Get version

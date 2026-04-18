@@ -1,6 +1,7 @@
 # OTAIP Agent Catalog
 
-> 75 agents across 11 stages. 14 have pipeline contracts (marked with checkmark).
+> 75 agents across 12 stages. 14 have pipeline contracts (marked with checkmark).
+> Counts are computed from source by `pnpm run count:agents` — do not hand-edit the totals.
 
 ## Stage 0 -- Reference (7 agents)
 
