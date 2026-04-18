@@ -8,7 +8,12 @@
  */
 
 import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
-import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
+import {
+  AgentNotInitializedError,
+  AgentInputValidationError,
+  applyEU261,
+  applyUsDotIdb,
+} from '@otaip/core';
 import Decimal from 'decimal.js';
 import type {
   FeedbackComplaintInput,
@@ -99,6 +104,35 @@ function determinePriority(complaintType: ComplaintType, regulation: Regulation)
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * EU261 Article 7 base compensation by distance band — mirrors the
+ * @otaip/core EU261_BANDS constants and is re-derived here to keep the
+ * tests' baseAmount transparent (pre-reduction).
+ */
+function bandBaseByDistance(distanceKm: number): Decimal {
+  if (distanceKm < 1500) return new Decimal('250');
+  if (distanceKm <= 3500) return new Decimal('400');
+  return new Decimal('600');
+}
+
+/**
+ * Article 7(2) rerouting reduction — band thresholds 2h/3h/4h.
+ * Returns 50 when reduction applies, 0 otherwise.
+ */
+function computeReroutingReduction(
+  distanceKm: number,
+  data: FeedbackComplaintInput,
+): number {
+  if (!data.alternativeOffered) return 0;
+  let threshold: number;
+  if (distanceKm < 1500) threshold = 2;
+  else if (distanceKm <= 3500) threshold = 3;
+  else threshold = 4;
+  const lateness = data.alternativeArrivalDelayHours;
+  if (lateness === undefined) return 0;
+  return lateness <= threshold ? 50 : 0;
 }
 
 export class FeedbackComplaintAgent implements Agent<
@@ -286,7 +320,7 @@ export class FeedbackComplaintAgent implements Agent<
     return { dotRecord };
   }
 
-  // --- EU261 compensation (secondary) ---
+  // --- EU261 compensation (delegates to @otaip/core regulations/eu261) ---
 
   private calculateEU261(data: FeedbackComplaintInput): CompensationResult {
     const distanceKm = data.distanceKm ?? 0;
@@ -294,44 +328,59 @@ export class FeedbackComplaintAgent implements Agent<
     const currency = 'EUR';
     const delayMinutes = this.getDelayMinutes(data);
 
-    // DELAY — not eligible if < 180 minutes
     if (complaintType === 'DELAY') {
-      if (delayMinutes < 180) {
-        return {
-          eligible: false,
-          regulation: 'EU261',
-          baseAmount: '0.00',
-          finalAmount: '0.00',
-          currency,
-          reductionPercent: 0,
-          notes: 'Delay under 180 minutes is not eligible for EU261 compensation.',
-        };
-      }
-
-      const baseAmount = this.eu261BaseByDistance(distanceKm);
-      return this.applyEU261Reduction(
-        baseAmount,
+      const result = applyEU261({
         distanceKm,
-        data,
+        arrivalDelayHours: delayMinutes / 60,
+        extraordinaryCircumstances: false,
+        flightCancelled: false,
+        ...(data.alternativeOffered !== undefined ? { reroutingOffered: data.alternativeOffered } : {}),
+        ...(data.alternativeArrivalDelayHours !== undefined
+          ? { reroutingArrivalLatenessHours: data.alternativeArrivalDelayHours }
+          : {}),
+      });
+      const baseAmount = bandBaseByDistance(distanceKm);
+      return {
+        eligible: result.eligible,
+        regulation: 'EU261',
+        baseAmount: baseAmount.toFixed(2),
+        finalAmount: result.compensationEur,
         currency,
-        `EU261 delay compensation for ${distanceKm}km, ${delayMinutes}min delay.`,
-      );
+        reductionPercent: result.reductionPercent,
+        notes: `EU261 delay (${distanceKm}km, ${delayMinutes}min). ${result.reason}`,
+      };
     }
 
-    // CANCELLATION
     if (complaintType === 'CANCELLATION') {
-      const baseAmount = this.eu261BaseByDistance(distanceKm);
-      return this.applyEU261Reduction(
-        baseAmount,
+      // Cancellation cash compensation under Article 5(1)(c). Notice <14 days
+      // assumed when not provided (worst-case for carrier liability).
+      const result = applyEU261({
         distanceKm,
-        data,
+        arrivalDelayHours: 0,
+        extraordinaryCircumstances: false,
+        flightCancelled: true,
+        noticeDaysBeforeDeparture: 0,
+        ...(data.alternativeOffered !== undefined ? { reroutingOffered: data.alternativeOffered } : {}),
+        ...(data.alternativeArrivalDelayHours !== undefined
+          ? { reroutingArrivalLatenessHours: data.alternativeArrivalDelayHours }
+          : {}),
+      });
+      const baseAmount = bandBaseByDistance(distanceKm);
+      return {
+        eligible: result.eligible,
+        regulation: 'EU261',
+        baseAmount: baseAmount.toFixed(2),
+        finalAmount: result.compensationEur,
         currency,
-        `EU261 cancellation compensation for ${distanceKm}km.`,
-      );
+        reductionPercent: result.reductionPercent,
+        notes: `EU261 cancellation (${distanceKm}km). ${result.reason}`,
+      };
     }
 
-    // DOWNGRADE — 30%/50%/75% of fare by distance
     if (complaintType === 'DOWNGRADE') {
+      // Article 10(2): downgrade reimbursement is 30%/50%/75% of the price of
+      // the ticket for the affected segment, by distance band. This is
+      // published law and is the only fixed scaling allowed.
       const farePaid = data.farePaid
         ? new Decimal(data.farePaid)
         : data.fareAmount
@@ -353,20 +402,28 @@ export class FeedbackComplaintAgent implements Agent<
         finalAmount: amount,
         currency,
         reductionPercent: 0,
-        notes: `EU261 downgrade: ${percent}% of fare for ${distanceKm}km.`,
+        notes: `EU261 Article 10(2) downgrade: ${percent}% of fare (${distanceKm}km band).`,
       };
     }
 
-    // DENIED_BOARDING
     if (complaintType === 'DENIED_BOARDING') {
-      const baseAmount = this.eu261BaseByDistance(distanceKm);
-      return this.applyEU261Reduction(
-        baseAmount,
-        distanceKm,
-        data,
+      // Article 4: denied boarding compensation uses Article 7 amounts.
+      // No delay trigger applies — compensation is owed on denial itself.
+      const baseAmount = bandBaseByDistance(distanceKm);
+      const reduction = computeReroutingReduction(distanceKm, data);
+      const finalAmount =
+        reduction > 0 ? baseAmount.mul(100 - reduction).div(100) : baseAmount;
+      return {
+        eligible: true,
+        regulation: 'EU261',
+        baseAmount: baseAmount.toFixed(2),
+        finalAmount: finalAmount.toFixed(2),
         currency,
-        `EU261 denied boarding compensation for ${distanceKm}km.`,
-      );
+        reductionPercent: reduction,
+        notes: `EU261 Article 4 denied boarding (${distanceKm}km).${
+          reduction > 0 ? ' 50% reduction under Article 7(2).' : ''
+        }`,
+      };
     }
 
     return {
@@ -380,74 +437,18 @@ export class FeedbackComplaintAgent implements Agent<
     };
   }
 
-  private eu261BaseByDistance(distanceKm: number): Decimal {
-    if (distanceKm < 1500) {
-      return new Decimal('250');
-    }
-    if (distanceKm <= 3500) {
-      return new Decimal('400');
-    }
-    return new Decimal('600');
-  }
-
-  /**
-   * EU261 50% reduction: alternativeOffered AND arrival within threshold.
-   * Thresholds by distance band: <1500km → 2h, 1500-3500km → 3h, >3500km → 4h.
-   */
-  private applyEU261Reduction(
-    baseAmount: Decimal,
-    distanceKm: number,
-    data: FeedbackComplaintInput,
-    currency: string,
-    baseNotes: string,
-  ): CompensationResult {
-    let reductionPercent = 0;
-    let finalAmount = baseAmount;
-    let notes = baseNotes;
-
-    if (data.alternativeOffered) {
-      // Determine arrival threshold by distance band
-      let arrivalThresholdHours: number;
-      if (distanceKm < 1500) {
-        arrivalThresholdHours = 2;
-      } else if (distanceKm <= 3500) {
-        arrivalThresholdHours = 3;
-      } else {
-        arrivalThresholdHours = 4;
-      }
-
-      const altArrivalDelay = data.alternativeArrivalDelayHours ?? Infinity;
-      if (altArrivalDelay <= arrivalThresholdHours) {
-        reductionPercent = 50;
-        finalAmount = baseAmount.mul(50).div(100);
-        notes += ` 50% reduction applied (alternative offered, arrival within ${arrivalThresholdHours}h of original).`;
-      }
-    }
-
-    return {
-      eligible: true,
-      regulation: 'EU261',
-      baseAmount: baseAmount.toFixed(2),
-      finalAmount: finalAmount.toFixed(2),
-      currency,
-      reductionPercent,
-      notes,
-    };
-  }
-
-  // --- US DOT compensation (primary) ---
-
   private getDelayMinutes(data: FeedbackComplaintInput): number {
     if (data.delayMinutes !== undefined) return data.delayMinutes;
     if (data.delayHours !== undefined) return Math.round(data.delayHours * 60);
     return 0;
   }
 
+  // --- US DOT compensation (delegates to @otaip/core regulations/us-dot-idb) ---
+
   private calculateUSDOT(data: FeedbackComplaintInput): CompensationResult {
     const complaintType = data.complaintType ?? 'DENIED_BOARDING';
     const currency = 'USD';
 
-    // DELAY — US DOT does not mandate delay compensation
     if (complaintType === 'DELAY') {
       return {
         eligible: false,
@@ -461,7 +462,6 @@ export class FeedbackComplaintAgent implements Agent<
       };
     }
 
-    // CANCELLATION — US DOT requires refund/rebooking, no mandated cash compensation
     if (complaintType === 'CANCELLATION') {
       return {
         eligible: false,
@@ -474,7 +474,6 @@ export class FeedbackComplaintAgent implements Agent<
       };
     }
 
-    // DOWNGRADE — full refund required
     if (complaintType === 'DOWNGRADE') {
       const fare = data.fareAmount
         ? new Decimal(data.fareAmount)
@@ -492,7 +491,6 @@ export class FeedbackComplaintAgent implements Agent<
       };
     }
 
-    // DENIED_BOARDING — full implementation
     if (complaintType === 'DENIED_BOARDING') {
       const fare = data.fareAmount
         ? new Decimal(data.fareAmount)
@@ -502,37 +500,26 @@ export class FeedbackComplaintAgent implements Agent<
       const delayMinutes = this.getDelayMinutes(data);
       const isDomestic = data.isDomestic ?? true;
 
-      // Thresholds: domestic <2h / >=2h, international <4h / >=4h
-      const lowThreshold = isDomestic ? 120 : 240;
+      const result = applyUsDotIdb({
+        isDomestic,
+        substituteArrivalLateMinutes: delayMinutes,
+        oneWayFareUsd: fare.toString(),
+      });
 
-      if (delayMinutes < lowThreshold) {
-        // 200% of fare, cap $775
-        const raw = Decimal.min(fare.mul(2), new Decimal('775'));
-        return {
-          eligible: true,
-          regulation: 'US_DOT',
-          baseAmount: fare.mul(2).toFixed(2),
-          finalAmount: raw.toFixed(2),
-          currency,
-          reductionPercent: 0,
-          notes: `US DOT denied boarding: 200% of fare ($${fare.toFixed(2)}), capped at $775.00. ${isDomestic ? 'Domestic' : 'International'} delay ${delayMinutes}min < ${lowThreshold}min threshold.`,
-        };
-      }
+      // baseAmount reflects pre-cap multiplier × fare for transparency.
+      const baseAmount = fare.mul(result.band.multiplier).toFixed(2);
 
-      // >= threshold: 400% of fare, cap $1550
-      const raw = Decimal.min(fare.mul(4), new Decimal('1550'));
       return {
-        eligible: true,
+        eligible: result.eligible,
         regulation: 'US_DOT',
-        baseAmount: fare.mul(4).toFixed(2),
-        finalAmount: raw.toFixed(2),
+        baseAmount,
+        finalAmount: result.compensationUsd,
         currency,
         reductionPercent: 0,
-        notes: `US DOT denied boarding: 400% of fare ($${fare.toFixed(2)}), capped at $1550.00. ${isDomestic ? 'Domestic' : 'International'} delay ${delayMinutes}min >= ${lowThreshold}min threshold.`,
+        notes: result.reason,
       };
     }
 
-    // Other types not covered by US DOT
     return {
       eligible: false,
       regulation: 'US_DOT',

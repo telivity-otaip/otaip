@@ -1,5 +1,5 @@
 {
-  "description": "ATPCO Category 31 change fee rules by fare basis pattern. Based on common industry patterns.",
+  "description": "TEST FIXTURE — invented common-industry patterns. Do NOT use in production. Real Cat31 data must come from authoritative ATPCO feeds for the specific carrier/market/fare-basis. Used here only to exercise the engine's apply-as-filed branch.",
   "rules": [
     {
       "fare_basis_pattern": "^Y",

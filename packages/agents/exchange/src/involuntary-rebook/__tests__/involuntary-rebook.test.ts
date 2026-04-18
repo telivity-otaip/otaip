@@ -1,7 +1,9 @@
 /**
  * Involuntary Rebook — Unit Tests
  *
- * Agent 5.3: Schedule change handling, protection logic, regulatory flags.
+ * Agent 5.3: Schedule change handling, protection logic, regulatory entitlements.
+ *
+ * Threshold and EU261 inputs are PASSED EXPLICITLY (no invented defaults).
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
@@ -62,6 +64,7 @@ function makeInput(overrides: Partial<InvoluntaryRebookInput> = {}): Involuntary
   return {
     original_pnr: makePnr(),
     schedule_change: makeChange(),
+    thresholds: { time_change_minutes: 60 },
     available_flights: [
       {
         carrier: 'BA',
@@ -100,13 +103,13 @@ function makeInput(overrides: Partial<InvoluntaryRebookInput> = {}): Involuntary
 
 describe('Involuntary Rebook', () => {
   describe('Trigger assessment', () => {
-    it('marks time change > 60min as involuntary', async () => {
+    it('marks time change > supplied threshold as involuntary', async () => {
       const result = await agent.execute({ data: makeInput() });
       expect(result.data.result.is_involuntary).toBe(true);
       expect(result.data.result.trigger).toBe('TIME_CHANGE');
     });
 
-    it('marks time change <= 60min as not involuntary', async () => {
+    it('marks time change <= supplied threshold as not involuntary', async () => {
       const input = makeInput({
         schedule_change: makeChange({ time_change_minutes: 30 }),
       });
@@ -121,6 +124,16 @@ describe('Involuntary Rebook', () => {
       });
       const result = await agent.execute({ data: input });
       expect(result.data.result.is_involuntary).toBe(true);
+    });
+
+    it('returns non-involuntary + DOMAIN_INPUT_REQUIRED warning when time threshold missing', async () => {
+      const input = makeInput({ thresholds: undefined });
+      const result = await agent.execute({ data: input });
+      expect(result.data.result.is_involuntary).toBe(false);
+      expect(result.warnings).toBeDefined();
+      expect(
+        result.warnings!.some((w) => w.includes('DOMAIN_INPUT_REQUIRED') && w.includes('time_change_minutes')),
+      ).toBe(true);
     });
 
     it('flight cancellation is always involuntary', async () => {
@@ -259,6 +272,57 @@ describe('Involuntary Rebook', () => {
       expect(eu261!.applies).toBe(true);
     });
 
+    it('reports DOMAIN_INPUT_REQUIRED when EU261 inputs are missing', async () => {
+      const result = await agent.execute({ data: makeInput() });
+      const eu261 = result.data.result.regulatory_flags.find((f) => f.framework === 'EU261')!;
+      expect(eu261.compensation_eur).toBeNull();
+      expect(eu261.missing_inputs).toBeDefined();
+      expect(eu261.missing_inputs).toContain('eu261_inputs.distance_km');
+    });
+
+    it('computes €600 for >3500km flight delayed 5h', async () => {
+      const input = makeInput({
+        eu261_inputs: {
+          distance_km: 6000,
+          arrival_delay_hours: 5,
+          extraordinary_circumstances: false,
+        },
+      });
+      const result = await agent.execute({ data: input });
+      const eu261 = result.data.result.regulatory_flags.find((f) => f.framework === 'EU261')!;
+      expect(eu261.compensation_eur).toBe('600.00');
+      expect(eu261.reduction_percent).toBe(0);
+    });
+
+    it('applies Article 7(2) 50% rerouting reduction when alternative arrival within band', async () => {
+      const input = makeInput({
+        eu261_inputs: {
+          distance_km: 6000,
+          arrival_delay_hours: 5,
+          extraordinary_circumstances: false,
+          rerouting_offered: true,
+          rerouting_arrival_lateness_hours: 4,
+        },
+      });
+      const result = await agent.execute({ data: input });
+      const eu261 = result.data.result.regulatory_flags.find((f) => f.framework === 'EU261')!;
+      expect(eu261.compensation_eur).toBe('300.00');
+      expect(eu261.reduction_percent).toBe(50);
+    });
+
+    it('returns €0 under extraordinary circumstances', async () => {
+      const input = makeInput({
+        eu261_inputs: {
+          distance_km: 6000,
+          arrival_delay_hours: 5,
+          extraordinary_circumstances: true,
+        },
+      });
+      const result = await agent.execute({ data: input });
+      const eu261 = result.data.result.regulatory_flags.find((f) => f.framework === 'EU261')!;
+      expect(eu261.compensation_eur).toBe('0.00');
+    });
+
     it('flags EU261 for EU carrier regardless of route', async () => {
       const input = makeInput({
         original_pnr: makePnr({
@@ -297,41 +361,12 @@ describe('Involuntary Rebook', () => {
   });
 
   describe('Regulatory entitlements — US DOT', () => {
-    it('flags US DOT for US departure', async () => {
-      const input = makeInput({
-        original_pnr: makePnr({ departure_country: 'US' }),
-      });
-      const result = await agent.execute({ data: input });
-      const usDot = result.data.result.regulatory_flags.find((f) => f.framework === 'US_DOT');
-      expect(usDot!.applies).toBe(true);
-    });
-
-    it('flags US DOT for US arrival', async () => {
+    it('reports US DOT IDB as not applicable on rebook path (delays/cancels are not denied boarding)', async () => {
       const result = await agent.execute({ data: makeInput() });
       const usDot = result.data.result.regulatory_flags.find((f) => f.framework === 'US_DOT');
-      expect(usDot!.applies).toBe(true); // arrival_country: 'US'
-    });
-
-    it('does not flag US DOT for non-US route', async () => {
-      const input = makeInput({
-        original_pnr: makePnr({
-          departure_country: 'GB',
-          arrival_country: 'JP',
-          affected_segment: {
-            carrier: 'BA',
-            flight_number: '5',
-            origin: 'LHR',
-            destination: 'NRT',
-            departure_date: '2026-06-15',
-            departure_time: '11:00',
-            booking_class: 'Y',
-            fare_basis: 'YOWJP',
-          },
-        }),
-      });
-      const result = await agent.execute({ data: input });
-      const usDot = result.data.result.regulatory_flags.find((f) => f.framework === 'US_DOT');
+      expect(usDot).toBeDefined();
       expect(usDot!.applies).toBe(false);
+      expect(usDot!.reason).toMatch(/14 CFR §250/);
     });
   });
 

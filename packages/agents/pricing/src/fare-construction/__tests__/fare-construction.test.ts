@@ -298,7 +298,7 @@ describe('Fare Construction', () => {
     });
   });
 
-  describe('HIP detection', () => {
+  describe('HIP single-component', () => {
     it('detects no HIP for simple direct fare', async () => {
       const result = await agent.execute({
         data: {
@@ -316,12 +316,18 @@ describe('Fare Construction', () => {
         },
       });
 
+      if ('status' in result.data && result.data.status === 'DOMAIN_INPUT_REQUIRED') {
+        throw new Error('Expected normal output');
+      }
       expect(result.data.hip_check.detected).toBe(false);
+      expect(result.data.hip_check.missing_inputs).toBeUndefined();
     });
   });
 
   describe('BHC detection', () => {
-    it('detects backhaul when revisiting a city', async () => {
+    it('reports BHC undetected with DOMAIN_INPUT_REQUIRED for multi-component fares', async () => {
+      // Real BHC requires geographic-direction analysis. Simple
+      // city-revisited heuristics were a CLAUDE.md violation and removed.
       const result = await agent.execute({
         data: {
           journey_type: 'CT',
@@ -359,8 +365,46 @@ describe('Fare Construction', () => {
         },
       });
 
-      expect(result.data.bhc_check.detected).toBe(true);
-      expect(result.data.bhc_check.description).toContain('LHR');
+      if ('status' in result.data && result.data.status === 'DOMAIN_INPUT_REQUIRED') {
+        throw new Error('Expected normal output, got DOMAIN_INPUT_REQUIRED');
+      }
+      expect(result.data.bhc_check.detected).toBe(false);
+      expect(result.data.bhc_check.missing_inputs).toBeDefined();
+      expect(result.data.bhc_check.missing_inputs!.length).toBeGreaterThan(0);
+      expect(result.warnings!.some((w) => w.includes('DOMAIN_INPUT_REQUIRED (BHC)'))).toBe(true);
+    });
+  });
+
+  describe('HIP detection', () => {
+    it('reports HIP undetected with DOMAIN_INPUT_REQUIRED for multi-component fares', async () => {
+      const result = await agent.execute({
+        data: {
+          journey_type: 'OW',
+          components: [
+            {
+              origin: 'JFK',
+              destination: 'LHR',
+              carrier: 'BA',
+              fare_basis: 'Y',
+              nuc_amount: '500.00',
+            },
+            {
+              origin: 'LHR',
+              destination: 'CDG',
+              carrier: 'AF',
+              fare_basis: 'Y',
+              nuc_amount: '200.00',
+            },
+          ],
+          selling_currency: 'USD',
+        },
+      });
+      if ('status' in result.data && result.data.status === 'DOMAIN_INPUT_REQUIRED') {
+        throw new Error('Expected normal output, got DOMAIN_INPUT_REQUIRED');
+      }
+      expect(result.data.hip_check.detected).toBe(false);
+      expect(result.data.hip_check.missing_inputs).toBeDefined();
+      expect(result.warnings!.some((w) => w.includes('DOMAIN_INPUT_REQUIRED (HIP)'))).toBe(true);
     });
   });
 
@@ -412,7 +456,9 @@ describe('Fare Construction', () => {
       expect(new Decimal(result.data.local_amount_raw).toFixed(2)).toBe(expected.toFixed(2));
     });
 
-    it('falls back to ROE 1.0 for unknown currency', async () => {
+    it('returns DOMAIN_INPUT_REQUIRED for unknown currency (no ROE fallback)', async () => {
+      // Previous behaviour silently fell back to 1.0, producing wrong fares.
+      // Now refuses to construct without an authoritative ROE.
       const result = await agent.execute({
         data: {
           journey_type: 'OW',
@@ -429,7 +475,13 @@ describe('Fare Construction', () => {
         },
       });
 
-      expect(result.data.roe).toBe('1.000000');
+      expect('status' in result.data && result.data.status).toBe('DOMAIN_INPUT_REQUIRED');
+      if ('status' in result.data && result.data.status === 'DOMAIN_INPUT_REQUIRED') {
+        expect(result.data.missing).toContain('roe_table_entry:XYZ');
+        expect(result.data.references).toContain('IATA monthly ROE publication');
+      }
+      expect(result.confidence).toBe(0);
+      expect(result.warnings!.some((w) => w.includes('DOMAIN_INPUT_REQUIRED'))).toBe(true);
     });
   });
 

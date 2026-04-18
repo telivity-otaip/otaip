@@ -2,11 +2,25 @@
  * Change Management — Unit Tests
  *
  * Agent 5.1: ATPCO Cat 31 voluntary change assessment.
+ *
+ * Tests pass Cat31 rules in via input.cat31_rules using the test fixture
+ * to exercise the apply-as-filed branch. Tests of the no-rules branch
+ * verify the ATPCO default (permitted at no charge / fee waived for
+ * involuntary changes).
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { createRequire } from 'node:module';
 import { ChangeManagement } from '../index.js';
-import type { ChangeManagementInput, OriginalTicketSummary, RequestedItinerary } from '../types.js';
+import type {
+  ChangeManagementInput,
+  Cat31Rules,
+  OriginalTicketSummary,
+  RequestedItinerary,
+} from '../types.js';
+
+const require = createRequire(import.meta.url);
+const TEST_CAT31_RULES = require('./fixtures/test-cat31-rules.json') as Cat31Rules;
 
 let agent: ChangeManagement;
 
@@ -62,12 +76,13 @@ function makeInput(overrides: Partial<ChangeManagementInput> = {}): ChangeManage
     original_ticket: makeOriginal(),
     requested_itinerary: makeRequested(),
     current_datetime: '2026-03-15T12:00:00Z',
+    cat31_rules: TEST_CAT31_RULES,
     ...overrides,
   };
 }
 
 describe('Change Management', () => {
-  describe('Basic change assessment', () => {
+  describe('Basic change assessment (with filed Cat31 rules)', () => {
     it('calculates fare difference (upgrade)', async () => {
       const result = await agent.execute({ data: makeInput() });
       expect(result.data.assessment.fare_difference).toBe('100.00');
@@ -78,7 +93,7 @@ describe('Change Management', () => {
       expect(result.data.assessment.additional_collection).toBe('100.00');
     });
 
-    it('includes change fee for restricted fare', async () => {
+    it('includes change fee for restricted fare per filed rule', async () => {
       const result = await agent.execute({ data: makeInput() });
       expect(Number(result.data.assessment.change_fee)).toBeGreaterThan(0);
     });
@@ -107,6 +122,34 @@ describe('Change Management', () => {
     });
   });
 
+  describe('ATPCO default — no Cat31 rules supplied', () => {
+    it('voluntary change with no rules: penalty = 0 (ATPCO default)', async () => {
+      const result = await agent.execute({
+        data: makeInput({ cat31_rules: undefined }),
+      });
+      expect(result.data.assessment.change_fee).toBe('0.00');
+      expect(result.data.assessment.fee_waived).toBe(false);
+      expect(result.data.assessment.summary).toContain('ATPCO default');
+    });
+
+    it('involuntary change with no rules: penalty = 0, fee_waived = true', async () => {
+      const result = await agent.execute({
+        data: makeInput({ cat31_rules: undefined, is_involuntary: true }),
+      });
+      expect(result.data.assessment.change_fee).toBe('0.00');
+      expect(result.data.assessment.fee_waived).toBe(true);
+      expect(result.data.assessment.summary).toContain('Involuntary');
+    });
+
+    it('involuntary change with rules: filed penalty still waived to 0', async () => {
+      const result = await agent.execute({
+        data: makeInput({ is_involuntary: true }),
+      });
+      expect(result.data.assessment.change_fee).toBe('0.00');
+      expect(result.data.assessment.fee_waived).toBe(true);
+    });
+  });
+
   describe('Fare difference scenarios', () => {
     it('zero fare difference when same fare', async () => {
       const input = makeInput({
@@ -125,7 +168,7 @@ describe('Change Management', () => {
       expect(result.data.assessment.fare_difference).toBe('-100.00');
     });
 
-    it('forfeits difference on non-refundable downgrade', async () => {
+    it('forfeits difference on non-refundable downgrade per filed rule', async () => {
       const input = makeInput({
         original_ticket: makeOriginal({ is_refundable: false }),
         requested_itinerary: makeRequested({ new_fare: '350.00', new_tax: '110.00' }),
@@ -144,11 +187,11 @@ describe('Change Management', () => {
     });
   });
 
-  describe('Free change window', () => {
+  describe('Free change window (per filed rule)', () => {
     it('free change within 24h of booking', async () => {
       const input = makeInput({
         original_ticket: makeOriginal({ booking_date: '2026-03-15T10:00:00Z' }),
-        current_datetime: '2026-03-15T20:00:00Z', // 10h after booking
+        current_datetime: '2026-03-15T20:00:00Z',
       });
       const result = await agent.execute({ data: input });
       expect(result.data.assessment.is_free_change).toBe(true);
@@ -159,13 +202,13 @@ describe('Change Management', () => {
     it('not free after 24h window', async () => {
       const input = makeInput({
         original_ticket: makeOriginal({ booking_date: '2026-03-01T10:00:00Z' }),
-        current_datetime: '2026-03-15T12:00:00Z', // 14 days after
+        current_datetime: '2026-03-15T12:00:00Z',
       });
       const result = await agent.execute({ data: input });
       expect(result.data.assessment.is_free_change).toBe(false);
     });
 
-    it('full-fare Y class has no change fee (always free)', async () => {
+    it('full-fare Y class has no change fee per filed rule', async () => {
       const input = makeInput({
         original_ticket: makeOriginal({ fare_basis: 'YOWUS' }),
       });
@@ -173,7 +216,7 @@ describe('Change Management', () => {
       expect(result.data.assessment.change_fee).toBe('0.00');
     });
 
-    it('business class has no change fee', async () => {
+    it('business class has no change fee per filed rule', async () => {
       const input = makeInput({
         original_ticket: makeOriginal({ fare_basis: 'COWUS' }),
       });
@@ -198,7 +241,7 @@ describe('Change Management', () => {
     });
   });
 
-  describe('Reject fares', () => {
+  describe('Reject fares (per filed reject_patterns)', () => {
     it('rejects change for BASIC economy', async () => {
       const input = makeInput({
         original_ticket: makeOriginal({ fare_basis: 'HOWBASIC' }),
@@ -222,6 +265,15 @@ describe('Change Management', () => {
       const result = await agent.execute({ data: input });
       expect(result.warnings).toBeDefined();
       expect(result.warnings![0]).toContain('not permitted');
+    });
+
+    it('does NOT reject BASIC fare when no Cat31 rules supplied', async () => {
+      const input = makeInput({
+        original_ticket: makeOriginal({ fare_basis: 'HOWBASIC' }),
+        cat31_rules: undefined,
+      });
+      const result = await agent.execute({ data: input });
+      expect(result.data.assessment.action).not.toBe('REJECT');
     });
   });
 

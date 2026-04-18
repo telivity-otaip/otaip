@@ -1,10 +1,23 @@
 /**
  * Refund Processing Engine — penalty calc, commission recall,
  * tax refund, conjunction handling, BSP/ARC reporting.
+ *
+ * No invented penalty amounts.
+ *
+ * - When `input.cat33_rules` is provided, the engine applies the filed
+ *   rules: pattern-match the fare basis, use the rule's penalty and
+ *   forfeit-base-fare flag.
+ * - When `input.cat33_rules` is absent, the engine uses the ATPCO
+ *   default per the project's domain spec: voluntary refunds incur NO
+ *   penalty; involuntary refunds are full refunds.
+ *
+ * The previous "$200 default penalty" fallback was a CLAUDE.md
+ * violation and has been removed.
+ *
+ * // DOMAIN_QUESTION: per-carrier ATPCO Cat33 data ingestion pipeline.
  */
 
 import Decimal from 'decimal.js';
-import { createRequire } from 'node:module';
 import type {
   RefundProcessingInput,
   RefundProcessingOutput,
@@ -14,12 +27,8 @@ import type {
   TaxItem,
   BspRefundFields,
   ArcRefundFields,
+  Cat33Rules,
 } from './types.js';
-
-const require = createRequire(import.meta.url);
-const rulesData = require('./data/refund-penalty-rules.json') as {
-  rules: RefundPenaltyRule[];
-};
 
 function sumTaxes(taxes: TaxItem[]): Decimal {
   let total = new Decimal(0);
@@ -29,8 +38,12 @@ function sumTaxes(taxes: TaxItem[]): Decimal {
   return total;
 }
 
-function findPenaltyRule(fareBasis: string): RefundPenaltyRule | undefined {
-  for (const rule of rulesData.rules) {
+function findPenaltyRule(
+  rules: Cat33Rules | undefined,
+  fareBasis: string,
+): RefundPenaltyRule | undefined {
+  if (!rules) return undefined;
+  for (const rule of rules.rules) {
     if (new RegExp(rule.fare_basis_pattern).test(fareBasis)) {
       return rule;
     }
@@ -87,7 +100,8 @@ function buildArcFields(
 export function processRefund(input: RefundProcessingInput): RefundProcessingOutput {
   const originalBase = new Decimal(input.base_fare);
   const originalTax = sumTaxes(input.taxes);
-  const rule = findPenaltyRule(input.fare_basis);
+  const rule = findPenaltyRule(input.cat33_rules, input.fare_basis);
+  const isInvoluntary = input.is_involuntary === true;
 
   const hasWaiver = !!input.waiver_code;
 
@@ -99,19 +113,27 @@ export function processRefund(input: RefundProcessingInput): RefundProcessingOut
 
   switch (input.refund_type) {
     case 'FULL': {
-      // Full refund — all unused coupons
-      if (rule?.forfeit_base_fare && !hasWaiver && !input.is_refundable) {
-        // Non-refundable: base fare forfeited, taxes still refundable
-        baseFareRefund = new Decimal(0);
-        penalty = new Decimal(0);
-      } else if (hasWaiver) {
-        // Waiver bypasses penalty
+      // Full refund — all unused coupons.
+      // Penalty source-of-truth:
+      //   - involuntary               → 0 (carrier-initiated)
+      //   - waiver code present       → 0 (waiver bypasses penalty)
+      //   - filed forfeit_base_fare   → entire base forfeited
+      //   - filed penalty_amount      → that amount
+      //   - no rule + voluntary       → 0 (ATPCO default, no invention)
+      if (isInvoluntary || hasWaiver) {
         baseFareRefund = originalBase;
         penalty = new Decimal(0);
-      } else {
-        const penaltyAmount = rule ? new Decimal(rule.penalty_amount) : new Decimal('200.00');
+      } else if (rule?.forfeit_base_fare && !input.is_refundable) {
+        baseFareRefund = new Decimal(0);
+        penalty = new Decimal(0);
+      } else if (rule) {
+        const penaltyAmount = new Decimal(rule.penalty_amount);
         penalty = Decimal.min(penaltyAmount, originalBase);
         baseFareRefund = originalBase.minus(penalty);
+      } else {
+        // No rule supplied → ATPCO default for voluntary refund: no penalty.
+        baseFareRefund = originalBase;
+        penalty = new Decimal(0);
       }
       taxRefund = originalTax;
       taxBreakdown = input.taxes;
@@ -120,7 +142,7 @@ export function processRefund(input: RefundProcessingInput): RefundProcessingOut
     }
 
     case 'PARTIAL': {
-      // Partial refund — specific coupons only
+      // Partial refund — specific coupons only.
       const refundableCoupons = (input.coupons_to_refund ?? []).filter((c) => c.refundable);
       const couponRatio =
         input.total_coupons > 0
@@ -129,16 +151,20 @@ export function processRefund(input: RefundProcessingInput): RefundProcessingOut
 
       const proratedBase = originalBase.times(couponRatio).toDecimalPlaces(2);
 
-      if (rule?.forfeit_base_fare && !hasWaiver && !input.is_refundable) {
-        baseFareRefund = new Decimal(0);
-        penalty = new Decimal(0);
-      } else if (hasWaiver) {
+      if (isInvoluntary || hasWaiver) {
         baseFareRefund = proratedBase;
         penalty = new Decimal(0);
-      } else {
-        const penaltyAmount = rule ? new Decimal(rule.penalty_amount) : new Decimal('200.00');
+      } else if (rule?.forfeit_base_fare && !input.is_refundable) {
+        baseFareRefund = new Decimal(0);
+        penalty = new Decimal(0);
+      } else if (rule) {
+        const penaltyAmount = new Decimal(rule.penalty_amount);
         penalty = Decimal.min(penaltyAmount, proratedBase);
         baseFareRefund = proratedBase.minus(penalty);
+      } else {
+        // No rule supplied → ATPCO default: no penalty on prorated portion.
+        baseFareRefund = proratedBase;
+        penalty = new Decimal(0);
       }
 
       // Prorate taxes
@@ -173,12 +199,12 @@ export function processRefund(input: RefundProcessingInput): RefundProcessingOut
   // Audit trail
   const audit: RefundAuditTrail = {
     original_ticket_number: input.ticket_number,
-    conjunction_tickets: input.conjunction_tickets,
+    ...(input.conjunction_tickets !== undefined ? { conjunction_tickets: input.conjunction_tickets } : {}),
     refund_type: input.refund_type,
     original_base_fare: originalBase.toFixed(2),
     original_total_tax: originalTax.toFixed(2),
     penalty_applied: penalty.toFixed(2),
-    waiver_code: input.waiver_code,
+    ...(input.waiver_code !== undefined ? { waiver_code: input.waiver_code } : {}),
     base_fare_refunded: baseFareRefund.toFixed(2),
     tax_refunded: taxRefund.toFixed(2),
     commission_recalled: commissionRecalled.toFixed(2),
@@ -205,9 +231,9 @@ export function processRefund(input: RefundProcessingInput): RefundProcessingOut
     total_refund: totalRefund.toFixed(2),
     commission_recalled: commissionRecalled.toFixed(2),
     net_refund: netRefund.toFixed(2),
-    waiver_code: input.waiver_code,
-    bsp_fields: bspFields,
-    arc_fields: arcFields,
+    ...(input.waiver_code !== undefined ? { waiver_code: input.waiver_code } : {}),
+    ...(bspFields !== undefined ? { bsp_fields: bspFields } : {}),
+    ...(arcFields !== undefined ? { arc_fields: arcFields } : {}),
     audit,
   };
 

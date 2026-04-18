@@ -50,6 +50,29 @@ export { DEFAULT_RETRY_CONFIG, withRetry, computeDelay } from './retry/index.js'
 export { fetchWithRetry } from './http/index.js';
 export type { FetchWithRetryOptions } from './http/index.js';
 
+export type { DomainInputRequired } from './domain/index.js';
+export { domainInputRequired, isDomainInputRequired } from './domain/index.js';
+
+export {
+  EU261_BANDS,
+  EU261_DELAY_TRIGGER_HOURS,
+  EU261_LONGHAUL_PARTIAL_REDUCTION,
+  EU261_CANCELLATION_NOTICE_DAYS,
+  EU261_REFUND_CHOICE_DELAY_HOURS,
+  applyEU261,
+  greatCircleDistanceKm,
+  US_DOT_IDB_DOMESTIC,
+  US_DOT_IDB_INTERNATIONAL,
+  applyUsDotIdb,
+} from './regulations/index.js';
+export type {
+  EU261Input,
+  EU261Result,
+  UsDotIdbInput,
+  UsDotIdbResult,
+  UsDotIdbBand,
+} from './regulations/index.js';
+
 export type {
   LoopPhase,
   ToolCall,

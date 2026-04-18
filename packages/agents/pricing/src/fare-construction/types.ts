@@ -3,7 +3,16 @@
  *
  * Agent 2.2: NUC × ROE fare construction with mileage validation,
  * HIP/BHC/CTM checks, surcharges, and IATA rounding.
+ *
+ * Output is `FareConstructionResult` — a discriminated union that may be
+ * either a successful `FareConstructionOutput` or a `DomainInputRequired`
+ * sentinel when authoritative inputs (ROE, intermediate-point fare
+ * lookups, etc.) are unavailable.
  */
+
+import type { DomainInputRequired } from '@otaip/core';
+
+export type FareConstructionResult = FareConstructionOutput | DomainInputRequired;
 
 export type JourneyType = 'OW' | 'RT' | 'CT';
 
@@ -52,6 +61,13 @@ export interface HipCheck {
   hip_nuc: string | null;
   /** Description */
   description: string;
+  /**
+   * Set when intermediate-point fare lookup data was not provided. Each
+   * entry names a missing input (e.g. 'intermediate_point_fares:JFK-LON').
+   * Real HIP detection requires per-airline filed fares between every
+   * intermediate point pair — see ATPCO Fare Construction guide.
+   */
+  missing_inputs?: string[];
 }
 
 export interface BhcCheck {
@@ -59,6 +75,13 @@ export interface BhcCheck {
   detected: boolean;
   /** Description */
   description: string;
+  /**
+   * Set when geographic-direction analysis data was not provided. Real
+   * BHC detection compares fare-component directionality against great-
+   * circle bearing of the intended journey, which requires geographic
+   * direction analysis beyond simple "city revisited" string matching.
+   */
+  missing_inputs?: string[];
 }
 
 export interface CtmCheck {

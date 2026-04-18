@@ -93,6 +93,19 @@ export interface RegulatoryFlag {
   applies: boolean;
   /** Reason */
   reason: string;
+  /**
+   * For EU261: computed compensation per passenger when all required inputs
+   * are available. Null when applies=true but compensation cannot be
+   * computed (missing distance/delay/etc) — see `missing_inputs`.
+   */
+  compensation_eur?: string | null;
+  /** For EU261 reductions (e.g. long-haul 50% under Article 7(2)(c)). */
+  reduction_percent?: number;
+  /**
+   * Names of required inputs that were not supplied, preventing
+   * computation. See @otaip/core domain/types.ts.
+   */
+  missing_inputs?: string[];
 }
 
 export interface InvoluntaryRebookResult {
@@ -130,15 +143,43 @@ export interface InvoluntaryRebookInput {
     is_alliance_partner: boolean;
     is_interline: boolean;
   }>;
-  /** Involuntary thresholds (overrides) */
+  /**
+   * Involuntary trigger thresholds. NO defaults — different carriers define
+   * IRROP triggers differently (60min, 90min, any misconnect). The trigger
+   * may be based on departure delay or arrival delay. Caller must supply
+   * the carrier-specific threshold for TIME_CHANGE assessments. If absent
+   * for a TIME_CHANGE, the engine cannot decide and returns the change as
+   * non-involuntary with a warning.
+   *
+   * // DOMAIN_QUESTION: per-carrier IRROP threshold catalogue (issue tracker).
+   */
   thresholds?: {
-    /** Minutes of departure time change that triggers involuntary (default: 60) */
+    /** Minutes of departure time change that triggers involuntary. REQUIRED for TIME_CHANGE. */
     time_change_minutes?: number;
-    /** Hours within which same carrier must be available (default: 6) */
+    /** Hours within which same carrier must be available. */
     same_carrier_window_hours?: number;
   };
   /** Whether passenger missed original flight (no-show) */
   is_passenger_no_show?: boolean;
+  /**
+   * Inputs required to compute EU261 compensation. When omitted but EU261
+   * applies, the regulatory flag is set with `compensation_eur: null` and
+   * `missing_inputs` listing what is needed.
+   */
+  eu261_inputs?: {
+    /** Great-circle distance origin → final destination (km). */
+    distance_km?: number;
+    /** Arrival delay at the FINAL destination, in hours. */
+    arrival_delay_hours?: number;
+    /** Carrier asserts extraordinary circumstances exemption. */
+    extraordinary_circumstances?: boolean;
+    /** For cancellations: how many days before departure was the passenger notified? */
+    notice_days_before_departure?: number;
+    /** Article 7(2): carrier offered rerouting whose arrival is within band threshold. */
+    rerouting_offered?: boolean;
+    /** Hours by which rerouted arrival exceeds original scheduled arrival. */
+    rerouting_arrival_lateness_hours?: number;
+  };
 }
 
 export interface InvoluntaryRebookOutput {

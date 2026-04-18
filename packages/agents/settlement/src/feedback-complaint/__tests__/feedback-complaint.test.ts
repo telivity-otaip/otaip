@@ -216,7 +216,7 @@ describe('Feedback & Complaint Agent', () => {
   });
 
   describe('US DOT compensation — DENIED_BOARDING (primary)', () => {
-    it('domestic <2h delay: 200% capped at $775', async () => {
+    it('domestic 1-2h late: 200% capped at $1075', async () => {
       const result = await agent.execute({
         data: {
           operation: 'calculateCompensation',
@@ -232,21 +232,21 @@ describe('Feedback & Complaint Agent', () => {
       expect(result.data.compensation!.currency).toBe('USD');
     });
 
-    it('domestic <2h delay: caps at $775', async () => {
+    it('domestic 1-2h late: caps at $1075', async () => {
       const result = await agent.execute({
         data: {
           operation: 'calculateCompensation',
           regulation: 'US_DOT',
           complaintType: 'DENIED_BOARDING',
-          fareAmount: '500.00',
+          fareAmount: '700.00',
           delayMinutes: 90,
           isDomestic: true,
         },
       });
-      expect(result.data.compensation!.finalAmount).toBe('775.00');
+      expect(result.data.compensation!.finalAmount).toBe('1075.00');
     });
 
-    it('domestic >=2h delay: 400% capped at $1550', async () => {
+    it('domestic >2h late: 400% capped at $2150', async () => {
       const result = await agent.execute({
         data: {
           operation: 'calculateCompensation',
@@ -260,21 +260,21 @@ describe('Feedback & Complaint Agent', () => {
       expect(result.data.compensation!.finalAmount).toBe('1200.00');
     });
 
-    it('domestic >=2h delay: caps at $1550', async () => {
+    it('domestic >2h late: caps at $2150', async () => {
       const result = await agent.execute({
         data: {
           operation: 'calculateCompensation',
           regulation: 'US_DOT',
           complaintType: 'DENIED_BOARDING',
-          fareAmount: '500.00',
+          fareAmount: '800.00',
           delayMinutes: 180,
           isDomestic: true,
         },
       });
-      expect(result.data.compensation!.finalAmount).toBe('1550.00');
+      expect(result.data.compensation!.finalAmount).toBe('2150.00');
     });
 
-    it('international <4h delay: 200% capped at $775', async () => {
+    it('international 1-4h late: 200% capped at $1075', async () => {
       const result = await agent.execute({
         data: {
           operation: 'calculateCompensation',
@@ -289,21 +289,21 @@ describe('Feedback & Complaint Agent', () => {
       expect(result.data.compensation!.finalAmount).toBe('600.00');
     });
 
-    it('international <4h delay: caps at $775', async () => {
+    it('international 1-4h late: caps at $1075', async () => {
       const result = await agent.execute({
         data: {
           operation: 'calculateCompensation',
           regulation: 'US_DOT',
           complaintType: 'DENIED_BOARDING',
-          fareAmount: '500.00',
+          fareAmount: '600.00',
           delayMinutes: 200,
           isDomestic: false,
         },
       });
-      expect(result.data.compensation!.finalAmount).toBe('775.00');
+      expect(result.data.compensation!.finalAmount).toBe('1075.00');
     });
 
-    it('international >=4h delay: 400% capped at $1550', async () => {
+    it('international >4h late: 400% capped at $2150', async () => {
       const result = await agent.execute({
         data: {
           operation: 'calculateCompensation',
@@ -317,18 +317,18 @@ describe('Feedback & Complaint Agent', () => {
       expect(result.data.compensation!.finalAmount).toBe('1200.00');
     });
 
-    it('international >=4h delay: caps at $1550', async () => {
+    it('international >4h late: caps at $2150', async () => {
       const result = await agent.execute({
         data: {
           operation: 'calculateCompensation',
           regulation: 'US_DOT',
           complaintType: 'DENIED_BOARDING',
-          fareAmount: '500.00',
+          fareAmount: '1000.00',
           delayMinutes: 300,
           isDomestic: false,
         },
       });
-      expect(result.data.compensation!.finalAmount).toBe('1550.00');
+      expect(result.data.compensation!.finalAmount).toBe('2150.00');
     });
 
     it('defaults to domestic when isDomestic not specified', async () => {

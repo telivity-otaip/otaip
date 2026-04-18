@@ -1,9 +1,26 @@
 /**
  * Involuntary Rebook Engine — trigger assessment, protection logic,
  * regulatory entitlements.
+ *
+ * EU261 compensation is delegated to @otaip/core regulations/eu261, which
+ * encodes the published Regulation (EC) No 261/2004 constants.
+ *
+ * US DOT 14 CFR §250 IDB applies only to involuntary denied boarding
+ * (oversales) — NOT to delays/cancellations. We therefore mark the US_DOT
+ * flag as not-applicable on the rebook path even when a US touchpoint
+ * exists, and reference the IDB module for callers who do hit oversales
+ * (Agent 6.5 Feedback & Complaint).
+ *
+ * // DOMAIN_QUESTION: per-carrier IRROP threshold catalogue
+ * // The 60-minute time-change threshold previously hardcoded here was
+ * // a CLAUDE.md violation. Different carriers define IRROP triggers
+ * // differently. Callers must supply `input.thresholds.time_change_minutes`
+ * // when assessing a TIME_CHANGE; without it we conservatively report
+ * // non-involuntary and emit a warning.
  */
 
 import { createRequire } from 'node:module';
+import { applyEU261 } from '@otaip/core';
 import type {
   InvoluntaryRebookInput,
   InvoluntaryRebookOutput,
@@ -18,19 +35,20 @@ const require = createRequire(import.meta.url);
 const euData = require('./data/eu-countries.json') as { countries: string[] };
 const EU_COUNTRIES = new Set(euData.countries);
 
-const DEFAULT_TIME_CHANGE_THRESHOLD = 60; // minutes
-
 // ---------------------------------------------------------------------------
 // Trigger assessment
 // ---------------------------------------------------------------------------
 
-function assessTrigger(input: InvoluntaryRebookInput): {
+interface TriggerAssessment {
   isInvoluntary: boolean;
   trigger: InvoluntaryTrigger;
-} {
+  /** Set when threshold input was needed but missing. */
+  missingThreshold?: boolean;
+}
+
+function assessTrigger(input: InvoluntaryRebookInput): TriggerAssessment {
   const sc = input.schedule_change;
-  const thresholds = input.thresholds ?? {};
-  const timeThreshold = thresholds.time_change_minutes ?? DEFAULT_TIME_CHANGE_THRESHOLD;
+  const threshold = input.thresholds?.time_change_minutes;
 
   if (input.is_passenger_no_show) {
     return { isInvoluntary: false, trigger: 'NO_SHOW' };
@@ -41,22 +59,20 @@ function assessTrigger(input: InvoluntaryRebookInput): {
       return { isInvoluntary: true, trigger: 'FLIGHT_CANCELLATION' };
 
     case 'TIME_CHANGE': {
+      if (threshold === undefined) {
+        return { isInvoluntary: false, trigger: 'TIME_CHANGE', missingThreshold: true };
+      }
       const minutes = sc.time_change_minutes ?? 0;
-      return {
-        isInvoluntary: minutes > timeThreshold,
-        trigger: 'TIME_CHANGE',
-      };
+      return { isInvoluntary: minutes > threshold, trigger: 'TIME_CHANGE' };
     }
 
     case 'ROUTING_CHANGE':
       return { isInvoluntary: true, trigger: 'ROUTING_CHANGE' };
 
-    case 'EQUIPMENT_DOWNGRADE': {
-      // Flag but not auto-involuntary
-      const isDowngrade = sc.original_is_widebody === true && sc.new_is_widebody === false;
+    case 'EQUIPMENT_DOWNGRADE':
+      // Equipment downgrade is flagged but not auto-involuntary — handled
+      // separately via downgrade compensation rules (Agent 6.5).
       return { isInvoluntary: false, trigger: 'EQUIPMENT_DOWNGRADE' };
-      void isDowngrade;
-    }
   }
 }
 
@@ -124,38 +140,82 @@ function buildProtectionOptions(input: InvoluntaryRebookInput): ProtectionOption
 // Regulatory entitlements
 // ---------------------------------------------------------------------------
 
-function assessRegulatory(input: InvoluntaryRebookInput): RegulatoryFlag[] {
+function assessRegulatory(
+  input: InvoluntaryRebookInput,
+  trigger: InvoluntaryTrigger,
+): RegulatoryFlag[] {
   const flags: RegulatoryFlag[] = [];
   const pnr = input.original_pnr;
 
-  // EU261/2004: applies if departing from EU OR if EU carrier regardless of destination
+  // EU261 jurisdiction: departing from EU/EEA, OR EU carrier (regardless of route).
   const departureIsEu = EU_COUNTRIES.has(pnr.departure_country);
   const isEuCarrier = pnr.is_eu_carrier;
+  const eu261Applies = departureIsEu || isEuCarrier;
 
-  if (departureIsEu || isEuCarrier) {
-    flags.push({
-      framework: 'EU261',
-      applies: true,
-      reason: departureIsEu
-        ? `Departure from EU/EEA country (${pnr.departure_country}).`
-        : `EU carrier (${pnr.affected_segment.carrier}) — EU261 applies regardless of route.`,
-    });
-  } else {
+  if (!eu261Applies) {
     flags.push({
       framework: 'EU261',
       applies: false,
       reason: 'Non-EU departure and non-EU carrier — EU261 does not apply.',
     });
+  } else {
+    const eu = input.eu261_inputs ?? {};
+    const flightCancelled = trigger === 'FLIGHT_CANCELLATION';
+    const missing: string[] = [];
+    if (eu.distance_km === undefined) missing.push('eu261_inputs.distance_km');
+    if (!flightCancelled && eu.arrival_delay_hours === undefined) {
+      missing.push('eu261_inputs.arrival_delay_hours');
+    }
+    if (eu.extraordinary_circumstances === undefined) {
+      missing.push('eu261_inputs.extraordinary_circumstances');
+    }
+    if (flightCancelled && eu.notice_days_before_departure === undefined) {
+      missing.push('eu261_inputs.notice_days_before_departure');
+    }
+
+    const reasonPrefix = departureIsEu
+      ? `Departure from EU/EEA country (${pnr.departure_country}).`
+      : `EU carrier (${pnr.affected_segment.carrier}) — EU261 applies regardless of route.`;
+
+    if (missing.length > 0) {
+      flags.push({
+        framework: 'EU261',
+        applies: true,
+        reason: `${reasonPrefix} Compensation not computed — see missing_inputs.`,
+        compensation_eur: null,
+        reduction_percent: 0,
+        missing_inputs: missing,
+      });
+    } else {
+      const result = applyEU261({
+        distanceKm: eu.distance_km!,
+        arrivalDelayHours: flightCancelled ? 0 : eu.arrival_delay_hours!,
+        extraordinaryCircumstances: eu.extraordinary_circumstances!,
+        flightCancelled,
+        ...(flightCancelled ? { noticeDaysBeforeDeparture: eu.notice_days_before_departure } : {}),
+        ...(eu.rerouting_offered !== undefined ? { reroutingOffered: eu.rerouting_offered } : {}),
+        ...(eu.rerouting_arrival_lateness_hours !== undefined
+          ? { reroutingArrivalLatenessHours: eu.rerouting_arrival_lateness_hours }
+          : {}),
+      });
+      flags.push({
+        framework: 'EU261',
+        applies: true,
+        reason: `${reasonPrefix} ${result.reason}`,
+        compensation_eur: result.eligible ? result.compensationEur : '0.00',
+        reduction_percent: result.reductionPercent,
+      });
+    }
   }
 
-  // US DOT: applies if departure from or arrival to US
-  const usInvolved = pnr.departure_country === 'US' || pnr.arrival_country === 'US';
+  // US DOT 14 CFR §250 — IDB (oversales) ONLY. Delays/cancellations are
+  // not denied-boarding events. We surface this as not-applicable on the
+  // rebook path even when the route touches the US.
   flags.push({
     framework: 'US_DOT',
-    applies: usInvolved,
-    reason: usInvolved
-      ? `US departure or arrival — DOT consumer protection applies.`
-      : 'No US touchpoint — US DOT rules do not apply.',
+    applies: false,
+    reason:
+      'US DOT 14 CFR §250 covers involuntary denied boarding (oversales) only — not delays or cancellations. See Agent 6.5 (Feedback & Complaint) for IDB handling.',
   });
 
   return flags;
@@ -165,17 +225,22 @@ function assessRegulatory(input: InvoluntaryRebookInput): RegulatoryFlag[] {
 // Main engine
 // ---------------------------------------------------------------------------
 
-export function processInvoluntaryRebook(input: InvoluntaryRebookInput): InvoluntaryRebookOutput {
-  const { isInvoluntary, trigger } = assessTrigger(input);
+export function processInvoluntaryRebook(
+  input: InvoluntaryRebookInput,
+): InvoluntaryRebookOutput & { warnings?: string[] } {
+  const assessment = assessTrigger(input);
+  const { isInvoluntary, trigger } = assessment;
   const isNoShow = input.is_passenger_no_show === true;
 
   const protectionOptions = isInvoluntary ? buildProtectionOptions(input) : [];
   const protectionPath: ProtectionPath =
     protectionOptions.length > 0 ? protectionOptions[0]!.path : 'NONE_AVAILABLE';
 
-  const regulatoryFlags = isInvoluntary ? assessRegulatory(input) : [];
+  const regulatoryFlags = isInvoluntary ? assessRegulatory(input, trigger) : [];
 
-  // Original routing credit: passenger retains original fare basis when rebooked involuntarily
+  // Original routing credit: passenger retains original fare basis when
+  // rebooked involuntarily. Carrier-specific implementation varies — this
+  // flag merely indicates entitlement, not the calculated residual.
   const originalRoutingCredit = isInvoluntary && !isNoShow;
 
   // Build summary
@@ -199,10 +264,28 @@ export function processInvoluntaryRebook(input: InvoluntaryRebookInput): Involun
     if (originalRoutingCredit) {
       summaryParts.push('Original routing credit: passenger retains original fare basis.');
     }
+  } else if (assessment.missingThreshold) {
+    summaryParts.push(
+      'TIME_CHANGE assessment requires input.thresholds.time_change_minutes (carrier-specific). Treating as non-involuntary pending input.',
+    );
   } else {
     summaryParts.push(
       `Schedule change does not meet involuntary threshold (trigger: ${trigger.replace('_', ' ').toLowerCase()}).`,
     );
+  }
+
+  const warnings: string[] = [];
+  if (assessment.missingThreshold) {
+    warnings.push(
+      'DOMAIN_INPUT_REQUIRED: thresholds.time_change_minutes is required for TIME_CHANGE assessment. See @otaip/core domain/types.ts.',
+    );
+  }
+  for (const flag of regulatoryFlags) {
+    if (flag.applies && flag.missing_inputs && flag.missing_inputs.length > 0) {
+      warnings.push(
+        `DOMAIN_INPUT_REQUIRED: ${flag.framework} compensation needs ${flag.missing_inputs.join(', ')}.`,
+      );
+    }
   }
 
   const result: InvoluntaryRebookResult = {
@@ -216,5 +299,5 @@ export function processInvoluntaryRebook(input: InvoluntaryRebookInput): Involun
     summary: summaryParts.join(' '),
   };
 
-  return { result };
+  return warnings.length > 0 ? { result, warnings } : { result };
 }
