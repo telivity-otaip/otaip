@@ -2,6 +2,93 @@
 
 > **Versioning policy:** Pre-v1.0, every release is a patch bump (`0.6.0 → 0.6.1 → 0.6.2 → …`). See [VERSIONING.md](VERSIONING.md) for the full policy and an explanation of the early-history version jumps (0.3.4 → 0.5.0 → 0.5.1 → 0.6.0) that predate this rule.
 
+## 0.6.3 — Codex review closeout, first npm publish, per-transaction routing
+
+Eleven PRs (#73–#83) addressing all 12 findings from a full-repo Codex review, the first-ever publish of the `@otaip/*` scope to npm, and a set of CI/publish hardening fixes. Several engines widen their output types and a couple of agents add required input fields — see **Potentially-breaking** below if you were depending on the previous behaviour.
+
+### Published to npm
+
+All 15 `@otaip/*` packages are now live on npm at `0.6.2` — previously the source existed but nothing had shipped. `npm install @otaip/core` (and friends) works.
+
+- `@otaip/core`, `@otaip/connect`, `@otaip/cli`, `@otaip/adapter-duffel`
+- `@otaip/agents-reference`, `@otaip/agents-search`, `@otaip/agents-pricing`, `@otaip/agents-booking`, `@otaip/agents-ticketing`, `@otaip/agents-exchange`, `@otaip/agents-settlement`, `@otaip/agents-reconciliation`, `@otaip/agents-lodging`
+- `@otaip/agents-tmc`, `@otaip/agents-platform`
+
+### Removed invented domain logic (CLAUDE.md compliance)
+
+Codex review flagged five engines that were computing fare/penalty/compensation amounts from invented "common industry pattern" data rather than authoritative sources. This release replaces all of them with either caller-supplied authoritative inputs or published-law constants.
+
+- **`@otaip/core`: EU 261/2004 + US DOT 14 CFR §250 modules (new).** `applyEU261()` encodes the published distance bands (€250/€400/€600), 3h arrival-delay trigger, Article 7(2) rerouting 50% reduction, 14-day cancellation safe harbour, and extraordinary-circumstances exemption. `applyUsDotIdb()` encodes the current 14 CFR §250.5 denied-boarding tables ($1,075 / $2,150 caps, effective 2025-01-22). Plus `greatCircleDistanceKm()` haversine helper.
+- **`@otaip/core`: new `DomainInputRequired` type + helpers** (`domainInputRequired`, `isDomainInputRequired`) — shared sentinel for engines that refuse to synthesise numbers when authoritative inputs are missing.
+- **Fare Construction (2.2):** removed the ROE 1.0 fallback (was silently multiplying every non-USD currency by 1), the per-mile-rate HIP heuristic, and the city-revisited BHC heuristic. Engine now returns `DomainInputRequired` when ROE is missing and populates `missing_inputs` on HIP/BHC checks that need intermediate-point fare lookups. The EMS mileage-surcharge formula (5%/5%, max 25%) stays — confirmed IATA standard. Output type widened to `FareConstructionResult = FareConstructionOutput | DomainInputRequired`.
+- **Change Management (5.1) + Refund Processing (6.1):** removed the "$200 default" fallback, the waiver-=-zero special case, and the residual = original − penalty formula. Engines now read `cat31_rules` / `cat33_rules` from input and apply them as filed. When rules are absent, they fall back to the ATPCO default — permitted at no charge for voluntary changes, fee waived for involuntary. Invented rule data moved out of `src/data/` into `__tests__/fixtures/` with a "TEST FIXTURE — do not use in production" banner.
+- **Involuntary Rebook (5.3):** removed the hardcoded 60-minute IRROP threshold. Caller now supplies `thresholds.time_change_minutes` per carrier. Real EU261 compensation is calculated via the core module when `eu261_inputs` (distance, delay, extraordinary circumstances, notice days, rerouting) are provided; `regulatory_flags[].missing_inputs` lists what's needed otherwise. Clarified that US DOT IDB applies to denied boarding only — not delays/cancellations.
+- **Feedback & Complaint (6.5):** replaced ~250 lines of inline EU261 / US DOT compensation math with calls to the core regulation modules. DOT IDB caps updated from pre-amendment $775 / $1,550 to current $1,075 / $2,150. Article 10(2) downgrade reimbursement (30/50/75%) kept — published law not covered by the Article 7 helper.
+
+### GDS/NDC router per-transaction routing (CLAUDE.md compliance)
+
+The router previously treated `carrier → channel_priority` as unconditional. Replaced with per-transaction routing: different transaction types (`shopping`, `booking`, `ticketing`, `servicing`, `group`, `corporate`) route differently for the same carrier. Built-in defaults cover `shopping` and `booking`; every other type requires caller-supplied `capability_overrides` or the engine returns `domain_input_required: true`. Unknown carriers no longer default silently to GDS/AMADEUS.
+
+### HTTP hardening
+
+- **New `@otaip/core` `fetchWithRetry(input, init?, options?)`** — wraps `fetch` with per-attempt `AbortController` timeout (default 30s) + retry on 5xx / 429 / network errors via the existing `withRetry`. Response stays a `Response`; callers still inspect `response.ok`.
+- **TripPro defaults now HTTPS.** Search and calendar-search URLs were `http://mas.trippro.com/...` — switched to `https://`. Reprice/book were already HTTPS.
+- **Sabre auth, Navitaire create+refresh, Duffel adapter, TripPro SOAP client** all route through `fetchWithRetry` instead of raw `fetch`.
+
+### Correctness fixes
+
+- **`booking/api-abstraction` rate limiter** — the counter incremented once per `execute()` call, **before** the retry loop, so retries against the upstream provider went uncounted. Moved the increment and the rate-limit guard inside the loop so each actual outbound attempt is charged against the quota.
+- **Stub agents now throw `UnimplementedDomainInputError`** (new `@otaip/core` export) instead of raw `Error`. Four agents migrated: `DisruptionResponseAgent` (5.4), `DynamicPricingAgent` (2.6), `RevenueManagementAgent` (2.7), `InterlineSettlementAgent` (7.4).
+
+### CLI
+
+- **`otaip agents` registry is now auto-discovered** from source metadata (`packages/cli/src/agent-discovery.ts`) rather than a hand-maintained array that had drifted (claimed 71, listed 69, several names didn't match the exported agent classes). Walks `packages/agents/*/src/*/index.ts`, `packages/agents-platform/src/*/index.ts`, `packages/agents-tmc/src/*/index.ts`, and `packages/core/src/agents/shopping/*/index.ts` — greps `readonly id`, `readonly name`, `readonly version`. Today: 75 agents across 12 stages.
+- **CLI now included in lint** (`--ignore-pattern 'packages/cli/**'` removed). `packages/cli/tsconfig.json` added to the ESLint parser project list. CLI-scoped override allows `console.*` (CLI stdout is the contract).
+- **7 new tests** for the discovery walk — count floor, unique IDs, file-resolves-to-real-path, stage matches ID prefix, sort order, etc.
+
+### Bootstrap + counts
+
+- **New `scripts/count-agents.ts`** (`pnpm run count:agents`) — single source of truth for agent counts. Replaces a `find` in `release.yml` that undercounted by skipping `agents-platform` and `agents-tmc`. All agent/stage counts in README, docs, and release notes now derive from one script.
+- **Removed root `postinstall`.** With `ignore-scripts=true` in `.npmrc` (shipped in 0.5.x for supply-chain safety), the `postinstall` never ran anyway. Docs updated to instruct an explicit `pnpm run data:download`.
+- **Publish prep** — every workspace package now has `"type": "module"` so tsup's ESM output (`index.js`/`index.d.ts`) matches the `main`/`types` fields; `exports["."].types` moved from `./src/index.ts` (not in the tarball) to `./dist/index.d.ts`; all 15 workspace packages aligned to the root version so the first publish was coherent.
+
+### CI / release
+
+- **`release.yml` no longer swallows test failures.** The previous step used `pnpm test 2>&1 || true`, masking failed tests so a broken release could publish with a misleading test count. Split into two steps that fail fast.
+- **`publish.yml` now verifies packages are actually live.** After `pnpm -r publish`, polls the registry for each of the 15 `@otaip/*` packages and expects `dist-tags.latest` to equal the released version. Fails loudly if pnpm reports success but the registry doesn't have the package. (Caught a "published successfully but 404 on registry for 5 minutes" class of bug on the first live publish.)
+- **`ci.yml` builds before typecheck.** With `exports.types → ./dist/index.d.ts`, cross-package `@otaip/*` imports need `dist/` to exist for TS to resolve types. Doubles as clean-tree build validation.
+
+### Docs
+
+- **README header numbers synced** — 75 agents across 12 stages, 3,092 tests, 16 packages. Test badge updated. Install instructions now say `pnpm install --frozen-lockfile && pnpm run data:download`.
+- **Accurate tsconfig strictness claim** — README and CLAUDE.md previously said "all strict flags ON" but `exactOptionalPropertyTypes` is intentionally off. Replaced with the explicit list of enabled flags.
+- **docs/getting-started.md** — added the explicit data-download step and documented the supply-chain trade-off.
+- **docs/agents.md** — header updated to "12 stages" with a note pointing future editors at `pnpm run count:agents` so the total cannot drift again.
+
+### Potentially-breaking
+
+> Pre-1.0 policy allows breaking changes in patch bumps; flagged here so downstream consumers can update.
+
+- `FareConstruction#execute()` return type widened to `AgentOutput<FareConstructionOutput | DomainInputRequired>`. Consumers must narrow on `result.data.status`.
+- `GdsNdcRouter` input now requires `transaction_type` (new enum). Previously-working inputs without it will be rejected by the validator.
+- `ChangeManagement` and `RefundProcessing` now require `cat31_rules` / `cat33_rules` in input to apply filed penalties. Absent rules → ATPCO default (no penalty for voluntary, waived for involuntary) — **was** a `$200` default in 0.6.2.
+- `InvoluntaryRebook` now requires `thresholds.time_change_minutes` to mark a time-change as involuntary. Absent → non-involuntary with a warning.
+- `@otaip/core` exports `fetchWithRetry`, `UnimplementedDomainInputError`, `DomainInputRequired`, `applyEU261`, `applyUsDotIdb`, `greatCircleDistanceKm` and related types.
+- TripPro `searchUrl` / `calendarSearchUrl` defaults switched from `http://` to `https://`. Override explicitly for local dev.
+- US DOT IDB compensation caps updated to 14 CFR §250.5 (effective 2025-01-22): `$1,075` / `$2,150` (was the pre-amendment `$775` / `$1,550`).
+- 11 packages that previously lacked `"type": "module"` now have it. CommonJS consumers will need to import via `import(...)` or upgrade their resolution.
+
+### Tests
+
+- **3,092 total passing** (was 3,034). 58 new tests:
+  - 18 for the new EU261 + US DOT IDB regulation modules
+  - 8 for `fetchWithRetry`
+  - 5 new EU261 compensation tests in involuntary-rebook
+  - 7 for CLI agent discovery
+  - 7 for the ATPCO-default branches in change-management + refund-processing
+  - 5 for per-transaction GDS/NDC routing + new validators
+  - 3 for the rate-limit retry counting + stub `UnimplementedDomainInputError`
+
 ## 0.6.2 — Reference OTA Multi-Adapter Fixes
 
 Three bugs in the Sprint H multi-adapter integration caught by Codex review, plus the follow-up to make booking adapter-aware. No behavior change to the single-adapter path; no breaking changes to public interfaces.
