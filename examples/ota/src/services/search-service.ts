@@ -60,6 +60,19 @@ export class SearchService {
     return this.offerCache.get(offerId);
   }
 
+  /**
+   * Cache offers returned from any search path (single- or multi-adapter).
+   *
+   * Used by the multi-adapter search route so follow-up lookups
+   * (`GET /api/offers/:id`, BookingService.createBooking) find the offer
+   * rather than 404ing. Idempotent — re-caching the same ID overwrites.
+   */
+  cacheOffers(offers: Iterable<SearchOffer>): void {
+    for (const offer of offers) {
+      this.offerCache.set(offer.offer_id, offer);
+    }
+  }
+
   /** Search for flight offers. */
   async search(params: SearchParams): Promise<SearchResult> {
     // Validate airport codes if resolver is available

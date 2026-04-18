@@ -6,6 +6,7 @@
  */
 
 import type { FastifyInstance } from 'fastify';
+import type { SearchRequest } from '@otaip/core';
 import type { SearchService } from '../services/search-service.js';
 import type { MultiSearchService } from '../services/multi-search-service.js';
 
@@ -87,17 +88,26 @@ export function registerSearchRoute(
       // Sprint H: if multi-adapter is configured and query param requests it,
       // use the multi-search service for aggregated results.
       if (multiSearch && request.query && (request.query as Record<string, string>)['multi'] === 'true') {
-        const multiResult = await multiSearch.search({
+        const origin = body.origin.toUpperCase();
+        const destination = body.destination.toUpperCase();
+        const multiRequest: SearchRequest = {
           segments: [
-            {
-              origin: body.origin.toUpperCase(),
-              destination: body.destination.toUpperCase(),
-              departure_date: body.date,
-            },
+            { origin, destination, departure_date: body.date },
           ],
           passengers: [{ type: 'ADT', count: body.passengers }],
           cabin_class: body.cabinClass,
-        });
+        };
+        // Forward full round-trip — multi path must not drop the return leg.
+        if (body.returnDate) {
+          multiRequest.segments.push({
+            origin: destination,
+            destination: origin,
+            departure_date: body.returnDate,
+          });
+        }
+        const multiResult = await multiSearch.search(multiRequest);
+        // Cache offers so GET /api/offers/:id and BookingService can find them.
+        searchService.cacheOffers(multiResult.offers);
         return reply.send(multiResult);
       }
 

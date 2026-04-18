@@ -11,10 +11,11 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
-import { createAdapter } from './config/adapters.js';
+import { createAdapter, createMultiAdapter } from './config/adapters.js';
 import type { OtaAdapter } from './types.js';
 import type { MockOtaAdapter } from './mock-ota-adapter.js';
 import { SearchService } from './services/search-service.js';
+import { MultiSearchService } from './services/multi-search-service.js';
 import { OfferService } from './services/offer-service.js';
 import { BookingService } from './services/booking-service.js';
 import { PaymentService } from './services/payment-service.js';
@@ -40,10 +41,22 @@ export interface BuildAppOptions {
   adapter?: OtaAdapter;
   /** Whether to initialize the airport resolver. Defaults to true. */
   initResolver?: boolean;
+  /**
+   * Override the multi-search service (useful for testing).
+   * If not provided, one is constructed from `createMultiAdapter()` iff the
+   * `ADAPTERS` env var is set. When neither is present, the ?multi=true
+   * branch stays unreachable and single-adapter search is used exclusively.
+   */
+  multiSearch?: MultiSearchService;
 }
 
 export async function buildApp(options: BuildAppOptions = {}) {
   const adapter = options.adapter ?? createAdapter();
+  const multiSearch =
+    options.multiSearch ??
+    (process.env['ADAPTERS']
+      ? new MultiSearchService({ adapters: createMultiAdapter() })
+      : undefined);
 
   const app = Fastify({ logger: true });
 
@@ -67,7 +80,7 @@ export async function buildApp(options: BuildAppOptions = {}) {
   }
 
   // Register routes — Sprint E
-  registerSearchRoute(app, searchService);
+  registerSearchRoute(app, searchService, multiSearch);
   registerOffersRoute(app, offerService);
   registerHealthRoute(app, adapter);
 
