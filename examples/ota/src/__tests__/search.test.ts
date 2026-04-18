@@ -13,8 +13,9 @@ import type {
   SearchResponse,
 } from '@otaip/core';
 import { MockDuffelAdapter } from '@otaip/adapter-duffel';
-import { buildApp } from '../server.js';
+import { buildApp, filterBookingAdapters } from '../server.js';
 import { MultiSearchService } from '../services/multi-search-service.js';
+import { SearchService } from '../services/search-service.js';
 import type {
   BookingRequest,
   BookingResult,
@@ -605,5 +606,82 @@ describe('POST /api/book after multi-search — adapter-aware routing', () => {
     expect(adapterA.lastBookRequest).toBeNull();
     expect(adapterC.lastBookRequest).toBeNull();
     expect(defaultAdapter.lastBookRequest).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Codex round-2 follow-ups:
+//   - offerAdapterSource stale-entry bug: a later single-adapter cache of
+//     the same offer_id must clear any previously-recorded source.
+//   - filterBookingAdapters() unit coverage — previously only exercised via
+//     buildApp() + HTTP, so the derivation was not pinned directly.
+// ---------------------------------------------------------------------------
+
+describe('SearchService.cacheOffers — stale adapterSource clearing', () => {
+  function adapterStub(): DistributionAdapter {
+    return {
+      name: 'noop',
+      async search(): Promise<SearchResponse> {
+        return { offers: [], truncated: false };
+      },
+      async isAvailable(): Promise<boolean> {
+        return true;
+      },
+    };
+  }
+
+  it('clears a previously-recorded adapterSource when re-cached without one', () => {
+    const svc = new SearchService(adapterStub());
+    // First cache: offer tagged with source-x (multi-adapter path).
+    svc.cacheOffers([{ ...makeOffer('offer-1', 200, 'source-x'), adapterSource: 'source-x' }]);
+    expect(svc.getOfferAdapterSource('offer-1')).toBe('source-x');
+    // Second cache: same ID, no adapterSource (single-adapter path).
+    svc.cacheOffers([makeOffer('offer-1', 200, 'source-x')]);
+    // Must be cleared so the booking falls back to the default adapter.
+    expect(svc.getOfferAdapterSource('offer-1')).toBeUndefined();
+  });
+
+  it('keeps the adapterSource when re-cached with the same source', () => {
+    const svc = new SearchService(adapterStub());
+    svc.cacheOffers([{ ...makeOffer('offer-2', 200, 'src'), adapterSource: 'src' }]);
+    svc.cacheOffers([{ ...makeOffer('offer-2', 200, 'src'), adapterSource: 'src' }]);
+    expect(svc.getOfferAdapterSource('offer-2')).toBe('src');
+  });
+});
+
+describe('filterBookingAdapters — only retains adapters that implement book()', () => {
+  it('drops search-only DistributionAdapters', () => {
+    const searchOnly: DistributionAdapter = {
+      name: 'search-only',
+      async search(): Promise<SearchResponse> {
+        return { offers: [], truncated: false };
+      },
+      async isAvailable(): Promise<boolean> {
+        return true;
+      },
+    };
+    const bookable = createRecordingOtaAdapter('bookable', []);
+    const mixed = new Map<string, DistributionAdapter>([
+      ['search-only', searchOnly],
+      ['bookable', bookable],
+    ]);
+    const filtered = filterBookingAdapters(mixed);
+    expect(filtered.has('bookable')).toBe(true);
+    expect(filtered.has('search-only')).toBe(false);
+    expect(filtered.size).toBe(1);
+  });
+
+  it('returns an empty map when no adapters are bookable', () => {
+    const searchOnly: DistributionAdapter = {
+      name: 'search-only',
+      async search(): Promise<SearchResponse> {
+        return { offers: [], truncated: false };
+      },
+      async isAvailable(): Promise<boolean> {
+        return true;
+      },
+    };
+    const filtered = filterBookingAdapters(new Map([['search-only', searchOnly]]));
+    expect(filtered.size).toBe(0);
   });
 });

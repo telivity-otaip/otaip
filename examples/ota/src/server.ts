@@ -36,8 +36,11 @@ const __dirname = dirname(__filename);
 /**
  * Extract the subset of multi-search adapters that also implement
  * `book()` — only those can fulfill a post-search booking.
+ *
+ * Exported for unit testing; also used internally by buildApp() to derive
+ * the booking registry from the multi-search adapter set.
  */
-function filterBookingAdapters(
+export function filterBookingAdapters(
   adapters: Map<string, DistributionAdapter>,
 ): Map<string, OtaAdapter> {
   const bookable = new Map<string, OtaAdapter>();

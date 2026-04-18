@@ -86,13 +86,28 @@ export class SearchService {
    *
    * When an offer carries an `adapterSource` tag (from MultiSearchService),
    * the source is recorded so BookingService can route the booking back
-   * to the same adapter.
+   * to the same adapter. When an offer is re-cached WITHOUT an
+   * `adapterSource` (e.g. a later single-adapter search returns the same
+   * `offer_id`), any previously-recorded source is cleared so the booking
+   * falls back to the default adapter instead of silently routing to a
+   * stale source.
+   *
+   * **`offer_id` collision semantics (deliberate):** within a single
+   * `MultiSearchService.search()` call, two adapters returning the same
+   * `offer_id` overwrite each other — last write wins. The Reference OTA
+   * tolerates this because offer IDs are opaque to the app and collisions
+   * between distinct suppliers are vanishingly rare in practice. Production
+   * deployments that want stronger guarantees should namespace IDs with
+   * the `adapterSource` prefix at the MultiSearchService boundary.
    */
   cacheOffers(offers: Iterable<SearchOffer & { adapterSource?: string }>): void {
     for (const offer of offers) {
       this.offerCache.set(offer.offer_id, offer);
       if (offer.adapterSource !== undefined) {
         this.offerAdapterSource.set(offer.offer_id, offer.adapterSource);
+      } else {
+        // Clear any stale source tag so the default adapter is used.
+        this.offerAdapterSource.delete(offer.offer_id);
       }
     }
   }
@@ -134,10 +149,11 @@ export class SearchService {
       (a, b) => a.price.total - b.price.total,
     );
 
-    // Cache offers for detail lookup
-    for (const offer of sortedOffers) {
-      this.offerCache.set(offer.offer_id, offer);
-    }
+    // Cache offers for detail lookup. Route through cacheOffers() so the
+    // stale-source clearing logic (see cacheOffers docs) applies here too —
+    // a single-adapter search after a multi-adapter search must not leave
+    // an offerAdapterSource entry behind.
+    this.cacheOffers(sortedOffers);
 
     // Collect unique sources
     const sources = [...new Set(sortedOffers.map((o) => o.source))];
