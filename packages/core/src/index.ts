@@ -47,6 +47,9 @@ export type {
 export type { RetryConfig, IsRetryable } from './retry/index.js';
 export { DEFAULT_RETRY_CONFIG, withRetry, computeDelay } from './retry/index.js';
 
+export { fetchWithRetry } from './http/index.js';
+export type { FetchWithRetryOptions } from './http/index.js';
+
 export type {
   LoopPhase,
   ToolCall,

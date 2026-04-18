@@ -5,9 +5,11 @@
 import { z } from 'zod';
 import { validateConfig } from '../../config.js';
 
-export const TRIPPRO_DEFAULT_SEARCH_URL = 'http://mas.trippro.com/resources/v2/Flights/search';
+// HTTPS by default. To use plain HTTP for local dev/testing, override the
+// URL via TripProConfig.searchUrl / calendarSearchUrl explicitly.
+export const TRIPPRO_DEFAULT_SEARCH_URL = 'https://mas.trippro.com/resources/v2/Flights/search';
 export const TRIPPRO_DEFAULT_CALENDAR_SEARCH_URL =
-  'http://mas.trippro.com/resources/v3/calendarsearch';
+  'https://mas.trippro.com/resources/v3/calendarsearch';
 export const TRIPPRO_DEFAULT_REPRICE_URL =
   'https://map.trippro.com/resources/api/v3/repriceitinerary';
 export const TRIPPRO_DEFAULT_BOOK_URL =

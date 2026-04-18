@@ -3,6 +3,8 @@
  * Uses raw XML templates — no SOAP client library.
  */
 
+import { fetchWithRetry } from '@otaip/core';
+
 export async function soapRequest(
   wsdlUrl: string,
   action: string,
@@ -19,7 +21,7 @@ export async function soapRequest(
   </soap:Body>
 </soap:Envelope>`;
 
-  const response = await fetch(wsdlUrl, {
+  const response = await fetchWithRetry(wsdlUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'text/xml; charset=utf-8',

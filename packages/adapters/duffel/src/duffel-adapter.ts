@@ -20,6 +20,7 @@ import type {
   PriceResponse,
   PriceBreakdown,
 } from '@otaip/core';
+import { fetchWithRetry } from '@otaip/core';
 import Decimal from 'decimal.js';
 
 const DUFFEL_BASE_URL = 'https://api.duffel.com';
@@ -367,7 +368,7 @@ export class DuffelAdapter implements DistributionAdapter {
 
     let response: Response;
     try {
-      response = await fetch(url, {
+      response = await fetchWithRetry(url, {
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,

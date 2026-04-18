@@ -5,6 +5,7 @@
  * Tokens are cached in memory and refreshed automatically before expiry.
  */
 
+import { fetchWithRetry } from '@otaip/core';
 import type { SabreConfig } from './config.js';
 import { getBaseUrl } from './config.js';
 
@@ -40,7 +41,7 @@ export class SabreAuth {
   private async fetchToken(): Promise<string> {
     const url = `${this.baseUrl}/v2/auth/token`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: 'POST',
       headers: {
         Authorization: `Basic ${this.credentials}`,
