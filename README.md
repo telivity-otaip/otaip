@@ -2,7 +2,7 @@
 
 The full airline and hotel booking lifecycle — search, pricing, booking, ticketing, exchange, refund, and BSP/ARC settlement — modeled as typed, testable agents with a pipeline contract system that prevents LLM hallucinations at every step.
 
-**76 agents. 6 distribution adapters. 14 pipeline-contracted agents. 3,022 tests. TypeScript strict.**
+**76 agents. 6 distribution adapters. 14 pipeline-contracted agents. 3,034 tests. TypeScript strict.**
 
 OTAIP agents encode real industry logic: ATPCO fare rules (Categories 1-33), NUC/ROE fare construction with HIP/BHC/CTM checks, BSP HOT file reconciliation, ADM prevention (9 pre-ticketing checks), NDC/EDIFACT normalization, IRROPS rebooking with EU261 and US DOT compliance, void window enforcement, married segment integrity, and payment-to-ticketing state machines with BSP finality rules.
 
@@ -14,7 +14,7 @@ pnpm add @otaip/core @otaip/agents-booking @otaip/connect
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
-[![Tests](https://img.shields.io/badge/tests-3022%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
+[![Tests](https://img.shields.io/badge/tests-3034%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
 
 ---
 
