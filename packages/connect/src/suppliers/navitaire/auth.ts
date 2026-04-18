@@ -6,6 +6,7 @@
  *   - PUT  /api/auth/v1/token       — refresh before expiry
  */
 
+import { fetchWithRetry } from '@otaip/core';
 import type { NavitaireConfig } from './config.js';
 
 interface CachedToken {
@@ -44,7 +45,7 @@ export class NavitaireAuth {
   private async createToken(): Promise<string> {
     const url = `${this.baseUrl}/api/auth/v1/token/user`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -70,7 +71,7 @@ export class NavitaireAuth {
 
     const url = `${this.baseUrl}/api/auth/v1/token`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
