@@ -2,29 +2,48 @@
  * Booking Service — creates bookings via the OTA adapter.
  *
  * Validates the offer exists in the search cache before booking.
+ *
+ * Sprint H multi-adapter: when the offer came from multi-adapter search,
+ * the booking routes to the same adapter that produced it. An offer from
+ * a search-only adapter (no `book()` method) is rejected explicitly rather
+ * than silently routed elsewhere.
  */
 
 import type { MockOtaAdapter } from '../mock-ota-adapter.js';
 import type { SearchService } from './search-service.js';
-import type { BookingResult, PassengerDetail } from '../types.js';
+import type { BookingResult, OtaAdapter, PassengerDetail } from '../types.js';
 
 // ---------------------------------------------------------------------------
 // Service
 // ---------------------------------------------------------------------------
 
 export class BookingService {
-  private readonly adapter: MockOtaAdapter;
+  private readonly defaultAdapter: MockOtaAdapter;
   private readonly searchService: SearchService;
+  /**
+   * Per-source booking adapters, keyed by the same `adapterSource` names
+   * used by MultiSearchService. Only adapters that implement `book()` should
+   * appear here; search-only adapters are intentionally omitted so bookings
+   * against their offers fail loudly.
+   */
+  private readonly bookingAdapters: Map<string, OtaAdapter>;
 
-  constructor(adapter: MockOtaAdapter, searchService: SearchService) {
-    this.adapter = adapter;
+  constructor(
+    defaultAdapter: MockOtaAdapter,
+    searchService: SearchService,
+    bookingAdapters?: Map<string, OtaAdapter>,
+  ) {
+    this.defaultAdapter = defaultAdapter;
     this.searchService = searchService;
+    this.bookingAdapters = bookingAdapters ?? new Map();
   }
 
   /**
    * Create a booking for a previously searched offer.
    *
-   * @throws Error if the offer is not found in the search cache.
+   * @throws OfferNotFoundError if the offer is not in the search cache.
+   * @throws AdapterNotBookableError if the offer came from a multi-adapter
+   *   source that does not implement booking.
    */
   async createBooking(
     offerId: string,
@@ -32,25 +51,33 @@ export class BookingService {
     contactEmail: string,
     contactPhone: string,
   ): Promise<BookingResult> {
-    // Verify offer exists in search cache
     const offer = this.searchService.getOffer(offerId);
     if (!offer) {
       throw new OfferNotFoundError(offerId);
     }
 
-    const result = await this.adapter.book({
+    // Route to the adapter that produced this offer. Single-adapter search
+    // leaves `adapterSource` unset — fall through to the default adapter.
+    const adapterSource = this.searchService.getOfferAdapterSource(offerId);
+    const adapter = this.resolveAdapter(adapterSource);
+
+    const result = await adapter.book({
       offerId,
       passengers,
       contactEmail,
       contactPhone,
     });
 
-    // Update the booking with actual price from the offer
-    this.adapter.updateBookingPrice(
-      result.bookingReference,
-      offer.price.total.toFixed(2),
-      offer.price.currency,
-    );
+    // Update the booking with the actual price from the offer. The
+    // price-update API is MockOtaAdapter-specific; the multi-adapter routing
+    // path reaches it only when the resolved adapter is a MockOtaAdapter.
+    if (isMockOtaAdapter(adapter)) {
+      adapter.updateBookingPrice(
+        result.bookingReference,
+        offer.price.total.toFixed(2),
+        offer.price.currency,
+      );
+    }
 
     return {
       ...result,
@@ -58,6 +85,21 @@ export class BookingService {
       currency: offer.price.currency,
     };
   }
+
+  private resolveAdapter(adapterSource: string | undefined): OtaAdapter {
+    if (adapterSource === undefined) {
+      return this.defaultAdapter;
+    }
+    const booking = this.bookingAdapters.get(adapterSource);
+    if (!booking) {
+      throw new AdapterNotBookableError(adapterSource);
+    }
+    return booking;
+  }
+}
+
+function isMockOtaAdapter(adapter: OtaAdapter): adapter is MockOtaAdapter {
+  return typeof (adapter as Partial<MockOtaAdapter>).updateBookingPrice === 'function';
 }
 
 // ---------------------------------------------------------------------------
@@ -68,5 +110,16 @@ export class OfferNotFoundError extends Error {
   constructor(offerId: string) {
     super(`Offer not found: ${offerId}. Search for flights first.`);
     this.name = 'OfferNotFoundError';
+  }
+}
+
+export class AdapterNotBookableError extends Error {
+  readonly adapterSource: string;
+  constructor(adapterSource: string) {
+    super(
+      `Adapter '${adapterSource}' does not support booking. The offer was produced by a search-only source; booking must go through an adapter that implements book().`,
+    );
+    this.name = 'AdapterNotBookableError';
+    this.adapterSource = adapterSource;
   }
 }

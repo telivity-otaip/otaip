@@ -15,6 +15,13 @@ import type {
 import { MockDuffelAdapter } from '@otaip/adapter-duffel';
 import { buildApp } from '../server.js';
 import { MultiSearchService } from '../services/multi-search-service.js';
+import type {
+  BookingRequest,
+  BookingResult,
+  CancelResult,
+  OtaAdapter,
+  PassengerDetail,
+} from '../types.js';
 
 let app: FastifyInstance;
 const mockAdapter = new MockDuffelAdapter();
@@ -433,5 +440,170 @@ describe('POST /api/search?multi=true — Sprint H bugfixes', () => {
     for (const adapter of [adapterA, adapterB]) {
       expect(adapter.lastRequest!.segments).toHaveLength(1);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Sprint H adapter-aware booking routing — Codex follow-up to #71:
+//   After a multi-search, bookings must route back to the adapter that
+//   produced the offer. Offers from a search-only adapter (no `book()`)
+//   must be rejected with a clear error, not silently routed elsewhere.
+// ---------------------------------------------------------------------------
+
+interface RecordingOtaAdapter extends RecordingAdapter {
+  lastBookRequest: BookingRequest | null;
+  book(request: BookingRequest): Promise<BookingResult>;
+  getBooking(reference: string): Promise<BookingResult | null>;
+  cancelBooking(reference: string): Promise<CancelResult>;
+}
+
+function createRecordingOtaAdapter(
+  name: string,
+  offers: SearchOffer[],
+): RecordingOtaAdapter {
+  let counter = 0;
+  const stub: RecordingOtaAdapter = {
+    name,
+    lastRequest: null,
+    lastBookRequest: null,
+    async search(request: SearchRequest): Promise<SearchResponse> {
+      stub.lastRequest = request;
+      return { offers, truncated: false };
+    },
+    async isAvailable(): Promise<boolean> {
+      return true;
+    },
+    async book(request: BookingRequest): Promise<BookingResult> {
+      stub.lastBookRequest = request;
+      counter += 1;
+      return {
+        bookingReference: `${name.toUpperCase()}-${counter}`,
+        status: 'confirmed',
+        offerId: request.offerId,
+        passengers: request.passengers,
+        contactEmail: request.contactEmail,
+        contactPhone: request.contactPhone,
+        totalAmount: '0.00',
+        currency: 'USD',
+        createdAt: new Date().toISOString(),
+      };
+    },
+    async getBooking(): Promise<BookingResult | null> {
+      return null;
+    },
+    async cancelBooking(): Promise<CancelResult> {
+      return { success: false, message: 'not implemented', bookingReference: '' };
+    },
+  };
+  return stub;
+}
+
+const SAMPLE_PASSENGER: PassengerDetail = {
+  title: 'mr',
+  firstName: 'Test',
+  lastName: 'Passenger',
+  dateOfBirth: '1985-04-12',
+  gender: 'male',
+};
+
+describe('POST /api/book after multi-search — adapter-aware routing', () => {
+  let bookApp: FastifyInstance;
+  let adapterA: RecordingOtaAdapter;
+  let adapterB: RecordingAdapter; // search-only — no book()
+  let adapterC: RecordingOtaAdapter;
+  let defaultAdapter: RecordingOtaAdapter; // injected as single-path fallback
+
+  beforeAll(async () => {
+    adapterA = createRecordingOtaAdapter('source-a', [
+      makeOffer('offer-a-1', 250, 'source-a'),
+    ]);
+    adapterB = createRecordingAdapter('source-b', [
+      makeOffer('offer-b-1', 175, 'source-b'),
+    ]);
+    adapterC = createRecordingOtaAdapter('source-c', [
+      makeOffer('offer-c-1', 300, 'source-c'),
+    ]);
+    defaultAdapter = createRecordingOtaAdapter('default', []);
+
+    const multiSearch = new MultiSearchService({
+      adapters: new Map<string, DistributionAdapter>([
+        ['source-a', adapterA],
+        ['source-b', adapterB],
+        ['source-c', adapterC],
+      ]),
+    });
+    // Only source-a and source-c implement book(); source-b is search-only.
+    const bookingAdapters = new Map<string, OtaAdapter>([
+      ['source-a', adapterA],
+      ['source-c', adapterC],
+    ]);
+    bookApp = await buildApp({
+      adapter: defaultAdapter,
+      initResolver: false,
+      multiSearch,
+      bookingAdapters,
+    });
+    await bookApp.ready();
+  });
+
+  afterAll(async () => {
+    await bookApp.close();
+  });
+
+  it('routes booking to the adapter that produced the offer (not the default)', async () => {
+    await bookApp.inject({
+      method: 'POST',
+      url: '/api/search?multi=true',
+      payload: { origin: 'JFK', destination: 'LAX', date: '2026-07-01', passengers: 1 },
+    });
+    const bookRes = await bookApp.inject({
+      method: 'POST',
+      url: '/api/book',
+      payload: {
+        offerId: 'offer-c-1',
+        passengers: [SAMPLE_PASSENGER],
+        email: 'buyer@example.com',
+        phone: '+15551234567',
+      },
+    });
+    expect(bookRes.statusCode).toBe(200);
+    // Adapter C must have received book(); A and default must not.
+    expect(adapterC.lastBookRequest).not.toBeNull();
+    expect(adapterC.lastBookRequest!.offerId).toBe('offer-c-1');
+    expect(adapterA.lastBookRequest).toBeNull();
+    expect(defaultAdapter.lastBookRequest).toBeNull();
+    // Booking reference should come from adapter C, not the default.
+    expect(bookRes.json().bookingReference).toMatch(/^SOURCE-C-/);
+  });
+
+  it('rejects booking an offer from a non-bookable adapter with 409', async () => {
+    await bookApp.inject({
+      method: 'POST',
+      url: '/api/search?multi=true',
+      payload: { origin: 'JFK', destination: 'LAX', date: '2026-07-01', passengers: 1 },
+    });
+    // Reset so we can prove no booking was routed anywhere.
+    adapterA.lastBookRequest = null;
+    adapterC.lastBookRequest = null;
+    defaultAdapter.lastBookRequest = null;
+
+    const bookRes = await bookApp.inject({
+      method: 'POST',
+      url: '/api/book',
+      payload: {
+        offerId: 'offer-b-1', // from search-only source-b
+        passengers: [SAMPLE_PASSENGER],
+        email: 'buyer@example.com',
+        phone: '+15551234567',
+      },
+    });
+    expect(bookRes.statusCode).toBe(409);
+    const body = bookRes.json();
+    expect(body.error).toMatch(/source-b/);
+    expect(body.adapterSource).toBe('source-b');
+    // No adapter should have been called.
+    expect(adapterA.lastBookRequest).toBeNull();
+    expect(adapterC.lastBookRequest).toBeNull();
+    expect(defaultAdapter.lastBookRequest).toBeNull();
   });
 });

@@ -38,6 +38,12 @@ export interface SearchResult {
 export class SearchService {
   private readonly adapter: DistributionAdapter;
   private readonly offerCache = new Map<string, SearchOffer>();
+  /**
+   * Tracks which adapter produced each cached offer, keyed by `offer_id`.
+   * Only populated for offers returned by multi-adapter search; single-adapter
+   * search leaves it empty so the default adapter is used for booking.
+   */
+  private readonly offerAdapterSource = new Map<string, string>();
   private airportResolver: AirportCodeResolver | null = null;
 
   constructor(adapter: DistributionAdapter) {
@@ -61,15 +67,33 @@ export class SearchService {
   }
 
   /**
+   * Get the adapter source that produced a cached offer, if known.
+   *
+   * Returns `undefined` for offers from the single-adapter path — callers
+   * should then fall back to the default adapter. Set for offers returned
+   * by the multi-adapter search path (which tags them with `adapterSource`).
+   */
+  getOfferAdapterSource(offerId: string): string | undefined {
+    return this.offerAdapterSource.get(offerId);
+  }
+
+  /**
    * Cache offers returned from any search path (single- or multi-adapter).
    *
    * Used by the multi-adapter search route so follow-up lookups
    * (`GET /api/offers/:id`, BookingService.createBooking) find the offer
    * rather than 404ing. Idempotent — re-caching the same ID overwrites.
+   *
+   * When an offer carries an `adapterSource` tag (from MultiSearchService),
+   * the source is recorded so BookingService can route the booking back
+   * to the same adapter.
    */
-  cacheOffers(offers: Iterable<SearchOffer>): void {
+  cacheOffers(offers: Iterable<SearchOffer & { adapterSource?: string }>): void {
     for (const offer of offers) {
       this.offerCache.set(offer.offer_id, offer);
+      if (offer.adapterSource !== undefined) {
+        this.offerAdapterSource.set(offer.offer_id, offer.adapterSource);
+      }
     }
   }
 

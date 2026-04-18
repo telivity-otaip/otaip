@@ -4,7 +4,10 @@
 
 import type { FastifyInstance } from 'fastify';
 import type { BookingService } from '../services/booking-service.js';
-import { OfferNotFoundError } from '../services/booking-service.js';
+import {
+  AdapterNotBookableError,
+  OfferNotFoundError,
+} from '../services/booking-service.js';
 import type { PassengerDetail } from '../types.js';
 
 // ---------------------------------------------------------------------------
@@ -92,6 +95,15 @@ export function registerBookRoute(
     } catch (err) {
       if (err instanceof OfferNotFoundError) {
         return reply.status(404).send({ error: err.message });
+      }
+
+      if (err instanceof AdapterNotBookableError) {
+        // 409 Conflict: the request is syntactically valid but the offer's
+        // source channel cannot fulfill it. Surfaces the adapter name so the
+        // client can pick a different offer.
+        return reply
+          .status(409)
+          .send({ error: err.message, adapterSource: err.adapterSource });
       }
 
       request.log.error({ err }, 'Booking failed');

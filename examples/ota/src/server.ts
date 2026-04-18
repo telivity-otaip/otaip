@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import type { DistributionAdapter } from '@otaip/core';
 import { createAdapter, createMultiAdapter } from './config/adapters.js';
 import type { OtaAdapter } from './types.js';
 import type { MockOtaAdapter } from './mock-ota-adapter.js';
@@ -32,6 +33,22 @@ import { registerManageRoutes } from './routes/manage.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+/**
+ * Extract the subset of multi-search adapters that also implement
+ * `book()` — only those can fulfill a post-search booking.
+ */
+function filterBookingAdapters(
+  adapters: Map<string, DistributionAdapter>,
+): Map<string, OtaAdapter> {
+  const bookable = new Map<string, OtaAdapter>();
+  for (const [name, adapter] of adapters) {
+    if (typeof (adapter as Partial<OtaAdapter>).book === 'function') {
+      bookable.set(name, adapter as OtaAdapter);
+    }
+  }
+  return bookable;
+}
+
 // ---------------------------------------------------------------------------
 // App factory (exported for testing)
 // ---------------------------------------------------------------------------
@@ -48,15 +65,30 @@ export interface BuildAppOptions {
    * branch stays unreachable and single-adapter search is used exclusively.
    */
   multiSearch?: MultiSearchService;
+  /**
+   * Per-source booking adapters. When a multi-search offer is booked, the
+   * registry maps its `adapterSource` to the adapter that should handle
+   * booking. Adapters that do not implement `book()` are omitted so that
+   * bookings against their offers fail with a clear 409 rather than being
+   * silently routed to an unrelated adapter.
+   */
+  bookingAdapters?: Map<string, OtaAdapter>;
 }
 
 export async function buildApp(options: BuildAppOptions = {}) {
   const adapter = options.adapter ?? createAdapter();
+  const multiAdapters = options.multiSearch ? undefined : process.env['ADAPTERS']
+    ? createMultiAdapter()
+    : undefined;
   const multiSearch =
     options.multiSearch ??
-    (process.env['ADAPTERS']
-      ? new MultiSearchService({ adapters: createMultiAdapter() })
-      : undefined);
+    (multiAdapters ? new MultiSearchService({ adapters: multiAdapters }) : undefined);
+  // Booking registry: only adapters that implement `book()` qualify. When
+  // the user injects `bookingAdapters` we trust them; otherwise we derive
+  // the registry from the same adapter set the multi-search fans out to.
+  const bookingAdapters: Map<string, OtaAdapter> =
+    options.bookingAdapters ??
+    (multiAdapters ? filterBookingAdapters(multiAdapters) : new Map());
 
   const app = Fastify({ logger: true });
 
@@ -69,7 +101,11 @@ export async function buildApp(options: BuildAppOptions = {}) {
   // Build services
   const searchService = new SearchService(adapter);
   const offerService = new OfferService(searchService);
-  const bookingService = new BookingService(adapter as MockOtaAdapter, searchService);
+  const bookingService = new BookingService(
+    adapter as MockOtaAdapter,
+    searchService,
+    bookingAdapters,
+  );
   const paymentService = new PaymentService(adapter as MockOtaAdapter);
   const ticketingService = new TicketingService(adapter as MockOtaAdapter);
   const manageService = new ManageService(adapter as MockOtaAdapter);
