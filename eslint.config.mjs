@@ -45,6 +45,7 @@ export default defineConfig([
                 "./packages/agents-platform/tsconfig.json",
                 "./packages/adapters/duffel/tsconfig.json",
                 "./packages/connect/tsconfig.json",
+                "./packages/cli/tsconfig.json",
             ],
         },
     },
@@ -63,5 +64,11 @@ export default defineConfig([
         "no-console": ["warn", {
             allow: ["warn", "error"],
         }],
+    },
+}, {
+    // CLI is the one place where stdout output IS the contract.
+    files: ["packages/cli/**/*.ts"],
+    rules: {
+        "no-console": "off",
     },
 }]);
