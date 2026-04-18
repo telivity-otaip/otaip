@@ -2,6 +2,18 @@
  * GDS/NDC Router Engine
  *
  * Routes booking requests to the correct distribution channel.
+ *
+ * Routing is PER-TRANSACTION, not per-airline. The same carrier can route
+ * differently for shopping vs booking vs ticketing vs servicing vs group
+ * vs corporate transactions. The built-in carrier capability map covers
+ * the common shopping/booking flows; for any other transaction type the
+ * caller must supply `capability_overrides` or the engine returns
+ * `domain_input_required` for that segment.
+ *
+ * // DOMAIN_QUESTION: per-carrier capability matrix per transaction type.
+ * // The previous implementation treated `carrier → channel_priority` as
+ * // unconditional, which was a CLAUDE.md violation: NDC carriers still
+ * // require GDS for groups, corporate fares, and post-booking servicing.
  */
 
 import { createRequire } from 'node:module';
@@ -16,6 +28,7 @@ import type {
   GdsPnrFormat,
   NdcOrderFormat,
   RoutingSegment,
+  TransactionType,
 } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -30,18 +43,41 @@ interface CarrierData {
 const require = createRequire(import.meta.url);
 const carrierData = require('./data/carrier-channels.json') as CarrierData;
 
+/** Transaction types whose channel capability is covered by the built-in carrier map. */
+const BUILTIN_TRANSACTION_TYPES: ReadonlySet<TransactionType> = new Set<TransactionType>([
+  'shopping',
+  'booking',
+]);
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getCarrierConfig(iata: string): CarrierChannelConfig | undefined {
-  return carrierData.carriers[iata];
+function getCarrierConfig(
+  iata: string,
+  transactionType: TransactionType,
+  overrides: GdsNdcRouterInput['capability_overrides'],
+): CarrierChannelConfig | undefined {
+  // Caller-supplied per-transaction override wins.
+  const carrierOverrides = overrides?.[iata];
+  if (carrierOverrides && carrierOverrides[transactionType]) {
+    return carrierOverrides[transactionType];
+  }
+  // Built-in carrier defaults apply ONLY to shopping/booking transactions.
+  if (BUILTIN_TRANSACTION_TYPES.has(transactionType)) {
+    return carrierData.carriers[iata];
+  }
+  return undefined;
 }
 
-function resolveRoutingCarrier(segment: RoutingSegment): { carrier: string; codeshare: boolean } {
+function resolveRoutingCarrier(
+  segment: RoutingSegment,
+  transactionType: TransactionType,
+  overrides: GdsNdcRouterInput['capability_overrides'],
+): { carrier: string; codeshare: boolean } {
   // Default strategy: use operating carrier if available
   if (segment.operating_carrier && segment.operating_carrier !== segment.marketing_carrier) {
-    const opConfig = getCarrierConfig(segment.operating_carrier);
+    const opConfig = getCarrierConfig(segment.operating_carrier, transactionType, overrides);
     if (opConfig) {
       return { carrier: segment.operating_carrier, codeshare: true };
     }
@@ -69,20 +105,31 @@ export function routeSegments(input: GdsNdcRouterInput): GdsNdcRouterOutput {
   const routings: ChannelRouting[] = [];
 
   for (const segment of input.segments) {
-    const { carrier, codeshare } = resolveRoutingCarrier(segment);
-    const config = getCarrierConfig(carrier);
+    const { carrier, codeshare } = resolveRoutingCarrier(
+      segment,
+      input.transaction_type,
+      input.capability_overrides,
+    );
+    const config = getCarrierConfig(carrier, input.transaction_type, input.capability_overrides);
 
     if (!config) {
-      // Unknown carrier — default to GDS via AMADEUS
+      // Two cases:
+      //  1. Transaction type beyond the built-in defaults and no override
+      //     supplied → we cannot decide a channel. Return DOMAIN_INPUT_REQUIRED.
+      //  2. Carrier truly unknown for shopping/booking → also DOMAIN_INPUT_REQUIRED.
       routings.push({
-        primary_channel: 'GDS',
-        gds_system: 'AMADEUS',
+        primary_channel: 'GDS', // placeholder; ignore when domain_input_required=true
+        gds_system: null,
         ndc_version: null,
         ndc_provider_id: null,
         fallbacks: [],
         routed_carrier: carrier,
         codeshare_applied: codeshare,
         booking_format: 'GDS_PNR',
+        domain_input_required: true,
+        missing_inputs: [
+          `capability_overrides[${carrier}].${input.transaction_type}`,
+        ],
       });
       continue;
     }
@@ -131,10 +178,14 @@ export function routeSegments(input: GdsNdcRouterInput): GdsNdcRouterOutput {
     });
   }
 
-  // Determine unified channel
-  const primaryChannels = new Set(routings.map((r) => r.primary_channel));
-  const unifiedChannel = primaryChannels.size === 1;
-  const recommendedChannel = unifiedChannel ? (routings[0]?.primary_channel ?? null) : null;
+  // Determine unified channel — only over resolvable segments.
+  const resolvedRoutings = routings.filter((r) => !r.domain_input_required);
+  const primaryChannels = new Set(resolvedRoutings.map((r) => r.primary_channel));
+  const unifiedChannel =
+    resolvedRoutings.length === routings.length && primaryChannels.size === 1;
+  const recommendedChannel = unifiedChannel
+    ? (resolvedRoutings[0]?.primary_channel ?? null)
+    : null;
 
   // Build format stubs
   const gdsFormat = buildGdsFormatStub(input.segments, routings);
@@ -157,7 +208,9 @@ function buildGdsFormatStub(
   segments: RoutingSegment[],
   routings: ChannelRouting[],
 ): GdsPnrFormat | null {
-  const gdsRoutings = routings.filter((r) => r.primary_channel === 'GDS');
+  const gdsRoutings = routings.filter(
+    (r) => r.primary_channel === 'GDS' && !r.domain_input_required,
+  );
   if (gdsRoutings.length === 0) return null;
 
   const gds = gdsRoutings[0]!.gds_system ?? 'AMADEUS';
@@ -167,7 +220,7 @@ function buildGdsFormatStub(
     gds,
     record_locator: null,
     segments: segments
-      .filter((_, i) => routings[i]?.primary_channel === 'GDS')
+      .filter((_, i) => routings[i]?.primary_channel === 'GDS' && !routings[i]?.domain_input_required)
       .map((seg) => ({
         carrier: seg.marketing_carrier,
         flight_number: seg.flight_number ?? '',
@@ -184,7 +237,9 @@ function buildNdcFormatStub(
   segments: RoutingSegment[],
   routings: ChannelRouting[],
 ): NdcOrderFormat | null {
-  const ndcRoutings = routings.filter((r) => r.primary_channel === 'NDC');
+  const ndcRoutings = routings.filter(
+    (r) => r.primary_channel === 'NDC' && !r.domain_input_required,
+  );
   if (ndcRoutings.length === 0) return null;
 
   const version = ndcRoutings[0]!.ndc_version ?? '21.3';
@@ -194,7 +249,7 @@ function buildNdcFormatStub(
     ndc_version: version,
     order_id: null,
     offer_items: segments
-      .filter((_, i) => routings[i]?.primary_channel === 'NDC')
+      .filter((_, i) => routings[i]?.primary_channel === 'NDC' && !routings[i]?.domain_input_required)
       .map((seg) => ({
         carrier: seg.marketing_carrier,
         origin: seg.origin,

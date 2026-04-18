@@ -24,6 +24,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'DL', origin: 'JFK', destination: 'LAX' }],
+          transaction_type: 'shopping',
           include_fallbacks: true,
         },
       });
@@ -38,6 +39,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'UA', origin: 'SFO', destination: 'LHR' }],
+          transaction_type: 'shopping',
           include_fallbacks: true,
         },
       });
@@ -50,6 +52,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'EK', origin: 'DXB', destination: 'LHR' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -62,6 +65,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'AS', origin: 'SEA', destination: 'LAX' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -75,6 +79,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
+          transaction_type: 'shopping',
           include_fallbacks: true,
         },
       });
@@ -90,6 +95,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'LH', origin: 'FRA', destination: 'JFK' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -103,6 +109,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'AA', origin: 'DFW', destination: 'LHR' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -115,6 +122,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'SQ', origin: 'SIN', destination: 'LHR' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -128,6 +136,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'WN', origin: 'LAX', destination: 'LAS' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -140,6 +149,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'FR', origin: 'STN', destination: 'DUB' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -151,6 +161,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'WN', origin: 'LAX', destination: 'LAS' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -172,6 +183,7 @@ describe('GDS/NDC Router', () => {
               destination: 'SYD',
             },
           ],
+          transaction_type: 'shopping',
           include_fallbacks: true,
         },
       });
@@ -193,6 +205,7 @@ describe('GDS/NDC Router', () => {
               destination: 'JFK',
             },
           ],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -212,6 +225,7 @@ describe('GDS/NDC Router', () => {
               destination: 'SYD',
             },
           ],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -227,6 +241,7 @@ describe('GDS/NDC Router', () => {
         data: {
           segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
           preferred_channel: 'GDS',
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -239,6 +254,7 @@ describe('GDS/NDC Router', () => {
         data: {
           segments: [{ marketing_carrier: 'DL', origin: 'JFK', destination: 'LAX' }],
           preferred_gds: 'SABRE',
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -252,6 +268,7 @@ describe('GDS/NDC Router', () => {
         data: {
           segments: [{ marketing_carrier: 'WN', origin: 'LAX', destination: 'LAS' }],
           preferred_channel: 'GDS',
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -266,6 +283,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
+          transaction_type: 'shopping',
           include_fallbacks: true,
         },
       });
@@ -278,6 +296,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -294,6 +313,7 @@ describe('GDS/NDC Router', () => {
             { marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' },
             { marketing_carrier: 'BA', origin: 'JFK', destination: 'LHR' },
           ],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -309,6 +329,7 @@ describe('GDS/NDC Router', () => {
             { marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' },
             { marketing_carrier: 'WN', origin: 'JFK', destination: 'LAX' },
           ],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -324,6 +345,7 @@ describe('GDS/NDC Router', () => {
             { marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' },
             { marketing_carrier: 'DL', origin: 'JFK', destination: 'LAX' },
           ],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -340,6 +362,7 @@ describe('GDS/NDC Router', () => {
           segments: [
             { marketing_carrier: 'DL', origin: 'JFK', destination: 'LAX', flight_number: '100' },
           ],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -353,6 +376,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -366,6 +390,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -375,23 +400,165 @@ describe('GDS/NDC Router', () => {
   });
 
   describe('Unknown carrier', () => {
-    it('defaults to GDS via AMADEUS for unknown carrier', async () => {
+    it('returns DOMAIN_INPUT_REQUIRED for unknown carrier (no invented default)', async () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'ZZ', origin: 'LHR', destination: 'JFK' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
 
+      expect(result.data.routings[0]!.domain_input_required).toBe(true);
+      expect(result.data.routings[0]!.missing_inputs).toBeDefined();
+      expect(result.warnings!.some((w) => w.includes('DOMAIN_INPUT_REQUIRED'))).toBe(true);
+    });
+
+    it('uses caller-supplied capability_overrides for unknown carrier', async () => {
+      const result = await agent.execute({
+        data: {
+          segments: [{ marketing_carrier: 'ZZ', origin: 'LHR', destination: 'JFK' }],
+          transaction_type: 'shopping',
+          capability_overrides: {
+            ZZ: {
+              shopping: {
+                name: 'Unknown Carrier',
+                channels: ['GDS'],
+                channel_priority: ['GDS'],
+                ndc_version: null,
+                gds_preference: 'SABRE',
+                ndc_capable: false,
+                ndc_provider_id: null,
+              },
+            },
+          },
+          include_fallbacks: false,
+        },
+      });
+      expect(result.data.routings[0]!.domain_input_required).toBeUndefined();
       expect(result.data.routings[0]!.primary_channel).toBe('GDS');
-      expect(result.data.routings[0]!.gds_system).toBe('AMADEUS');
+      expect(result.data.routings[0]!.gds_system).toBe('SABRE');
+    });
+  });
+
+  describe('Per-transaction routing (CLAUDE.md compliance)', () => {
+    it('returns DOMAIN_INPUT_REQUIRED for group transactions on NDC carrier', async () => {
+      // Built-in carrier defaults cover shopping/booking only. Groups
+      // routinely need GDS for NDC carriers.
+      const result = await agent.execute({
+        data: {
+          segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
+          transaction_type: 'group',
+          include_fallbacks: false,
+        },
+      });
+      expect(result.data.routings[0]!.domain_input_required).toBe(true);
+      expect(result.data.routings[0]!.missing_inputs![0]).toContain('group');
+    });
+
+    it('routes BA group transaction via GDS when override supplied', async () => {
+      const result = await agent.execute({
+        data: {
+          segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
+          transaction_type: 'group',
+          capability_overrides: {
+            BA: {
+              group: {
+                name: 'British Airways',
+                channels: ['GDS'],
+                channel_priority: ['GDS'],
+                ndc_version: null,
+                gds_preference: 'AMADEUS',
+                ndc_capable: false,
+                ndc_provider_id: null,
+              },
+            },
+          },
+          include_fallbacks: false,
+        },
+      });
+      expect(result.data.routings[0]!.domain_input_required).toBeUndefined();
+      expect(result.data.routings[0]!.primary_channel).toBe('GDS');
+    });
+
+    it('returns DOMAIN_INPUT_REQUIRED for servicing of an NDC carrier without override', async () => {
+      const result = await agent.execute({
+        data: {
+          segments: [{ marketing_carrier: 'LH', origin: 'FRA', destination: 'JFK' }],
+          transaction_type: 'servicing',
+          include_fallbacks: false,
+        },
+      });
+      expect(result.data.routings[0]!.domain_input_required).toBe(true);
+    });
+
+    it('returns DOMAIN_INPUT_REQUIRED for corporate transactions without override', async () => {
+      const result = await agent.execute({
+        data: {
+          segments: [{ marketing_carrier: 'AA', origin: 'DFW', destination: 'LHR' }],
+          transaction_type: 'corporate',
+          include_fallbacks: false,
+        },
+      });
+      expect(result.data.routings[0]!.domain_input_required).toBe(true);
+    });
+
+    it('caller override beats built-in default for shopping', async () => {
+      const result = await agent.execute({
+        data: {
+          segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
+          transaction_type: 'shopping',
+          capability_overrides: {
+            BA: {
+              shopping: {
+                name: 'British Airways',
+                channels: ['GDS'],
+                channel_priority: ['GDS'],
+                ndc_version: null,
+                gds_preference: 'SABRE',
+                ndc_capable: false,
+                ndc_provider_id: null,
+              },
+            },
+          },
+          include_fallbacks: false,
+        },
+      });
+      // Built-in default is NDC for BA; override forces GDS/SABRE.
+      expect(result.data.routings[0]!.primary_channel).toBe('GDS');
+      expect(result.data.routings[0]!.gds_system).toBe('SABRE');
     });
   });
 
   describe('Input validation', () => {
     it('rejects empty segments', async () => {
       await expect(
-        agent.execute({ data: { segments: [], include_fallbacks: false } }),
+        agent.execute({
+          data: { segments: [], transaction_type: 'shopping', include_fallbacks: false },
+        }),
+      ).rejects.toThrow('Invalid input');
+    });
+
+    it('rejects missing transaction_type', async () => {
+      await expect(
+        agent.execute({
+          data: {
+            segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
+            include_fallbacks: false,
+          } as Parameters<typeof agent.execute>[0]['data'],
+        }),
+      ).rejects.toThrow('Invalid input');
+    });
+
+    it('rejects invalid transaction_type', async () => {
+      await expect(
+        agent.execute({
+          data: {
+            segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
+            transaction_type: 'unknown' as 'shopping',
+            include_fallbacks: false,
+          },
+        }),
       ).rejects.toThrow('Invalid input');
     });
 
@@ -400,7 +567,8 @@ describe('GDS/NDC Router', () => {
         agent.execute({
           data: {
             segments: [{ marketing_carrier: 'TOOLONG', origin: 'JFK', destination: 'LHR' }],
-            include_fallbacks: false,
+            transaction_type: 'shopping',
+          include_fallbacks: false,
           },
         }),
       ).rejects.toThrow('Invalid input');
@@ -412,7 +580,8 @@ describe('GDS/NDC Router', () => {
           data: {
             segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
             preferred_channel: 'INVALID' as 'GDS',
-            include_fallbacks: false,
+            transaction_type: 'shopping',
+          include_fallbacks: false,
           },
         }),
       ).rejects.toThrow('Invalid input');
@@ -423,7 +592,8 @@ describe('GDS/NDC Router', () => {
         agent.execute({
           data: {
             segments: [{ marketing_carrier: 'BA', origin: '1', destination: 'JFK' }],
-            include_fallbacks: false,
+            transaction_type: 'shopping',
+          include_fallbacks: false,
           },
         }),
       ).rejects.toThrow('Invalid input');
@@ -446,6 +616,7 @@ describe('GDS/NDC Router', () => {
       const result = await agent.execute({
         data: {
           segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
+          transaction_type: 'shopping',
           include_fallbacks: false,
         },
       });
@@ -458,7 +629,8 @@ describe('GDS/NDC Router', () => {
         uninit.execute({
           data: {
             segments: [{ marketing_carrier: 'BA', origin: 'LHR', destination: 'JFK' }],
-            include_fallbacks: false,
+            transaction_type: 'shopping',
+          include_fallbacks: false,
           },
         }),
       ).rejects.toThrow('not been initialized');
