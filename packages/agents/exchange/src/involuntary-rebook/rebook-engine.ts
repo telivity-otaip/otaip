@@ -193,6 +193,10 @@ function assessRegulatory(
         extraordinaryCircumstances: eu.extraordinary_circumstances!,
         flightCancelled,
         ...(flightCancelled ? { noticeDaysBeforeDeparture: eu.notice_days_before_departure } : {}),
+        ...(eu.rerouting_offered !== undefined ? { reroutingOffered: eu.rerouting_offered } : {}),
+        ...(eu.rerouting_arrival_lateness_hours !== undefined
+          ? { reroutingArrivalLatenessHours: eu.rerouting_arrival_lateness_hours }
+          : {}),
       });
       flags.push({
         framework: 'EU261',

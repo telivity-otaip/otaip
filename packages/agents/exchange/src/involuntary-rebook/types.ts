@@ -175,6 +175,10 @@ export interface InvoluntaryRebookInput {
     extraordinary_circumstances?: boolean;
     /** For cancellations: how many days before departure was the passenger notified? */
     notice_days_before_departure?: number;
+    /** Article 7(2): carrier offered rerouting whose arrival is within band threshold. */
+    rerouting_offered?: boolean;
+    /** Hours by which rerouted arrival exceeds original scheduled arrival. */
+    rerouting_arrival_lateness_hours?: number;
   };
 }
 

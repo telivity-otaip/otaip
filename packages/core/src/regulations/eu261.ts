@@ -51,6 +51,15 @@ export interface EU261Input {
   flightCancelled: boolean;
   /** For cancellations: how many days before scheduled departure was the passenger notified? */
   noticeDaysBeforeDeparture?: number;
+  /**
+   * Article 7(2) rerouting reduction inputs. When the carrier offers
+   * rerouting whose arrival exceeds the originally scheduled arrival by
+   * no more than the band threshold (2h ≤1500km, 3h 1500-3500km,
+   * 4h >3500km), compensation may be reduced by 50%.
+   */
+  reroutingOffered?: boolean;
+  /** Hours by which the rerouted arrival exceeds the original scheduled arrival. */
+  reroutingArrivalLatenessHours?: number;
 }
 
 export interface EU261Result {
@@ -109,13 +118,20 @@ export function applyEU261(input: EU261Input): EU261Result {
         reason: `Cancellation notified ${notice} days before departure — no compensation owed (Article 5(1)(c) safe harbour ≥${EU261_CANCELLATION_NOTICE_DAYS} days).`,
       };
     }
+    let amount = new Decimal(band.compensationEur);
+    const reduction = computeReroutingReduction(input, band);
+    let reasonExtra = '';
+    if (reduction > 0) {
+      amount = amount.mul(100 - reduction).div(100);
+      reasonExtra = ` Reduced by ${reduction}% under Article 7(2) (rerouting offered within band threshold).`;
+    }
     return {
       eligible: true,
-      compensationEur: new Decimal(band.compensationEur).toFixed(2),
-      reductionPercent: 0,
+      compensationEur: amount.toFixed(2),
+      reductionPercent: reduction,
       careDelayHours: band.careDelayHours,
       refundChoiceAvailable: true,
-      reason: `Cancellation notified ${notice} days before departure — €${band.compensationEur} per passenger (distance band ≤${band.maxDistanceKm}km).`,
+      reason: `Cancellation notified ${notice} days before departure — €${band.compensationEur} per passenger (distance band ≤${band.maxDistanceKm}km).${reasonExtra}`,
     };
   }
 
@@ -131,20 +147,24 @@ export function applyEU261(input: EU261Input): EU261Result {
     };
   }
 
+  return buildDelayResult(input, band);
+}
+
+/**
+ * Build the eligible delay/cancellation compensation result, applying
+ * Article 7(2) rerouting reduction when applicable.
+ */
+function buildDelayResult(
+  input: EU261Input,
+  band: (typeof EU261_BANDS)[number],
+): EU261Result {
   let amount = new Decimal(band.compensationEur);
-  let reduction = 0;
+  const reduction = computeReroutingReduction(input, band);
   let reasonExtra = '';
-
-  if (
-    input.distanceKm > EU261_LONGHAUL_PARTIAL_REDUCTION.distanceKm &&
-    input.arrivalDelayHours >= EU261_LONGHAUL_PARTIAL_REDUCTION.delayHoursMin &&
-    input.arrivalDelayHours < EU261_LONGHAUL_PARTIAL_REDUCTION.delayHoursMax
-  ) {
-    reduction = EU261_LONGHAUL_PARTIAL_REDUCTION.reductionPct;
+  if (reduction > 0) {
     amount = amount.mul(100 - reduction).div(100);
-    reasonExtra = ` Reduced by ${reduction}% under Article 7(2)(c) (>${EU261_LONGHAUL_PARTIAL_REDUCTION.distanceKm}km, ${EU261_LONGHAUL_PARTIAL_REDUCTION.delayHoursMin}-${EU261_LONGHAUL_PARTIAL_REDUCTION.delayHoursMax}h delay).`;
+    reasonExtra = ` Reduced by ${reduction}% under Article 7(2) (rerouting offered within band threshold).`;
   }
-
   return {
     eligible: true,
     compensationEur: amount.toFixed(2),
@@ -153,6 +173,24 @@ export function applyEU261(input: EU261Input): EU261Result {
     refundChoiceAvailable: input.arrivalDelayHours >= EU261_REFUND_CHOICE_DELAY_HOURS,
     reason: `Arrival delay ${input.arrivalDelayHours}h ≥ ${EU261_DELAY_TRIGGER_HOURS}h trigger; distance band ≤${band.maxDistanceKm}km → €${band.compensationEur}.${reasonExtra}`,
   };
+}
+
+/**
+ * Article 7(2) rerouting reduction: 50% if the carrier offers re-routing
+ * whose arrival is within the band-specific threshold of the original
+ * scheduled arrival.
+ */
+function computeReroutingReduction(
+  input: EU261Input,
+  band: (typeof EU261_BANDS)[number],
+): number {
+  if (!input.reroutingOffered) return 0;
+  const lateness = input.reroutingArrivalLatenessHours;
+  if (lateness === undefined) return 0;
+  if (lateness <= band.careDelayHours) {
+    return EU261_LONGHAUL_PARTIAL_REDUCTION.reductionPct;
+  }
+  return 0;
 }
 
 /**

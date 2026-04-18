@@ -294,12 +294,14 @@ describe('Involuntary Rebook', () => {
       expect(eu261.reduction_percent).toBe(0);
     });
 
-    it('applies 50% long-haul reduction (€300) for 3-4h delay', async () => {
+    it('applies Article 7(2) 50% rerouting reduction when alternative arrival within band', async () => {
       const input = makeInput({
         eu261_inputs: {
           distance_km: 6000,
-          arrival_delay_hours: 3.5,
+          arrival_delay_hours: 5,
           extraordinary_circumstances: false,
+          rerouting_offered: true,
+          rerouting_arrival_lateness_hours: 4,
         },
       });
       const result = await agent.execute({ data: input });

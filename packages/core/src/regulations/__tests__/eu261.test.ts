@@ -34,15 +34,43 @@ describe('applyEU261 — delay path', () => {
     expect(r.compensationEur).toBe('600.00');
   });
 
-  it('reduces long-haul by 50% (€300) when delay is 3-4h', () => {
+  it('Article 7(2) rerouting reduction: 50% (€300) when alternative arrival within 4h on long-haul', () => {
     const r = applyEU261({
       distanceKm: 6000,
       arrivalDelayHours: 3.5,
       extraordinaryCircumstances: false,
       flightCancelled: false,
+      reroutingOffered: true,
+      reroutingArrivalLatenessHours: 4,
     });
     expect(r.compensationEur).toBe('300.00');
     expect(r.reductionPercent).toBe(50);
+  });
+
+  it('Article 7(2) rerouting reduction: 50% (€125) when alternative arrival within 2h on short-haul', () => {
+    const r = applyEU261({
+      distanceKm: 1000,
+      arrivalDelayHours: 4,
+      extraordinaryCircumstances: false,
+      flightCancelled: false,
+      reroutingOffered: true,
+      reroutingArrivalLatenessHours: 1.5,
+    });
+    expect(r.compensationEur).toBe('125.00');
+    expect(r.reductionPercent).toBe(50);
+  });
+
+  it('no reduction when rerouting arrival exceeds band threshold', () => {
+    const r = applyEU261({
+      distanceKm: 1000,
+      arrivalDelayHours: 4,
+      extraordinaryCircumstances: false,
+      flightCancelled: false,
+      reroutingOffered: true,
+      reroutingArrivalLatenessHours: 2.5,
+    });
+    expect(r.compensationEur).toBe('250.00');
+    expect(r.reductionPercent).toBe(0);
   });
 
   it('returns ineligible when delay < 3h', () => {
