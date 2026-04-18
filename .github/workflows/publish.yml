@@ -36,3 +36,45 @@ jobs:
         run: pnpm -r publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Fail loudly if the registry doesn't actually have the packages
+      # we just "published". pnpm has historically printed success for
+      # scoped publishes that were silently rejected by the registry —
+      # this step catches that class of bug.
+      - name: Verify packages are live on npm
+        run: |
+          set -e
+          # Registry can take up to ~60s to index new publishes.
+          # Poll each package until it returns 200 or we exceed the budget.
+          VERSION=$(node -p "require('./package.json').version")
+          PACKAGES="@otaip/core @otaip/connect @otaip/cli @otaip/adapter-duffel \
+            @otaip/agents-reference @otaip/agents-search @otaip/agents-pricing \
+            @otaip/agents-booking @otaip/agents-ticketing @otaip/agents-exchange \
+            @otaip/agents-settlement @otaip/agents-reconciliation \
+            @otaip/agents-lodging @otaip/agents-tmc @otaip/agents-platform"
+          FAIL=0
+          for pkg in $PACKAGES; do
+            printf "%-40s " "$pkg"
+            SUCCESS=0
+            for attempt in 1 2 3 4 5 6; do
+              CODE=$(curl -s -o /tmp/resp.json -w "%{http_code}" "https://registry.npmjs.org/${pkg}")
+              if [ "$CODE" = "200" ]; then
+                LATEST=$(node -e "console.log(require('/tmp/resp.json')['dist-tags']?.latest ?? '')")
+                if [ "$LATEST" = "$VERSION" ]; then
+                  echo "OK (${LATEST})"
+                  SUCCESS=1
+                  break
+                fi
+              fi
+              sleep 10
+            done
+            if [ "$SUCCESS" != "1" ]; then
+              echo "MISSING (expected ${VERSION})"
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" = "1" ]; then
+            echo ""
+            echo "One or more packages did not publish. See above."
+            exit 1
+          fi
