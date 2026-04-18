@@ -7,7 +7,7 @@
 If you lack domain input to proceed: refactor, clean, document existing code, then surface the blocking question. Never invent travel industry behavior.
 
 ## Tech Stack
-- TypeScript (strict mode — all strict flags ON)
+- TypeScript (`strict: true`, plus `noUncheckedIndexedAccess`, `noImplicitOverride`, `noPropertyAccessFromIndexSignature`; `exactOptionalPropertyTypes` is off — enabling it would require widespread call-site changes, tracked as a separate cleanup)
 - Node.js >=24
 - pnpm 10+ (workspace monorepo)
 - Vitest for testing
