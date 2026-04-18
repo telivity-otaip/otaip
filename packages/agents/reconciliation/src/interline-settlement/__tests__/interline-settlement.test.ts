@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest';
+import { UnimplementedDomainInputError } from '@otaip/core';
 import { InterlineSettlementAgent } from '../index.js';
 
 describe('InterlineSettlementAgent (coming soon)', () => {
-  it('throws not implemented', async () => {
+  it('throws UnimplementedDomainInputError', async () => {
     const a = new InterlineSettlementAgent();
     await a.initialize();
-    await expect(a.execute({ data: {} })).rejects.toThrow('not yet implemented');
+    await expect(a.execute({ data: {} })).rejects.toBeInstanceOf(
+      UnimplementedDomainInputError,
+    );
   });
   it('health returns degraded', async () => {
     const a = new InterlineSettlementAgent();

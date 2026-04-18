@@ -1,6 +1,6 @@
 // Coming soon — pending domain input
 import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
-import { AgentNotInitializedError } from '@otaip/core';
+import { AgentNotInitializedError, UnimplementedDomainInputError } from '@otaip/core';
 
 export class DisruptionResponseAgent implements Agent<
   Record<string, unknown>,
@@ -19,8 +19,9 @@ export class DisruptionResponseAgent implements Agent<
     _input: AgentInput<Record<string, unknown>>,
   ): Promise<AgentOutput<Record<string, unknown>>> {
     if (!this.initialized) throw new AgentNotInitializedError(this.id);
-    throw new Error(
-      'DisruptionResponseAgent not yet implemented. Requires domain input on disruption priority rules and carrier-specific response procedures.',
+    throw new UnimplementedDomainInputError(
+      this.id,
+      'disruption priority rules and carrier-specific response procedures',
     );
   }
 

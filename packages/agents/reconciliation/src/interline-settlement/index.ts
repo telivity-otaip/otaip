@@ -1,6 +1,6 @@
 // Coming soon — pending domain input (prorate/SIS)
 import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
-import { AgentNotInitializedError } from '@otaip/core';
+import { AgentNotInitializedError, UnimplementedDomainInputError } from '@otaip/core';
 
 export class InterlineSettlementAgent implements Agent<
   Record<string, unknown>,
@@ -22,8 +22,9 @@ export class InterlineSettlementAgent implements Agent<
     _input: AgentInput<Record<string, unknown>>,
   ): Promise<AgentOutput<Record<string, unknown>>> {
     if (!this.initialized) throw new AgentNotInitializedError(this.id);
-    throw new Error(
-      'InterlineSettlementAgent is not yet implemented. Requires domain input on interline prorate methodology before build can proceed.',
+    throw new UnimplementedDomainInputError(
+      this.id,
+      'interline prorate methodology and IATA SIS billing rules',
     );
   }
   async health(): Promise<AgentHealthStatus> {

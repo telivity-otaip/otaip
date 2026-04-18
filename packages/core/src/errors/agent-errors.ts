@@ -41,3 +41,19 @@ export class AgentDataUnavailableError extends AgentError {
     this.name = 'AgentDataUnavailableError';
   }
 }
+
+/**
+ * Thrown by stub agents whose implementation is gated on travel-domain
+ * input that the platform does not yet have. The message must describe
+ * the specific input still needed.
+ */
+export class UnimplementedDomainInputError extends AgentError {
+  constructor(agentId: string, detail: string) {
+    super(
+      `Agent ${agentId} requires domain input before it can be implemented: ${detail}`,
+      agentId,
+      'UNIMPLEMENTED_DOMAIN_INPUT',
+    );
+    this.name = 'UnimplementedDomainInputError';
+  }
+}

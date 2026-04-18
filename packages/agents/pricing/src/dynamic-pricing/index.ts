@@ -1,6 +1,6 @@
 // Coming soon — Tier 4
 import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
-import { AgentNotInitializedError } from '@otaip/core';
+import { AgentNotInitializedError, UnimplementedDomainInputError } from '@otaip/core';
 
 export class DynamicPricingAgent implements Agent<
   Record<string, unknown>,
@@ -17,8 +17,9 @@ export class DynamicPricingAgent implements Agent<
     _input: AgentInput<Record<string, unknown>>,
   ): Promise<AgentOutput<Record<string, unknown>>> {
     if (!this.initialized) throw new AgentNotInitializedError(this.id);
-    throw new Error(
-      'DynamicPricingAgent not yet implemented. Requires revenue management integration.',
+    throw new UnimplementedDomainInputError(
+      this.id,
+      'revenue management integration (per-carrier RBD inventory + bid-price feed)',
     );
   }
   async health(): Promise<AgentHealthStatus> {
