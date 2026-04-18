@@ -14,6 +14,7 @@ import type {
   GdsNdcRouterOutput,
   DistributionChannel,
   GdsSystem,
+  TransactionType,
 } from './types.js';
 import { routeSegments } from './router-engine.js';
 
@@ -21,6 +22,14 @@ const IATA_CODE_RE = /^[A-Z0-9]{2}$/;
 const AIRPORT_RE = /^[A-Z]{3}$/i;
 const VALID_CHANNELS = new Set<DistributionChannel>(['GDS', 'NDC', 'DIRECT']);
 const VALID_GDS = new Set<GdsSystem>(['AMADEUS', 'SABRE', 'TRAVELPORT']);
+const VALID_TRANSACTION_TYPES = new Set<TransactionType>([
+  'shopping',
+  'booking',
+  'ticketing',
+  'servicing',
+  'group',
+  'corporate',
+]);
 
 export class GdsNdcRouter implements Agent<GdsNdcRouterInput, GdsNdcRouterOutput> {
   readonly id = '3.1';
@@ -43,7 +52,9 @@ export class GdsNdcRouter implements Agent<GdsNdcRouterInput, GdsNdcRouterOutput
     const result = routeSegments(input.data);
 
     const warnings: string[] = [];
-    const directRoutes = result.routings.filter((r) => r.primary_channel === 'DIRECT');
+    const directRoutes = result.routings.filter(
+      (r) => r.primary_channel === 'DIRECT' && !r.domain_input_required,
+    );
     if (directRoutes.length > 0) {
       warnings.push(
         `${directRoutes.length} segment(s) routed to DIRECT channel — not bookable via GDS/NDC.`,
@@ -55,6 +66,12 @@ export class GdsNdcRouter implements Agent<GdsNdcRouterInput, GdsNdcRouterOutput
     const codeshares = result.routings.filter((r) => r.codeshare_applied);
     if (codeshares.length > 0) {
       warnings.push(`Codeshare routing applied for ${codeshares.length} segment(s).`);
+    }
+    const unresolved = result.routings.filter((r) => r.domain_input_required);
+    for (const r of unresolved) {
+      warnings.push(
+        `DOMAIN_INPUT_REQUIRED: capability matrix for carrier=${r.routed_carrier} transaction_type=${input.data.transaction_type} not provided — supply via input.capability_overrides.`,
+      );
     }
 
     return {
@@ -83,6 +100,13 @@ export class GdsNdcRouter implements Agent<GdsNdcRouterInput, GdsNdcRouterOutput
   }
 
   private validateInput(data: GdsNdcRouterInput): void {
+    if (!data.transaction_type || !VALID_TRANSACTION_TYPES.has(data.transaction_type)) {
+      throw new AgentInputValidationError(
+        this.id,
+        'transaction_type',
+        `Must be one of: ${[...VALID_TRANSACTION_TYPES].join(', ')}`,
+      );
+    }
     if (!data.segments || !Array.isArray(data.segments) || data.segments.length === 0) {
       throw new AgentInputValidationError(this.id, 'segments', 'At least one segment required.');
     }
@@ -150,4 +174,6 @@ export type {
   GdsPnrSegment,
   NdcOrderFormat,
   NdcOfferItem,
+  TransactionType,
+  TransactionCapabilityOverrides,
 } from './types.js';

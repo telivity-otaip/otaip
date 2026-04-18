@@ -10,6 +10,26 @@ export type NdcVersion = '17.2' | '18.1' | '21.3';
 
 export type GdsSystem = 'AMADEUS' | 'SABRE' | 'TRAVELPORT';
 
+/**
+ * Transaction-level routing dimension. Channel choice depends on the
+ * type of operation, not just the carrier — most NDC carriers still
+ * require GDS for groups, corporate fares, and post-booking servicing
+ * even when their default shopping/booking flow is NDC.
+ *
+ * // DOMAIN_QUESTION: per-carrier capability matrix per transaction type
+ * // (groups, corporate, post-booking servicing). The built-in carrier
+ * // map covers 'shopping' and 'booking' only — every other transaction
+ * // type requires the caller to supply `transaction_capability_overrides`,
+ * // otherwise the engine returns DOMAIN_INPUT_REQUIRED.
+ */
+export type TransactionType =
+  | 'shopping'
+  | 'booking'
+  | 'ticketing'
+  | 'servicing'
+  | 'group'
+  | 'corporate';
+
 export interface CarrierChannelConfig {
   name: string;
   channels: DistributionChannel[];
@@ -33,9 +53,31 @@ export interface RoutingSegment {
   flight_number?: string;
 }
 
+/**
+ * Per-transaction-type capability override map. Caller supplies this when
+ * routing transaction types that the built-in carrier defaults don't cover
+ * ('ticketing', 'servicing', 'group', 'corporate'). Entries take the same
+ * shape as the built-in carrier defaults.
+ */
+export type TransactionCapabilityOverrides = Partial<
+  Record<TransactionType, CarrierChannelConfig>
+>;
+
 export interface GdsNdcRouterInput {
   /** Segments to route */
   segments: RoutingSegment[];
+  /**
+   * Transaction type being routed. The decision is per-transaction, not
+   * per-airline: a carrier may use NDC for shopping but require GDS for
+   * groups or post-booking servicing.
+   */
+  transaction_type: TransactionType;
+  /**
+   * Caller-supplied capability overrides keyed by carrier IATA, then by
+   * transaction type. Required for transaction types beyond
+   * 'shopping'/'booking' — the engine has no built-in defaults for them.
+   */
+  capability_overrides?: Record<string, TransactionCapabilityOverrides>;
   /** Preferred channel (optional override) */
   preferred_channel?: DistributionChannel;
   /** Preferred GDS (optional override) */
@@ -102,6 +144,14 @@ export interface ChannelRouting {
   codeshare_applied: boolean;
   /** Expected booking format */
   booking_format: 'GDS_PNR' | 'NDC_ORDER' | 'DIRECT_API';
+  /**
+   * Set when the engine could not resolve a channel for this segment
+   * (transaction type lacks a capability entry). `primary_channel` is
+   * meaningless in that case; callers must consult `missing_inputs`.
+   */
+  domain_input_required?: boolean;
+  /** Names of missing inputs when `domain_input_required` is true. */
+  missing_inputs?: string[];
 }
 
 export interface GdsNdcRouterOutput {
