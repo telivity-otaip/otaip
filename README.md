@@ -186,7 +186,7 @@ docs/                       Architecture, agents, adapters, getting started
 
 - **TypeScript** (`strict: true`, plus `noUncheckedIndexedAccess`, `noImplicitOverride`, `noPropertyAccessFromIndexSignature`; `exactOptionalPropertyTypes` is off — enabling it would require call-site changes across dozens of files, tracked as a separate cleanup)
 - **Node.js** >=24
-- **pnpm** 10+ (workspace monorepo, 17 packages)
+- **pnpm** 10+ (workspace monorepo, 16 packages)
 - **Vitest** for testing (3,092 tests)
 - **tsup** for building (ESM + DTS)
 - **ESLint** + **Prettier** for linting/formatting
