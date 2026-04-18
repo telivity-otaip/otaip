@@ -10,15 +10,23 @@
  */
 
 import type { Agent, AgentInput, AgentOutput, AgentHealthStatus } from '@otaip/core';
-import { AgentNotInitializedError, AgentInputValidationError } from '@otaip/core';
-import type { FareConstructionInput, FareConstructionOutput, JourneyType } from './types.js';
+import {
+  AgentNotInitializedError,
+  AgentInputValidationError,
+  isDomainInputRequired,
+} from '@otaip/core';
+import type {
+  FareConstructionInput,
+  FareConstructionResult,
+  JourneyType,
+} from './types.js';
 import { constructFare } from './fare-engine.js';
 
 const VALID_JOURNEY_TYPES = new Set<JourneyType>(['OW', 'RT', 'CT']);
 const IATA_CODE_RE = /^[A-Z]{3}$/i;
 const CURRENCY_RE = /^[A-Z]{3}$/;
 
-export class FareConstruction implements Agent<FareConstructionInput, FareConstructionOutput> {
+export class FareConstruction implements Agent<FareConstructionInput, FareConstructionResult> {
   readonly id = '2.2';
   readonly name = 'Fare Construction';
   readonly version = '0.1.0';
@@ -31,7 +39,7 @@ export class FareConstruction implements Agent<FareConstructionInput, FareConstr
 
   async execute(
     input: AgentInput<FareConstructionInput>,
-  ): Promise<AgentOutput<FareConstructionOutput>> {
+  ): Promise<AgentOutput<FareConstructionResult>> {
     if (!this.initialized) {
       throw new AgentNotInitializedError(this.id);
     }
@@ -39,6 +47,25 @@ export class FareConstruction implements Agent<FareConstructionInput, FareConstr
     this.validateInput(input.data);
 
     const result = constructFare(input.data);
+
+    if (isDomainInputRequired(result)) {
+      return {
+        data: result,
+        confidence: 0,
+        warnings: [
+          `DOMAIN_INPUT_REQUIRED: ${result.description}`,
+          ...result.missing.map((m) => `missing: ${m}`),
+        ],
+        metadata: {
+          agent_id: this.id,
+          agent_version: this.version,
+          journey_type: input.data.journey_type,
+          component_count: input.data.components.length,
+          currency: input.data.selling_currency,
+          status: 'DOMAIN_INPUT_REQUIRED',
+        },
+      };
+    }
 
     const warnings: string[] = [];
     if (result.mileage_exceeded) {
@@ -51,6 +78,16 @@ export class FareConstruction implements Agent<FareConstructionInput, FareConstr
     }
     if (result.bhc_check.detected) {
       warnings.push(result.bhc_check.description);
+    }
+    if (result.hip_check.missing_inputs && result.hip_check.missing_inputs.length > 0) {
+      warnings.push(
+        `DOMAIN_INPUT_REQUIRED (HIP): ${result.hip_check.missing_inputs.join(', ')}`,
+      );
+    }
+    if (result.bhc_check.missing_inputs && result.bhc_check.missing_inputs.length > 0) {
+      warnings.push(
+        `DOMAIN_INPUT_REQUIRED (BHC): ${result.bhc_check.missing_inputs.join(', ')}`,
+      );
     }
 
     const missingMileage = result.mileage_checks.filter((m) => !m.data_available);
@@ -134,6 +171,7 @@ export class FareConstruction implements Agent<FareConstructionInput, FareConstr
 export type {
   FareConstructionInput,
   FareConstructionOutput,
+  FareConstructionResult,
   FareComponent,
   JourneyType,
   MileageCheck,

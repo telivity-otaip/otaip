@@ -2,13 +2,29 @@
  * Fare Construction Engine — 12-step pipeline.
  *
  * All financial math uses decimal.js.
+ *
+ * // DOMAIN_QUESTION: ROE source-of-truth
+ * // ROE values are published by IATA monthly. Hardcoded ROE values produce
+ * // wrong fares immediately for any currency that drifts. The previous
+ * // 1.0 fallback was a CLAUDE.md violation. We now refuse to construct
+ * // fares for currencies whose ROE is not in the input data and instead
+ * // return DOMAIN_INPUT_REQUIRED listing the missing ROE.
+ *
+ * // DOMAIN_QUESTION: HIP/BHC fare lookup
+ * // Real HIP/BHC detection requires per-carrier filed fares between every
+ * // intermediate point in the routing. The simplified heuristics that
+ * // previously lived here (per-mile rate comparison and string-matching
+ * // city revisits) were CLAUDE.md violations. We now report these checks
+ * // as undetected with `missing_inputs` listing the lookup data needed.
  */
 
 import { Decimal } from 'decimal.js';
 import { createRequire } from 'node:module';
+import { domainInputRequired, isDomainInputRequired } from '@otaip/core';
+import type { DomainInputRequired } from '@otaip/core';
 import type {
   FareConstructionInput,
-  FareConstructionOutput,
+  FareConstructionResult,
   MileageCheck,
   MileageSurcharge,
   HipCheck,
@@ -16,6 +32,8 @@ import type {
   CtmCheck,
   AuditStep,
 } from './types.js';
+
+export { isDomainInputRequired };
 
 // ---------------------------------------------------------------------------
 // Data loading
@@ -82,7 +100,7 @@ function iataRound(amount: Decimal, unit: string): Decimal {
 // Pipeline steps
 // ---------------------------------------------------------------------------
 
-export function constructFare(input: FareConstructionInput): FareConstructionOutput {
+export function constructFare(input: FareConstructionInput): FareConstructionResult {
   const audit: AuditStep[] = [];
   let stepNum = 0;
 
@@ -191,67 +209,59 @@ export function constructFare(input: FareConstructionInput): FareConstructionOut
   );
 
   // Step 6: HIP check (Higher Intermediate Point)
-  // TODO: [NEEDS DOMAIN INPUT] Real HIP detection requires intermediate point fare comparison
+  // Real HIP detection requires per-airline filed fares between every
+  // intermediate point in the routing. Without that lookup data, we
+  // report `detected: false` and surface the missing inputs. We do NOT
+  // apply per-mile-rate heuristics — those are not the published ATPCO
+  // HIP comparison rule.
+  const hipMissing: string[] = [];
+  if (input.components.length > 1) {
+    for (let i = 0; i < input.components.length - 1; i++) {
+      const comp = input.components[i]!;
+      hipMissing.push(`intermediate_point_fares:${comp.origin}-${comp.destination}`);
+    }
+  }
   const hipCheck: HipCheck = {
     detected: false,
     hip_point: null,
     hip_nuc: null,
-    description: 'HIP check not applicable (no intermediate point fares in dataset)',
+    description:
+      hipMissing.length > 0
+        ? 'HIP check skipped — intermediate-point fare lookup data not provided.'
+        : 'HIP check not applicable for single-component fare.',
+    ...(hipMissing.length > 0 ? { missing_inputs: hipMissing } : {}),
   };
-
-  // Simple HIP detection: check if any intermediate segment has a higher per-mile fare
-  if (input.components.length > 1) {
-    for (let i = 0; i < input.components.length - 1; i++) {
-      const comp = input.components[i]!;
-      const cp = findMileage(comp.origin, comp.destination);
-      if (cp && cp.tpm > 0) {
-        const perMile = new Decimal(comp.nuc_amount).div(cp.tpm);
-        // Check against overall per-mile rate
-        const overallPerMile = totalTpm > 0 ? totalNuc.div(totalTpm) : new Decimal(0);
-        if (perMile.gt(overallPerMile.mul('1.1'))) {
-          hipCheck.detected = true;
-          hipCheck.hip_point = comp.destination;
-          hipCheck.hip_nuc = comp.nuc_amount;
-          hipCheck.description = `HIP detected at ${comp.destination}: segment fare NUC ${comp.nuc_amount} exceeds proportional rate`;
-          break;
-        }
-      }
-    }
-  }
 
   addStep(
     'HIP Check',
     hipCheck.description,
     'fare components',
-    hipCheck.detected ? 'HIP detected' : 'no HIP',
+    hipMissing.length > 0 ? 'skipped — domain input required' : 'no HIP',
   );
 
   // Step 7: BHC check (Backhaul Check)
-  // TODO: [NEEDS DOMAIN INPUT] Real BHC detection requires geographic direction analysis
+  // Real BHC requires geographic direction analysis (great-circle bearing
+  // of each fare component vs. intended journey direction). Simple "city
+  // revisited" string matching is not the published BHC rule. We report
+  // `detected: false` and list the missing inputs.
+  const bhcMissing =
+    input.components.length > 1
+      ? ['geographic_direction_analysis:fare_components']
+      : [];
   const bhcCheck: BhcCheck = {
     detected: false,
-    description: 'Backhaul check: no backhaul detected',
+    description:
+      bhcMissing.length > 0
+        ? 'Backhaul check skipped — geographic direction analysis data not provided.'
+        : 'Backhaul check not applicable for single-component fare.',
+    ...(bhcMissing.length > 0 ? { missing_inputs: bhcMissing } : {}),
   };
-
-  // Simple BHC: detect if journey goes "backwards" (origin appears again)
-  if (input.components.length > 1) {
-    const visited = new Set<string>();
-    visited.add(input.components[0]!.origin);
-    for (const comp of input.components) {
-      if (visited.has(comp.destination) && comp.destination !== input.components[0]!.origin) {
-        bhcCheck.detected = true;
-        bhcCheck.description = `Backhaul detected: ${comp.destination} visited more than once`;
-        break;
-      }
-      visited.add(comp.destination);
-    }
-  }
 
   addStep(
     'BHC Check',
     bhcCheck.description,
     'routing',
-    bhcCheck.detected ? 'BHC detected' : 'no BHC',
+    bhcMissing.length > 0 ? 'skipped — domain input required' : 'no BHC',
   );
 
   // Step 8: CTM check (Circle Trip Minimum)
@@ -277,25 +287,31 @@ export function constructFare(input: FareConstructionInput): FareConstructionOut
   );
 
   // Step 9: Get ROE
+  // No fallback. ROE values are published by IATA monthly. Returning
+  // anything else (especially 1.0) silently produces wrong fares for
+  // every non-USD currency. If ROE is missing → DomainInputRequired.
   const roe = getRoe(input.selling_currency);
   if (!roe) {
-    // Fallback to USD ROE of 1.0
     addStep(
       'ROE Lookup',
-      `No ROE found for ${input.selling_currency}, using 1.0`,
+      `No ROE for ${input.selling_currency} — refusing to construct fare.`,
       input.selling_currency,
-      '1.000000',
+      'DOMAIN_INPUT_REQUIRED',
     );
-  } else {
-    addStep(
-      'ROE Lookup',
-      `ROE for ${input.selling_currency}`,
-      input.selling_currency,
-      roe.toFixed(6),
-    );
+    return domainInputRequired({
+      missing: [`roe_table_entry:${input.selling_currency}`],
+      description: `No ROE entry for ${input.selling_currency}. Construction halted to avoid producing an incorrect local-currency fare.`,
+      references: ['IATA monthly ROE publication', 'ATPCO Fare Construction guide'],
+    });
   }
+  addStep(
+    'ROE Lookup',
+    `ROE for ${input.selling_currency}`,
+    input.selling_currency,
+    roe.toFixed(6),
+  );
 
-  const effectiveRoe = roe ?? new Decimal(1);
+  const effectiveRoe = roe;
 
   // Step 10: NUC × ROE = local currency
   const localRaw = totalNuc.mul(effectiveRoe);
