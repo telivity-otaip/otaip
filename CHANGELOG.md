@@ -2,6 +2,26 @@
 
 > **Versioning policy:** Pre-v1.0, every release is a patch bump (`0.6.0 → 0.6.1 → 0.6.2 → …`). See [VERSIONING.md](VERSIONING.md) for the full policy and an explanation of the early-history version jumps (0.3.4 → 0.5.0 → 0.5.1 → 0.6.0) that predate this rule.
 
+## 0.6.2 — Reference OTA Multi-Adapter Fixes
+
+Three bugs in the Sprint H multi-adapter integration caught by Codex review, plus the follow-up to make booking adapter-aware. No behavior change to the single-adapter path; no breaking changes to public interfaces.
+
+### Fixed
+
+- **`buildApp()` now wires `MultiSearchService` into the search route** — `?multi=true` was previously unreachable in production. When the `ADAPTERS` env var is set, a `MultiSearchService` is constructed automatically; test callers can inject one via `buildApp({ multiSearch })`.
+- **Multi-adapter search now caches its offers** — `GET /api/offers/:id` and `POST /api/book` no longer 404 on offers returned from the multi path. New `SearchService.cacheOffers()` is called from the multi branch.
+- **`returnDate` preserved on the multi path** — round-trip requests now reach adapters with both segments. Previously the return leg was silently dropped.
+- **Adapter-aware booking routing** — bookings now route back to the adapter that produced the offer. An offer from a search-only adapter (no `book()` method) is rejected with HTTP `409` and the adapter name, not silently routed to the default adapter. New `AdapterNotBookableError` + `SearchService.getOfferAdapterSource()` + `BookingService(defaultAdapter, searchService, bookingAdapters?)` registry param.
+- **Stale `adapterSource` cleared on re-cache** — a single-adapter search after a multi-adapter search no longer leaves a stale source entry behind that would misroute a subsequent booking.
+
+### Documented
+
+- `offer_id` collision semantics within a `MultiSearchService.search()` call are explicitly last-write-wins. Production deployments that need stronger guarantees should namespace IDs with `adapterSource` at the aggregation boundary.
+
+### Tests
+
+- 12 new tests in `examples/ota/src/__tests__/search.test.ts` pinning each fix. **3034 total passing**, 0 failing.
+
 ## 0.6.1 — Stub Replacements: HotelCarSearch, AITravelAdvisor, SelfServiceRebooking, WaitlistManagement
 
 Four stub agents replaced with real implementations. No new agents; no breaking changes to public interfaces. Existing imports continue to work.
