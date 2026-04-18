@@ -44,9 +44,10 @@ export class InvoluntaryRebook implements Agent<InvoluntaryRebookInput, Involunt
 
     this.validateInput(input.data);
 
-    const result = processInvoluntaryRebook(input.data);
+    const engineOutput = processInvoluntaryRebook(input.data);
+    const result = { result: engineOutput.result };
 
-    const warnings: string[] = [];
+    const warnings: string[] = [...(engineOutput.warnings ?? [])];
     if (result.result.is_involuntary) {
       warnings.push(`Involuntary change detected: ${result.result.trigger}.`);
       for (const flag of result.result.regulatory_flags) {
