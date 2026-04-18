@@ -51,6 +51,21 @@ export interface RefundPenaltyRule {
   notes: string;
 }
 
+/**
+ * ATPCO Category 33 rule set for refunds.
+ *
+ * Real Cat33 data comes from authoritative ATPCO feeds. This engine no
+ * longer hardcodes fallback "industry pattern" rules — when no rule
+ * matches and no rules are supplied, the engine uses the ATPCO default
+ * (permitted at no charge for voluntary refunds; full refund for
+ * involuntary).
+ *
+ * // DOMAIN_QUESTION: per-carrier ATPCO Cat33 ingestion pipeline.
+ */
+export interface Cat33Rules {
+  rules: RefundPenaltyRule[];
+}
+
 export interface BspRefundFields {
   /** Original ticket number */
   original_ticket_number: string;
@@ -172,6 +187,17 @@ export interface RefundProcessingInput {
   settlement_system: SettlementSystem;
   /** Current date (ISO — for reporting) */
   current_date?: string;
+  /**
+   * Whether this refund is carrier-initiated (involuntary). When true,
+   * no penalty is deducted regardless of the filed Cat33 rules.
+   */
+  is_involuntary?: boolean;
+  /**
+   * ATPCO Category 33 rules. When present → engine applies as filed.
+   * When absent → ATPCO default (voluntary: no penalty; involuntary:
+   * full refund). The engine never invents a penalty amount.
+   */
+  cat33_rules?: Cat33Rules;
 }
 
 export interface RefundProcessingOutput {

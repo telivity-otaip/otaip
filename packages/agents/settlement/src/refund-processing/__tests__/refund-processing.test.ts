@@ -5,8 +5,17 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { createRequire } from 'node:module';
 import { RefundProcessing } from '../index.js';
-import type { RefundProcessingInput, TaxItem, CouponRefundItem } from '../types.js';
+import type {
+  RefundProcessingInput,
+  TaxItem,
+  CouponRefundItem,
+  Cat33Rules,
+} from '../types.js';
+
+const require = createRequire(import.meta.url);
+const TEST_CAT33_RULES = require('./fixtures/test-cat33-rules.json') as Cat33Rules;
 
 let agent: RefundProcessing;
 
@@ -41,6 +50,7 @@ function makeInput(overrides: Partial<RefundProcessingInput> = {}): RefundProces
     is_refundable: true,
     settlement_system: 'BSP',
     current_date: '2026-04-01',
+    cat33_rules: TEST_CAT33_RULES,
     ...overrides,
   };
 }
@@ -89,6 +99,37 @@ describe('Refund Processing', () => {
     it('lists all coupons as refunded', async () => {
       const result = await agent.execute({ data: makeInput() });
       expect(result.data.refund.audit.coupons_refunded).toEqual([1, 2, 3, 4]);
+    });
+  });
+
+  describe('ATPCO default — no Cat33 rules supplied', () => {
+    it('voluntary refund with no rules: penalty = 0, full base refund', async () => {
+      const result = await agent.execute({
+        data: makeInput({ cat33_rules: undefined }),
+      });
+      expect(result.data.refund.penalty_applied).toBe('0.00');
+      expect(result.data.refund.base_fare_refund).toBe('450.00');
+    });
+
+    it('involuntary refund with no rules: penalty = 0, full refund regardless of fare basis', async () => {
+      const result = await agent.execute({
+        data: makeInput({
+          cat33_rules: undefined,
+          is_involuntary: true,
+          fare_basis: 'HOWBASIC',
+          is_refundable: false,
+        }),
+      });
+      expect(result.data.refund.penalty_applied).toBe('0.00');
+      expect(result.data.refund.base_fare_refund).toBe('450.00');
+    });
+
+    it('involuntary refund with rules: penalty still waived to 0', async () => {
+      const result = await agent.execute({
+        data: makeInput({ is_involuntary: true, fare_basis: 'EOWUS' }),
+      });
+      expect(result.data.refund.penalty_applied).toBe('0.00');
+      expect(result.data.refund.base_fare_refund).toBe('450.00');
     });
   });
 

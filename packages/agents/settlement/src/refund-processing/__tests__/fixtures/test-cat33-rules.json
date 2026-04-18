@@ -1,5 +1,5 @@
 {
-  "description": "ATPCO Category 33 refund penalty rules by fare basis pattern. Order matters — more specific patterns first.",
+  "description": "TEST FIXTURE — invented common-industry patterns. Do NOT use in production. Real Cat33 data must come from authoritative ATPCO feeds. Used only to exercise the engine's apply-as-filed branch.",
   "rules": [
     {
       "fare_basis_pattern": ".*BASIC$",

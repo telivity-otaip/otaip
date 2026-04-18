@@ -102,6 +102,25 @@ export interface ChangeAssessment {
   is_free_change: boolean;
 }
 
+/**
+ * ATPCO Category 31 rule set, per carrier/market/fare-basis pattern.
+ *
+ * Real Cat31 data comes from authoritative ATPCO feeds. This engine no
+ * longer hardcodes "common industry pattern" rules — the caller supplies
+ * the rules to apply. When `cat31_rules` is omitted, the engine falls
+ * back to the ATPCO default for voluntary changes (permitted at no
+ * charge) per the user-supplied domain spec.
+ */
+export interface Cat31Rules {
+  /** Filed change-fee rules. First match wins. */
+  rules: ChangeFeeRule[];
+  /**
+   * Fare-basis patterns whose carrier filing rejects voluntary changes
+   * outright (basic-economy, certain non-rebookable fares).
+   */
+  reject_patterns: string[];
+}
+
 export interface ChangeManagementInput {
   /** Original ticket summary */
   original_ticket: OriginalTicketSummary;
@@ -111,6 +130,20 @@ export interface ChangeManagementInput {
   waiver_code?: string;
   /** Current date/time (ISO — defaults to now) */
   current_datetime?: string;
+  /**
+   * Whether this change is carrier-initiated (involuntary). When true,
+   * the change fee is waived to 0 and downstream callers should consult
+   * Agent 5.3 (involuntary-rebook) for regulatory entitlements.
+   */
+  is_involuntary?: boolean;
+  /**
+   * ATPCO Category 31 rules. When present → engine applies as filed.
+   * When absent → ATPCO default (voluntary: no charge; involuntary:
+   * waived). The engine never invents a penalty amount.
+   *
+   * // DOMAIN_QUESTION: per-carrier ATPCO Cat31 ingestion pipeline.
+   */
+  cat31_rules?: Cat31Rules;
 }
 
 export interface ChangeManagementOutput {

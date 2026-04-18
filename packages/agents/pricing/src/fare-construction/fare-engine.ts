@@ -21,7 +21,6 @@
 import { Decimal } from 'decimal.js';
 import { createRequire } from 'node:module';
 import { domainInputRequired, isDomainInputRequired } from '@otaip/core';
-import type { DomainInputRequired } from '@otaip/core';
 import type {
   FareConstructionInput,
   FareConstructionResult,

@@ -1,29 +1,37 @@
 /**
  * Change Management Engine — ATPCO Cat 31 voluntary change assessment.
+ *
+ * No invented penalty amounts.
+ *
+ * - When `input.cat31_rules` is provided, the engine applies the filed
+ *   rules: pattern-match the fare basis, use the rule's penalty, free-
+ *   change window, and downgrade-forfeit flag.
+ * - When `input.cat31_rules` is absent, the engine uses the ATPCO
+ *   default per the project's domain spec: voluntary changes are
+ *   PERMITTED AT NO CHARGE; involuntary changes have the fee waived.
+ *
+ * The previous "$200 default" fallback was a CLAUDE.md violation and
+ * has been removed. Carrier-specific rules MUST flow in via input.
+ *
+ * // DOMAIN_QUESTION: per-carrier ATPCO Cat31 data ingestion pipeline.
  */
 
 import Decimal from 'decimal.js';
-import { createRequire } from 'node:module';
 import type {
   ChangeManagementInput,
   ChangeManagementOutput,
   ChangeAssessment,
   ChangeFeeRule,
   ChangeAction,
+  Cat31Rules,
 } from './types.js';
-
-const require = createRequire(import.meta.url);
-const rulesData = require('./data/change-fee-rules.json') as {
-  rules: ChangeFeeRule[];
-  reject_patterns: string[];
-};
 
 function currentTime(input: ChangeManagementInput): Date {
   return input.current_datetime ? new Date(input.current_datetime) : new Date();
 }
 
-function findMatchingRule(fareBasis: string): ChangeFeeRule | undefined {
-  for (const rule of rulesData.rules) {
+function findMatchingRule(rules: ChangeFeeRule[], fareBasis: string): ChangeFeeRule | undefined {
+  for (const rule of rules) {
     const re = new RegExp(rule.fare_basis_pattern);
     if (re.test(fareBasis)) {
       return rule;
@@ -32,8 +40,9 @@ function findMatchingRule(fareBasis: string): ChangeFeeRule | undefined {
   return undefined;
 }
 
-function isRejectFare(fareBasis: string): boolean {
-  return rulesData.reject_patterns.some((p) => new RegExp(p).test(fareBasis));
+function isRejectFare(rules: Cat31Rules | undefined, fareBasis: string): boolean {
+  if (!rules) return false;
+  return rules.reject_patterns.some((p) => new RegExp(p).test(fareBasis));
 }
 
 function isWithinFreeChangeWindow(
@@ -52,9 +61,10 @@ export function assessChange(input: ChangeManagementInput): ChangeManagementOutp
   const orig = input.original_ticket;
   const req = input.requested_itinerary;
   const currency = orig.base_fare_currency;
+  const isInvoluntary = input.is_involuntary === true;
 
-  // Check if fare basis is a reject type (BASIC, NR)
-  if (isRejectFare(orig.fare_basis)) {
+  // Reject path applies only when filed rules say so.
+  if (isRejectFare(input.cat31_rules, orig.fare_basis)) {
     const assessment: ChangeAssessment = {
       original_ticket_number: orig.ticket_number,
       action: 'REJECT',
@@ -68,18 +78,24 @@ export function assessChange(input: ChangeManagementInput): ChangeManagementOutp
       tax_difference: '0.00',
       total_due: '0.00',
       currency,
-      summary: `Change not permitted for fare basis ${orig.fare_basis}. This fare type does not allow voluntary changes.`,
+      summary: `Change not permitted for fare basis ${orig.fare_basis}. This fare type does not allow voluntary changes (filed Cat31 rejection).`,
       is_free_change: false,
     };
     return { assessment };
   }
 
-  const rule = findMatchingRule(orig.fare_basis);
+  const rule = input.cat31_rules
+    ? findMatchingRule(input.cat31_rules.rules, orig.fare_basis)
+    : undefined;
 
-  // Default rule if no match
-  const changeFeeAmount = rule ? new Decimal(rule.change_fee) : new Decimal('200.00');
-  const freeChangeHours = rule?.free_change_hours ?? 24;
-  const forfeitOnDowngrade = rule?.forfeit_difference_on_downgrade ?? true;
+  // Penalty source-of-truth:
+  //   1. Filed Cat31 rule for this fare basis  → rule.change_fee
+  //   2. No rule + involuntary                  → 0 (carrier-initiated)
+  //   3. No rule + voluntary                    → 0 (ATPCO default)
+  // The previous "$200 default when no rule" path was an invention.
+  const changeFeeAmount = rule ? new Decimal(rule.change_fee) : new Decimal('0.00');
+  const freeChangeHours = rule?.free_change_hours ?? 0;
+  const forfeitOnDowngrade = rule?.forfeit_difference_on_downgrade ?? false;
 
   // Check free change window
   const isFreeChange = isWithinFreeChangeWindow(orig.booking_date, now, freeChangeHours);
@@ -87,8 +103,9 @@ export function assessChange(input: ChangeManagementInput): ChangeManagementOutp
   // Check waiver code
   const hasWaiver = !!input.waiver_code;
 
-  // Effective change fee
-  const effectiveChangeFee = isFreeChange || hasWaiver ? new Decimal('0.00') : changeFeeAmount;
+  // Effective change fee: 0 if free window, waiver, or involuntary; else the filed amount.
+  const effectiveChangeFee =
+    isFreeChange || hasWaiver || isInvoluntary ? new Decimal('0.00') : changeFeeAmount;
 
   // Fare difference
   const originalFare = new Decimal(orig.base_fare);
@@ -113,7 +130,7 @@ export function assessChange(input: ChangeManagementInput): ChangeManagementOutp
   } else if (fareDifference.lessThan(0)) {
     // Downgrade
     if (!orig.is_refundable && forfeitOnDowngrade) {
-      // Non-refundable: forfeit the difference
+      // Non-refundable AND filed rule says forfeit: forfeit the difference
       forfeitedAmount = fareDifference.abs();
     }
     // Refundable fares: the negative difference would be credited (handled by agent 5.2)
@@ -131,8 +148,11 @@ export function assessChange(input: ChangeManagementInput): ChangeManagementOutp
 
   // Build summary
   const summaryParts: string[] = [];
+  if (isInvoluntary) summaryParts.push('Involuntary change — fee waived per carrier/regulatory practice.');
   if (isFreeChange) summaryParts.push('Free change (within booking window).');
   if (hasWaiver) summaryParts.push(`Waiver code ${input.waiver_code!} applied — penalty waived.`);
+  if (!rule && !input.cat31_rules)
+    summaryParts.push('No Cat31 rules supplied — applying ATPCO default (no charge).');
   if (effectiveChangeFee.greaterThan(0))
     summaryParts.push(`Change fee: ${currency} ${effectiveChangeFee.toFixed(2)}.`);
   if (additionalCollection.greaterThan(0))
@@ -147,8 +167,8 @@ export function assessChange(input: ChangeManagementInput): ChangeManagementOutp
     action,
     change_fee: effectiveChangeFee.toFixed(2),
     change_fee_currency: currency,
-    fee_waived: isFreeChange || hasWaiver,
-    waiver_code: input.waiver_code,
+    fee_waived: isFreeChange || hasWaiver || isInvoluntary,
+    ...(input.waiver_code !== undefined ? { waiver_code: input.waiver_code } : {}),
     fare_difference: fareDifference.toFixed(2),
     additional_collection: additionalCollection.toFixed(2),
     residual_value: residualValue.toFixed(2),
