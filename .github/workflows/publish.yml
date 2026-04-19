@@ -41,17 +41,37 @@ jobs:
       # we just "published". pnpm has historically printed success for
       # scoped publishes that were silently rejected by the registry —
       # this step catches that class of bug.
+      #
+      # The package list is derived from the workspace (any non-private
+      # @otaip/* package), not hardcoded. A previously hardcoded list
+      # silently skipped @otaip/adapter-hotelbeds in v0.6.4: pnpm's
+      # "+ pkg@version" output looked successful, this step never
+      # checked hotelbeds, and the registry CDN masked the gap with
+      # read-side propagation lag long enough to mislead the operator.
+      # Auto-discovery prevents that recurrence for any new package
+      # added to the workspace.
       - name: Verify packages are live on npm
         run: |
           set -e
+          VERSION=$(node -p "require('./package.json').version")
+          PACKAGES=$(pnpm m ls --json --depth=-1 | node -e "
+            let s='';
+            process.stdin.on('data', c => s += c).on('end', () => {
+              const arr = JSON.parse(s);
+              const names = arr
+                .filter(p => !p.private && p.name && p.name.startsWith('@otaip/'))
+                .map(p => p.name)
+                .sort();
+              process.stdout.write(names.join(' '));
+            });
+          ")
+          if [ -z "$PACKAGES" ]; then
+            echo "No @otaip/* packages discovered in workspace — refusing to claim success."
+            exit 1
+          fi
+          echo "Discovered $(echo $PACKAGES | wc -w | tr -d ' ') packages to verify."
           # Registry can take up to ~60s to index new publishes.
           # Poll each package until it returns 200 or we exceed the budget.
-          VERSION=$(node -p "require('./package.json').version")
-          PACKAGES="@otaip/core @otaip/connect @otaip/cli @otaip/adapter-duffel \
-            @otaip/agents-reference @otaip/agents-search @otaip/agents-pricing \
-            @otaip/agents-booking @otaip/agents-ticketing @otaip/agents-exchange \
-            @otaip/agents-settlement @otaip/agents-reconciliation \
-            @otaip/agents-lodging @otaip/agents-tmc @otaip/agents-platform"
           FAIL=0
           for pkg in $PACKAGES; do
             printf "%-40s " "$pkg"

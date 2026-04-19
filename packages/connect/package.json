@@ -36,7 +36,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/telivity-otaip/otaip.git",
+    "url": "git+https://github.com/telivity-otaip/otaip.git",
     "directory": "packages/connect"
   }
 }
