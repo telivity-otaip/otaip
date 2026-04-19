@@ -236,8 +236,20 @@ export interface CancellationDeadline {
   hoursBeforeCheckin: number;
   /** Type of penalty */
   penaltyType: 'percentage' | 'nights' | 'fixed';
-  /** Penalty value — percentage (0-100), night count, or fixed amount */
+  /**
+   * Penalty value the traveler pays — percentage (0-100), night count, or
+   * fixed amount. For supplier-net data with a platform markup applied
+   * (e.g. bedbank cancellation fees), this is the marked-up gross figure
+   * and `netPenaltyValue` carries the supplier's net.
+   */
   penaltyValue: number;
+  /**
+   * Supplier-net penalty amount before any platform markup is applied.
+   * Optional: only populated when the source was net (e.g. bedbank rates
+   * where adapters apply a fixed markup). Lets the settlement and
+   * reporting layers reconcile platform margin on cancellation.
+   */
+  netPenaltyValue?: number;
   /** Currency for fixed-amount penalties */
   penaltyCurrency?: string;
 }

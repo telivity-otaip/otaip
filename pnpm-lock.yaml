@@ -113,6 +113,18 @@ importers:
         specifier: ^10.6.0
         version: 10.6.0
 
+  packages/adapters/hotelbeds:
+    dependencies:
+      '@otaip/agents-lodging':
+        specifier: workspace:*
+        version: link:../../agents/lodging
+      '@otaip/core':
+        specifier: workspace:*
+        version: link:../../core
+      decimal.js:
+        specifier: ^10.6.0
+        version: 10.6.0
+
   packages/agents-platform:
     dependencies:
       '@otaip/core':
