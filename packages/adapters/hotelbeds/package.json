@@ -1,7 +1,7 @@
 {
-  "name": "@otaip/agents-booking",
+  "name": "@otaip/adapter-hotelbeds",
   "version": "0.6.4",
-  "description": "OTAIP Stage 3 agents — GDS/NDC routing, PNR building, validation, queue management",
+  "description": "OTAIP distribution adapter for the Hotelbeds APItude (Hotels) bedbank API",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,13 +20,9 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@otaip/agents-lodging": "workspace:*",
     "@otaip/core": "workspace:*",
-    "@otaip/connect": "workspace:*",
-    "@otaip/agents-reference": "workspace:*",
-    "@otaip/agents-search": "workspace:*",
-    "@otaip/agents-pricing": "workspace:*",
-    "decimal.js": "^10.6.0",
-    "zod": "^4.3.6"
+    "decimal.js": "^10.6.0"
   },
   "license": "Apache-2.0",
   "engines": {
@@ -35,6 +31,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/telivity-otaip/otaip.git",
-    "directory": "packages/agents/booking"
+    "directory": "packages/adapters/hotelbeds"
   }
 }

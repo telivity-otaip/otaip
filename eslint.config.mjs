@@ -44,6 +44,7 @@ export default defineConfig([
                 "./packages/agents-tmc/tsconfig.json",
                 "./packages/agents-platform/tsconfig.json",
                 "./packages/adapters/duffel/tsconfig.json",
+                "./packages/adapters/hotelbeds/tsconfig.json",
                 "./packages/connect/tsconfig.json",
                 "./packages/cli/tsconfig.json",
             ],

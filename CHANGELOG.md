@@ -2,6 +2,33 @@
 
 > **Versioning policy:** Pre-v1.0, every release is a patch bump (`0.6.0 → 0.6.1 → 0.6.2 → …`). See [VERSIONING.md](VERSIONING.md) for the full policy and an explanation of the early-history version jumps (0.3.4 → 0.5.0 → 0.5.1 → 0.6.0) that predate this rule.
 
+## 0.6.4 — Hotelbeds Distribution Adapter
+
+Patch bump per the pre-v1.0 policy in [VERSIONING.md](VERSIONING.md). Adds a new adapter package — `@otaip/adapter-hotelbeds`, the first lodging-distribution adapter on OTAIP. Verified end-to-end against the real Hotelbeds APItude sandbox: full booking lifecycle (search → checkrate → book → retrieve → cancel) returns a real Hotelbeds reference and cleans up after itself.
+
+### New
+
+- **`@otaip/adapter-hotelbeds`** — Hotelbeds APItude adapter for the Hotels API. Implements `availability`, `checkRate`, `book`, `getBooking`, `listBookings`, and `cancelBooking` (`SIMULATION` and `CANCELLATION`). Search bridges into the lodging search aggregator via the existing `HotelSourceAdapter` shape. Mock adapter ships in the same package for upstream tests that don't have credentials.
+- **SHA256 request signing** — `signRequest` / `buildAuthHeaders` regenerate the `X-Signature` per request (Hotelbeds rejects signatures more than ~5 minutes off server time). Backed by `node:crypto`, no extra dependencies.
+- **Field mapper** — Hotelbeds wire types → canonical OTAIP lodging types (`RawHotelResult`, `RawRate`, `CancellationPolicy`, `BookingSummary`). All money stays in `Decimal` / string land; no `number` for prices.
+- **Demo script** at `packages/adapters/hotelbeds/demo/index.ts` — runnable with `HOTELBEDS_API_KEY=… HOTELBEDS_SECRET=… npx tsx demo/index.ts`. Walks the full lifecycle end-to-end in a single command.
+
+### Domain decisions applied
+
+- **DQ11 (mandatory fees)** — when Hotelbeds returns `taxes.allIncluded === false`, same-currency mandatory fees are folded into the rate's `totalRate` / `nightlyRate` so the top-level price is what the traveler actually owes. Fees stay on `mandatoryFees` for transparency. Cross-currency fees are listed but not folded (the adapter has no FX rate).
+- **DQ13 (cancellation markup)** — Hotelbeds cancellation `amount` is net (cost-to-us). Adapter applies a documented `HOTELBEDS_CANCEL_FEE_MARKUP = 1.25` and stores both the gross (`penaltyValue`) and the net (`netPenaltyValue`) so settlement and reporting can reconcile margin. New optional `netPenaltyValue?: number` field added to `CancellationDeadline` in `@otaip/agents-lodging` — additive, all existing callers still typecheck.
+- **DQ14 (booking status)** — explicit mapping for `CONFIRMED` / `CANCELLED` / `ON_REQUEST` / `PENDING` / `MODIFIED`; unknown values fall back to `pending` and emit a `console.warn` so unhandled states don't get silently swallowed.
+
+### Verification
+
+- **Unit tests:** 61 against mocked fetch (auth, field mapper, full adapter surface, mock adapter).
+- **Integration test:** 8/8 passing against the real Hotelbeds sandbox at `https://api.test.hotelbeds.com`. Auto-skipped when credentials aren't set, so CI never hits the live API. Self-cleans the booking it creates.
+- **Repo-wide:** 3153 tests passing, 0 failed, 11 skipped (the 8 integration + 3 pre-existing).
+
+### Deferred
+
+- Hotelbeds Transfers API and Activities API — tracked as a follow-up so this adapter stays focused on the bedbank content path that unblocks the lodging pipeline.
+
 ## 0.6.3 — Codex review closeout, first npm publish, per-transaction routing
 
 Eleven PRs (#73–#83) addressing all 12 findings from a full-repo Codex review, the first-ever publish of the `@otaip/*` scope to npm, and a set of CI/publish hardening fixes. Several engines widen their output types and a couple of agents add required input fields — see **Potentially-breaking** below if you were depending on the previous behaviour.
