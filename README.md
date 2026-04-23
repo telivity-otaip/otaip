@@ -4,10 +4,6 @@ The full airline and hotel booking lifecycle — search, pricing, booking, ticke
 
 **75 agents. 6 distribution adapters. 14 pipeline-contracted agents. 3,092 tests. TypeScript strict.**
 
-OTAIP agents encode real industry logic: ATPCO fare rules (Categories 1-33), NUC/ROE fare construction with HIP/BHC/CTM checks, BSP HOT file reconciliation, ADM prevention (9 pre-ticketing checks), NDC/EDIFACT normalization, IRROPS rebooking with EU261 and US DOT compliance, void window enforcement, married segment integrity, and payment-to-ticketing state machines with BSP finality rules.
-
-The pipeline validator enforces six gates on every LLM-orchestrated call: schema conformance, semantic validation, intent lock, cross-agent consistency, confidence gating, and action classification. An LLM cannot fabricate an offer ID, change the destination mid-flow, or ticket without approval.
-
 ```bash
 pnpm add @otaip/core @otaip/agents-booking @otaip/connect
 ```
@@ -15,81 +11,6 @@ pnpm add @otaip/core @otaip/agents-booking @otaip/connect
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/telivity-otaip/otaip/actions/workflows/ci.yml/badge.svg)](https://github.com/telivity-otaip/otaip/actions)
 [![Tests](https://img.shields.io/badge/tests-3092%20passing-brightgreen)](https://github.com/telivity-otaip/otaip/actions)
-
----
-
-## Distribution Adapters
-
-Six production adapters spanning GDS, NDC, LCC, aggregator, and hospitality channels. Real supplier API integrations with auth, rate limiting, and error normalization — not toy wrappers.
-
-| Adapter | Type | Channel | Auth | Capabilities | Tests |
-|---------|------|---------|------|-------------|-------|
-| **Amadeus** | GDS | EDIFACT/REST | OAuth2 | Search, Price, Book, Status | 83 |
-| **Sabre** | GDS | REST (BFM v5) | OAuth2 ATK | Search, Price, Book, Cancel, Status | 101 |
-| **Navitaire** | LCC | REST (dotREZ) | JWT | Search, Price, Book, Ticket, Cancel | 109 |
-| **TripPro/Mondee** | Aggregator | REST+SOAP | Dual token | Search, Price, Book, Cancel, Status | 73 |
-| **Duffel** | NDC | REST | API token | Search, Price, Book, Cancel, Ticket | 32 |
-| **HAIP** | Hospitality | REST | Bearer | Search, Book, Cancel | 58 |
-
-**456 adapter tests total.** Each adapter implements the `ConnectAdapter` interface and declares a static `ChannelCapability` manifest for the capability registry.
-
-See [docs/adapters/](docs/adapters/) for per-adapter documentation.
-
----
-
-## Agent Domains
-
-75 agents across 12 operational stages. Every agent implements `Agent<TInput, TOutput>` — typed inputs, typed outputs, confidence scores. No framework lock-in, no LLM required.
-
-| Stage | Domain | Package | Agents | Description |
-|-------|--------|---------|--------|-------------|
-| 0 | Reference Data | `@otaip/agents-reference` | 7 | Airport/airline codes, fare basis, class of service, equipment, currency/tax, country regulatory |
-| 1 | Search & Shop | `@otaip/agents-search` | 8 | Availability search, schedule, connections, fare shopping, ancillaries, multi-source aggregation |
-| 1.9 | Offer Evaluation | `@otaip/core` | 1 | Multi-dimensional offer scoring with traveler constraints |
-| 2 | Select & Price | `@otaip/agents-pricing` | 7 | Fare rules (ATPCO Cat 1-20), fare construction (NUC/ROE), tax calculation, offer builder, corporate policy |
-| 3 | Book & Order | `@otaip/agents-booking` | 8 | GDS/NDC routing, PNR builder, validation, queue management, API abstraction, order management, payment, retrieval |
-| 4 | Ticket & Fulfill | `@otaip/agents-ticketing` | 5 | Ticket issuance (ETR), EMD, void, itinerary delivery, document verification |
-| 5 | Change & Exchange | `@otaip/agents-exchange` | 6 | Change management (Cat 31), exchange/reissue, involuntary rebook (EU261/US DOT), disruption, waitlist |
-| 6 | Refund & Settlement | `@otaip/agents-settlement` | 6 | Refund processing (Cat 33), ADM prevention, ADM/ACM lifecycle, customer comms, feedback/complaint, loyalty |
-| 7 | BSP/ARC Reconciliation | `@otaip/agents-reconciliation` | 6 | BSP HOT file, ARC IAR, commission management, interline, financial reporting, revenue accounting |
-| 8 | TMC & Agency | `@otaip/agents-tmc` | 5 | Traveler profiles, corporate accounts, mid-office, reporting, duty of care |
-| 9 | Platform | `@otaip/agents-platform` | 9 | Orchestrator, knowledge, monitoring, audit, plugin manager, performance audit, routing audit, recommendations, alerts |
-| 20 | Lodging | `@otaip/agents-lodging` | 7 | Hotel search, property dedup, content normalization, rate comparison, booking, modification, confirmation verification |
-
-See [docs/agents.md](docs/agents.md) for the complete agent table with IDs, class names, and contract status.
-
----
-
-## Pipeline Contract System
-
-Every agent that participates in an LLM-orchestrated flow declares an `AgentContract` — Zod schemas, semantic validation, action classification, and confidence thresholds. The `PipelineOrchestrator` enforces six gates on every call:
-
-```
-LLM tool call
-    |
-    v
-[1. Schema conformance]     Zod parse — structural hallucinations impossible
-[2. Semantic validation]    Domain checks — "Is this airport code real?"
-[3. Intent lock]            "You can't change the destination mid-flow"
-[4. Cross-agent consistency] "This offer ID must exist in the search results"
-    |
-    v  (agent executes)
-    |
-[5. Confidence gating]     Output confidence meets threshold for action type
-[6. Action classification]  Irreversible actions require approval token
-```
-
-14 agents are currently contracted (reference, search, pricing, booking, ticketing, governance). The remaining 61 work as standalone agents called directly — no breaking changes.
-
-```typescript
-import { PipelineOrchestrator, agentToTool } from '@otaip/core';
-
-// Bridge contracted agents into LLM tools
-const tool = agentToTool(contract, agent, orchestrator, session);
-// Every tool.execute() runs through all 6 gates
-```
-
-See [docs/architecture.md](docs/architecture.md) for the full architecture overview.
 
 ---
 
@@ -139,6 +60,89 @@ npx @otaip/cli agents --stage 3                # Filter by booking stage
 npx @otaip/cli validate --agent 1.1 --input '{"origin":"JFK","destination":"LHR","departure_date":"2026-05-01","passengers":[{"type":"ADT","count":1}]}'
 npx @otaip/cli search --from JFK --to LHR --date 2026-05-01
 ```
+
+---
+
+## Distribution Adapters
+
+Six production adapters spanning GDS, NDC, LCC, aggregator, and hospitality channels. Real supplier API integrations with auth, rate limiting, and error normalization — not toy wrappers.
+
+| Adapter | Type | Channel | Auth | Capabilities | Tests |
+|---------|------|---------|------|-------------|-------|
+| **Amadeus** | GDS | EDIFACT/REST | OAuth2 | Search, Price, Book, Status | 83 |
+| **Sabre** | GDS | REST (BFM v5) | OAuth2 ATK | Search, Price, Book, Cancel, Status | 101 |
+| **Navitaire** | LCC | REST (dotREZ) | JWT | Search, Price, Book, Ticket, Cancel | 109 |
+| **TripPro/Mondee** | Aggregator | REST+SOAP | Dual token | Search, Price, Book, Cancel, Status | 73 |
+| **Duffel** | NDC | REST | API token | Search, Price, Book, Cancel, Ticket | 32 |
+| **HAIP** | Hospitality | REST | Bearer | Search, Book, Cancel | 58 |
+
+**456 adapter tests total.** Each adapter implements the `ConnectAdapter` interface and declares a static `ChannelCapability` manifest for the capability registry.
+
+See [docs/adapters/](docs/adapters/) for per-adapter documentation.
+
+---
+
+## Agent Domains
+
+75 agents across 12 operational stages. Every agent implements `Agent<TInput, TOutput>` — typed inputs, typed outputs, confidence scores. No framework lock-in, no LLM required.
+
+| Stage | Domain | Package | Agents | Description |
+|-------|--------|---------|--------|-------------|
+| 0 | Reference Data | `@otaip/agents-reference` | 7 | Airport/airline codes, fare basis, class of service, equipment, currency/tax, country regulatory |
+| 1 | Search & Shop | `@otaip/agents-search` | 8 | Availability search, schedule, connections, fare shopping, ancillaries, multi-source aggregation |
+| 1.9 | Offer Evaluation | `@otaip/core` | 1 | Multi-dimensional offer scoring with traveler constraints |
+| 2 | Select & Price | `@otaip/agents-pricing` | 7 | Fare rules (ATPCO Cat 1-20), fare construction (NUC/ROE), tax calculation, offer builder, corporate policy |
+| 3 | Book & Order | `@otaip/agents-booking` | 8 | GDS/NDC routing, PNR builder, validation, queue management, API abstraction, order management, payment, retrieval |
+| 4 | Ticket & Fulfill | `@otaip/agents-ticketing` | 5 | Ticket issuance (ETR), EMD, void, itinerary delivery, document verification |
+| 5 | Change & Exchange | `@otaip/agents-exchange` | 6 | Change management (Cat 31), exchange/reissue, involuntary rebook (EU261/US DOT), disruption, waitlist |
+| 6 | Refund & Settlement | `@otaip/agents-settlement` | 6 | Refund processing (Cat 33), ADM prevention, ADM/ACM lifecycle, customer comms, feedback/complaint, loyalty |
+| 7 | BSP/ARC Reconciliation | `@otaip/agents-reconciliation` | 6 | BSP HOT file, ARC IAR, commission management, interline, financial reporting, revenue accounting |
+| 8 | TMC & Agency | `@otaip/agents-tmc` | 5 | Traveler profiles, corporate accounts, mid-office, reporting, duty of care |
+| 9 | Platform | `@otaip/agents-platform` | 9 | Orchestrator, knowledge, monitoring, audit, plugin manager, performance audit, routing audit, recommendations, alerts |
+| 20 | Lodging | `@otaip/agents-lodging` | 7 | Hotel search, property dedup, content normalization, rate comparison, booking, modification, confirmation verification |
+
+See [docs/agents.md](docs/agents.md) for the complete agent table with IDs, class names, and contract status.
+
+---
+
+## Pipeline Contract System
+
+The pipeline validator enforces six gates on every LLM-orchestrated call: schema conformance, semantic validation, intent lock, cross-agent consistency, confidence gating, and action classification. An LLM cannot fabricate an offer ID, change the destination mid-flow, or ticket without approval.
+
+Every agent that participates in an LLM-orchestrated flow declares an `AgentContract` — Zod schemas, semantic validation, action classification, and confidence thresholds. The `PipelineOrchestrator` enforces six gates on every call:
+
+```
+LLM tool call
+    |
+    v
+[1. Schema conformance]     Zod parse — structural hallucinations impossible
+[2. Semantic validation]    Domain checks — "Is this airport code real?"
+[3. Intent lock]            "You can't change the destination mid-flow"
+[4. Cross-agent consistency] "This offer ID must exist in the search results"
+    |
+    v  (agent executes)
+    |
+[5. Confidence gating]     Output confidence meets threshold for action type
+[6. Action classification]  Irreversible actions require approval token
+```
+
+14 agents are currently contracted (reference, search, pricing, booking, ticketing, governance). The remaining 61 work as standalone agents called directly — no breaking changes.
+
+```typescript
+import { PipelineOrchestrator, agentToTool } from '@otaip/core';
+
+// Bridge contracted agents into LLM tools
+const tool = agentToTool(contract, agent, orchestrator, session);
+// Every tool.execute() runs through all 6 gates
+```
+
+See [docs/architecture.md](docs/architecture.md) for the full architecture overview.
+
+---
+
+## Domain Expertise
+
+OTAIP agents encode real industry logic: ATPCO fare rules (Categories 1-33), NUC/ROE fare construction with HIP/BHC/CTM checks, BSP HOT file reconciliation, ADM prevention (9 pre-ticketing checks), NDC/EDIFACT normalization, IRROPS rebooking with EU261 and US DOT compliance, void window enforcement, married segment integrity, and payment-to-ticketing state machines with BSP finality rules.
 
 ---
 
