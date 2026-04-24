@@ -96,6 +96,9 @@ importers:
       fastify:
         specifier: ^5.3.3
         version: 5.8.5
+      stripe:
+        specifier: ^18.0.0
+        version: 18.5.0(@types/node@25.5.0)
     devDependencies:
       tsup:
         specifier: ^8.5.1
@@ -1896,6 +1899,15 @@ packages:
   std-env@4.0.0:
     resolution: {integrity: sha512-zUMPtQ/HBY3/50VbpkupYHbRroTRZJPRLvreamgErJVys0ceuzMkD44J/QjqhHjOzK42GQ3QZIeFG1OYfOtKqQ==}
 
+  stripe@18.5.0:
+    resolution: {integrity: sha512-Hp+wFiEQtCB0LlNgcFh5uVyKznpDjzyUZ+CNVEf+I3fhlYvh7rZruIg+jOwzJRCpy0ZTPMjlzm7J2/M2N6d+DA==}
+    engines: {node: '>=12.*'}
+    peerDependencies:
+      '@types/node': '>=12.x.x'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
   sucrase@3.35.1:
     resolution: {integrity: sha512-DhuTmvZWux4H1UOnWMB3sk0sbaCVOoQZjv8u1rDoTV0HTdGem9hkAZtl4JZy8P2z4Bg0nT+YMeOFyVr4zcG5Tw==}
     engines: {node: '>=16 || 14 >=14.17'}
@@ -3581,6 +3593,12 @@ snapshots:
   statuses@2.0.2: {}
 
   std-env@4.0.0: {}
+
+  stripe@18.5.0(@types/node@25.5.0):
+    dependencies:
+      qs: 6.15.0
+    optionalDependencies:
+      '@types/node': 25.5.0
 
   sucrase@3.35.1:
     dependencies:

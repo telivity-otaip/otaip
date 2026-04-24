@@ -192,6 +192,7 @@ export class MockOtaAdapter extends MockDuffelAdapter implements OtaAdapter {
       totalAmount: row.totalAmount,
       currency: row.currency,
       createdAt: row.createdAt,
+      ...(row.paymentIntentId ? { paymentIntentId: row.paymentIntentId } : {}),
     };
   }
 }

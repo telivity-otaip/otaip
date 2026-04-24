@@ -8,6 +8,7 @@ import {
   AdapterNotBookableError,
   OfferNotFoundError,
 } from '../services/booking-service.js';
+import type { PaymentService } from '../services/payment-service.js';
 import type { PassengerDetail } from '../types.js';
 
 // ---------------------------------------------------------------------------
@@ -32,6 +33,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 export function registerBookRoute(
   app: FastifyInstance,
   bookingService: BookingService,
+  paymentService?: PaymentService,
 ): void {
   app.post<{ Body: BookBody }>('/api/book', async (request, reply) => {
     const body = request.body as BookBody | undefined;
@@ -90,6 +92,21 @@ export function registerBookRoute(
         body.email,
         body.phone,
       );
+
+      // When Stripe is wired in, create the PaymentIntent now so the
+      // frontend can collect the card with the returned client_secret.
+      if (paymentService?.usesStripe) {
+        try {
+          const intent = await paymentService.createIntent(result.bookingReference);
+          if (intent.clientSecret) result.clientSecret = intent.clientSecret;
+          if (intent.paymentIntentId) result.paymentIntentId = intent.paymentIntentId;
+        } catch (piErr) {
+          // Booking succeeded; intent creation failed. Surface as a warning
+          // so the caller can retry via the pay route rather than failing
+          // the whole booking.
+          request.log.warn({ piErr }, 'PaymentIntent creation failed after booking');
+        }
+      }
 
       return reply.send(result);
     } catch (err) {

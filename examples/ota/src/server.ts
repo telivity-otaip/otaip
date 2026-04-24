@@ -11,11 +11,13 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import Stripe from 'stripe';
 import type { DistributionAdapter } from '@otaip/core';
 import { createAdapter, createMultiAdapter } from './config/adapters.js';
 import type { OtaAdapter } from './types.js';
 import { MockOtaAdapter } from './mock-ota-adapter.js';
 import { SqliteStore } from './persistence/sqlite-store.js';
+import type { StripeLike } from './services/payment-service.js';
 import { SearchService } from './services/search-service.js';
 import { MultiSearchService } from './services/multi-search-service.js';
 import { OfferService } from './services/offer-service.js';
@@ -67,6 +69,13 @@ export interface BuildAppOptions {
    * is expected to carry its own store.
    */
   store?: SqliteStore;
+  /**
+   * Optional Stripe client (or Stripe-compatible mock) for payments.
+   * When absent and `STRIPE_SECRET_KEY` env var is set, a real Stripe
+   * instance is constructed. When both are absent, PaymentService runs
+   * in mock mode (payments always succeed with `pay_mock_*` IDs).
+   */
+  stripe?: StripeLike;
   /** Whether to initialize the airport resolver. Defaults to true. */
   initResolver?: boolean;
   /**
@@ -98,6 +107,13 @@ export async function buildApp(options: BuildAppOptions = {}) {
   const adapter =
     options.adapter ??
     (store ? new MockOtaAdapter({ store }) : createAdapter());
+
+  // Stripe client: caller wins, otherwise construct from env when key is set.
+  const stripe: StripeLike | undefined =
+    options.stripe ??
+    (process.env['STRIPE_SECRET_KEY']
+      ? new Stripe(process.env['STRIPE_SECRET_KEY'])
+      : undefined);
   const multiAdapters = options.multiSearch ? undefined : process.env['ADAPTERS']
     ? createMultiAdapter()
     : undefined;
@@ -127,7 +143,10 @@ export async function buildApp(options: BuildAppOptions = {}) {
     searchService,
     bookingAdapters,
   );
-  const paymentService = new PaymentService(adapter as MockOtaAdapter);
+  const paymentService = new PaymentService(adapter as MockOtaAdapter, {
+    ...(stripe ? { stripe } : {}),
+    ...(store ? { store } : {}),
+  });
   const ticketingService = new TicketingService(adapter as MockOtaAdapter);
   const manageService = new ManageService(adapter as MockOtaAdapter);
 
@@ -142,7 +161,7 @@ export async function buildApp(options: BuildAppOptions = {}) {
   registerHealthRoute(app, adapter);
 
   // Register routes — Sprint F
-  registerBookRoute(app, bookingService);
+  registerBookRoute(app, bookingService, paymentService);
   registerPayRoute(app, paymentService);
   registerTicketRoute(app, ticketingService);
   registerManageRoutes(app, manageService);
