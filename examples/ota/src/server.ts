@@ -14,7 +14,8 @@ import fastifyStatic from '@fastify/static';
 import type { DistributionAdapter } from '@otaip/core';
 import { createAdapter, createMultiAdapter } from './config/adapters.js';
 import type { OtaAdapter } from './types.js';
-import type { MockOtaAdapter } from './mock-ota-adapter.js';
+import { MockOtaAdapter } from './mock-ota-adapter.js';
+import { SqliteStore } from './persistence/sqlite-store.js';
 import { SearchService } from './services/search-service.js';
 import { MultiSearchService } from './services/multi-search-service.js';
 import { OfferService } from './services/offer-service.js';
@@ -59,6 +60,13 @@ export function filterBookingAdapters(
 export interface BuildAppOptions {
   /** Override the adapter (useful for testing with MockOtaAdapter). */
   adapter?: OtaAdapter;
+  /**
+   * Optional SqliteStore for durable persistence. If not provided and
+   * `DATABASE_PATH` env var is set, one is constructed automatically.
+   * Ignored when the caller also passes `adapter` — the injected adapter
+   * is expected to carry its own store.
+   */
+  store?: SqliteStore;
   /** Whether to initialize the airport resolver. Defaults to true. */
   initResolver?: boolean;
   /**
@@ -79,7 +87,17 @@ export interface BuildAppOptions {
 }
 
 export async function buildApp(options: BuildAppOptions = {}) {
-  const adapter = options.adapter ?? createAdapter();
+  // Persistence: caller-supplied store wins, otherwise derive from env.
+  // When neither is set, the MockOtaAdapter falls back to its in-memory Map.
+  const store =
+    options.store ??
+    (process.env['DATABASE_PATH']
+      ? new SqliteStore(process.env['DATABASE_PATH'])
+      : undefined);
+
+  const adapter =
+    options.adapter ??
+    (store ? new MockOtaAdapter({ store }) : createAdapter());
   const multiAdapters = options.multiSearch ? undefined : process.env['ADAPTERS']
     ? createMultiAdapter()
     : undefined;
