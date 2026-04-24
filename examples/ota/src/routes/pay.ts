@@ -19,11 +19,27 @@ interface PayBody {
 // Route registration
 // ---------------------------------------------------------------------------
 
+const PAY_BODY_SCHEMA = {
+  type: 'object',
+  required: ['bookingReference'],
+  additionalProperties: false,
+  properties: {
+    bookingReference: { type: 'string', minLength: 6, maxLength: 32 },
+    paymentMethodId: { type: 'string', minLength: 1, maxLength: 200 },
+  },
+} as const;
+
 export function registerPayRoute(
   app: FastifyInstance,
   paymentService: PaymentService,
 ): void {
-  app.post<{ Body: PayBody }>('/api/pay', async (request, reply) => {
+  app.post<{ Body: PayBody }>(
+    '/api/pay',
+    {
+      schema: { body: PAY_BODY_SCHEMA },
+      config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+    },
+    async (request, reply) => {
     const body = request.body as PayBody | undefined;
 
     if (!body) {
@@ -54,5 +70,6 @@ export function registerPayRoute(
       const message = err instanceof Error ? err.message : 'Unknown error';
       return reply.status(500).send({ error: 'Payment failed', message });
     }
-  });
+  },
+  );
 }

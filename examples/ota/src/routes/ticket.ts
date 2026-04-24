@@ -18,11 +18,23 @@ interface TicketBody {
 // Route registration
 // ---------------------------------------------------------------------------
 
+const TICKET_BODY_SCHEMA = {
+  type: 'object',
+  required: ['bookingReference'],
+  additionalProperties: false,
+  properties: {
+    bookingReference: { type: 'string', minLength: 6, maxLength: 32 },
+  },
+} as const;
+
 export function registerTicketRoute(
   app: FastifyInstance,
   ticketingService: TicketingService,
 ): void {
-  app.post<{ Body: TicketBody }>('/api/ticket', async (request, reply) => {
+  app.post<{ Body: TicketBody }>(
+    '/api/ticket',
+    { schema: { body: TICKET_BODY_SCHEMA } },
+    async (request, reply) => {
     const body = request.body as TicketBody | undefined;
 
     if (!body) {
@@ -51,5 +63,6 @@ export function registerTicketRoute(
       const message = err instanceof Error ? err.message : 'Unknown error';
       return reply.status(500).send({ error: 'Ticketing failed', message });
     }
-  });
+  },
+  );
 }

@@ -8,6 +8,7 @@ import {
   AdapterNotBookableError,
   OfferNotFoundError,
 } from '../services/booking-service.js';
+import type { PaymentService } from '../services/payment-service.js';
 import type { PassengerDetail } from '../types.js';
 
 // ---------------------------------------------------------------------------
@@ -29,11 +30,46 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 // Route registration
 // ---------------------------------------------------------------------------
 
+const BOOK_BODY_SCHEMA = {
+  type: 'object',
+  required: ['offerId', 'passengers', 'email', 'phone'],
+  additionalProperties: false,
+  properties: {
+    offerId: { type: 'string', minLength: 1, maxLength: 200 },
+    email: { type: 'string', format: 'email', maxLength: 254 },
+    phone: { type: 'string', minLength: 6, maxLength: 20 },
+    passengers: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 9,
+      items: {
+        type: 'object',
+        required: ['title', 'firstName', 'lastName', 'dateOfBirth', 'gender'],
+        additionalProperties: false,
+        properties: {
+          title: { type: 'string', enum: ['mr', 'ms', 'mrs', 'miss', 'dr'] },
+          firstName: { type: 'string', minLength: 1, maxLength: 60 },
+          lastName: { type: 'string', minLength: 1, maxLength: 60 },
+          dateOfBirth: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+          gender: { type: 'string', enum: ['male', 'female'] },
+        },
+      },
+    },
+  },
+} as const;
+
 export function registerBookRoute(
   app: FastifyInstance,
   bookingService: BookingService,
+  paymentService?: PaymentService,
 ): void {
-  app.post<{ Body: BookBody }>('/api/book', async (request, reply) => {
+  app.post<{ Body: BookBody }>(
+    '/api/book',
+    {
+      schema: { body: BOOK_BODY_SCHEMA },
+      config: { rateLimit: { max: 20, timeWindow: '1 minute' } },
+    },
+    async (request, reply) => {
     const body = request.body as BookBody | undefined;
 
     if (!body) {
@@ -91,6 +127,21 @@ export function registerBookRoute(
         body.phone,
       );
 
+      // When Stripe is wired in, create the PaymentIntent now so the
+      // frontend can collect the card with the returned client_secret.
+      if (paymentService?.usesStripe) {
+        try {
+          const intent = await paymentService.createIntent(result.bookingReference);
+          if (intent.clientSecret) result.clientSecret = intent.clientSecret;
+          if (intent.paymentIntentId) result.paymentIntentId = intent.paymentIntentId;
+        } catch (piErr) {
+          // Booking succeeded; intent creation failed. Surface as a warning
+          // so the caller can retry via the pay route rather than failing
+          // the whole booking.
+          request.log.warn({ piErr }, 'PaymentIntent creation failed after booking');
+        }
+      }
+
       return reply.send(result);
     } catch (err) {
       if (err instanceof OfferNotFoundError) {
@@ -110,5 +161,6 @@ export function registerBookRoute(
       const message = err instanceof Error ? err.message : 'Unknown error';
       return reply.status(500).send({ error: 'Booking failed', message });
     }
-  });
+  },
+  );
 }

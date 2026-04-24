@@ -75,7 +75,8 @@ describe('POST /api/search', () => {
     expect(res.statusCode).toBe(400);
     const body = res.json();
     expect(body.error).toBe('Validation failed');
-    expect(body.details).toContain('origin must be a 3-letter IATA airport code');
+    // AJV detail mentions the offending field.
+    expect(body.details.some((d: string) => d.includes('origin'))).toBe(true);
   });
 
   it('returns 400 for missing required fields', async () => {

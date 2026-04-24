@@ -1,8 +1,10 @@
 /**
- * Mock OTA Adapter — extends MockDuffelAdapter with in-memory booking.
+ * Mock OTA Adapter — extends MockDuffelAdapter with booking persistence.
  *
- * Stores bookings in a Map. All data is lost on server restart.
- * This is a reference implementation for the OTA example app.
+ * Constructor accepts an optional `SqliteStore`. When provided, bookings,
+ * payments, and tickets are persisted to SQLite and survive server restart.
+ * When absent, the adapter uses an in-memory `Map` (legacy behavior for
+ * existing tests that don't want to touch disk).
  */
 
 import { MockDuffelAdapter } from '@otaip/adapter-duffel';
@@ -13,25 +15,7 @@ import type {
   BookingStatus,
   CancelResult,
 } from './types.js';
-
-// ---------------------------------------------------------------------------
-// Internal booking record
-// ---------------------------------------------------------------------------
-
-interface BookingRecord {
-  bookingReference: string;
-  offerId: string;
-  passengers: BookingRequest['passengers'];
-  contactEmail: string;
-  contactPhone: string;
-  status: BookingStatus;
-  ticketNumbers?: string[];
-  totalAmount: string;
-  currency: string;
-  createdAt: string;
-  paymentId?: string;
-  ticketedAt?: string;
-}
+import type { SqliteStore, BookingRow } from './persistence/sqlite-store.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -48,7 +32,7 @@ function generateReference(): string {
 
 function generateTicketNumber(): string {
   // Mock 13-digit ticket number (airline code prefix + 10 digits)
-  const prefix = '016'; // United-style 3-digit airline code
+  const prefix = '016';
   let digits = '';
   for (let i = 0; i < 10; i++) {
     digits += Math.floor(Math.random() * 10).toString();
@@ -60,14 +44,39 @@ function generateTicketNumber(): string {
 // MockOtaAdapter
 // ---------------------------------------------------------------------------
 
+export interface MockOtaAdapterOptions {
+  /** When provided, bookings/payments/tickets are persisted to SQLite. */
+  store?: SqliteStore;
+}
+
 export class MockOtaAdapter extends MockDuffelAdapter implements OtaAdapter {
-  private readonly bookings = new Map<string, BookingRecord>();
+  /** In-memory fallback used only when no `store` is injected. */
+  private readonly memoryBookings = new Map<string, BookingRow>();
+  private readonly store?: SqliteStore;
+
+  constructor(options: MockOtaAdapterOptions = {}) {
+    super();
+    if (options.store) this.store = options.store;
+  }
+
+  private getRow(reference: string): BookingRow | null {
+    if (this.store) return this.store.getBooking(reference);
+    return this.memoryBookings.get(reference) ?? null;
+  }
+
+  private putRow(row: BookingRow): void {
+    if (this.store) {
+      this.store.putBooking(row);
+    } else {
+      this.memoryBookings.set(row.bookingReference, row);
+    }
+  }
 
   async book(request: BookingRequest): Promise<BookingResult> {
     const reference = generateReference();
     const now = new Date().toISOString();
 
-    const record: BookingRecord = {
+    const row: BookingRow = {
       bookingReference: reference,
       offerId: request.offerId,
       passengers: request.passengers,
@@ -79,9 +88,8 @@ export class MockOtaAdapter extends MockDuffelAdapter implements OtaAdapter {
       createdAt: now,
     };
 
-    this.bookings.set(reference, record);
-
-    return this.toResult(record);
+    this.putRow(row);
+    return this.toResult(row);
   }
 
   /**
@@ -89,53 +97,56 @@ export class MockOtaAdapter extends MockDuffelAdapter implements OtaAdapter {
    * Called by BookingService after verifying the offer exists.
    */
   updateBookingPrice(reference: string, totalAmount: string, currency: string): void {
-    const record = this.bookings.get(reference);
-    if (record) {
-      record.totalAmount = totalAmount;
-      record.currency = currency;
-    }
+    const row = this.getRow(reference);
+    if (!row) return;
+    row.totalAmount = totalAmount;
+    row.currency = currency;
+    this.putRow(row);
   }
 
   /**
-   * Record a payment against a booking.
+   * Record a payment against a booking. Optionally records the payment
+   * intent ID (Stripe) for cross-reference.
    */
-  recordPayment(reference: string, paymentId: string): void {
-    const record = this.bookings.get(reference);
-    if (record) {
-      record.paymentId = paymentId;
-    }
+  recordPayment(reference: string, paymentId: string, paymentIntentId?: string): void {
+    const row = this.getRow(reference);
+    if (!row) return;
+    row.paymentId = paymentId;
+    if (paymentIntentId !== undefined) row.paymentIntentId = paymentIntentId;
+    this.putRow(row);
   }
 
   /**
-   * Issue mock tickets for a booking.
-   * Returns the generated ticket numbers.
+   * Issue mock tickets for a booking. Returns the generated ticket numbers,
+   * or null when the booking does not exist.
    */
   issueTickets(reference: string): string[] | null {
-    const record = this.bookings.get(reference);
-    if (!record) return null;
+    const row = this.getRow(reference);
+    if (!row) return null;
 
-    if (record.status === 'ticketed' && record.ticketNumbers) {
-      return record.ticketNumbers;
+    if (row.status === 'ticketed' && row.ticketNumbers) {
+      return row.ticketNumbers;
     }
 
-    const ticketNumbers = record.passengers.map(() => generateTicketNumber());
-    record.ticketNumbers = ticketNumbers;
-    record.status = 'ticketed';
-    record.ticketedAt = new Date().toISOString();
+    const ticketNumbers = row.passengers.map(() => generateTicketNumber());
+    row.ticketNumbers = ticketNumbers;
+    row.status = 'ticketed';
+    row.ticketedAt = new Date().toISOString();
+    this.putRow(row);
 
     return ticketNumbers;
   }
 
   async getBooking(reference: string): Promise<BookingResult | null> {
-    const record = this.bookings.get(reference);
-    if (!record) return null;
-    return this.toResult(record);
+    const row = this.getRow(reference);
+    if (!row) return null;
+    return this.toResult(row);
   }
 
   async cancelBooking(reference: string): Promise<CancelResult> {
-    const record = this.bookings.get(reference);
+    const row = this.getRow(reference);
 
-    if (!record) {
+    if (!row) {
       return {
         success: false,
         message: `Booking not found: ${reference}`,
@@ -143,7 +154,7 @@ export class MockOtaAdapter extends MockDuffelAdapter implements OtaAdapter {
       };
     }
 
-    if (record.status === 'ticketed') {
+    if (row.status === 'ticketed') {
       return {
         success: false,
         message: 'Cannot cancel a ticketed booking. Contact support for refunds.',
@@ -151,7 +162,7 @@ export class MockOtaAdapter extends MockDuffelAdapter implements OtaAdapter {
       };
     }
 
-    if (record.status === 'cancelled') {
+    if (row.status === 'cancelled') {
       return {
         success: false,
         message: 'Booking is already cancelled.',
@@ -159,7 +170,8 @@ export class MockOtaAdapter extends MockDuffelAdapter implements OtaAdapter {
       };
     }
 
-    record.status = 'cancelled';
+    row.status = 'cancelled';
+    this.putRow(row);
 
     return {
       success: true,
@@ -168,18 +180,22 @@ export class MockOtaAdapter extends MockDuffelAdapter implements OtaAdapter {
     };
   }
 
-  private toResult(record: BookingRecord): BookingResult {
+  private toResult(row: BookingRow): BookingResult {
     return {
-      bookingReference: record.bookingReference,
-      status: record.status,
-      offerId: record.offerId,
-      passengers: record.passengers,
-      contactEmail: record.contactEmail,
-      contactPhone: record.contactPhone,
-      ticketNumbers: record.ticketNumbers,
-      totalAmount: record.totalAmount,
-      currency: record.currency,
-      createdAt: record.createdAt,
+      bookingReference: row.bookingReference,
+      status: row.status,
+      offerId: row.offerId,
+      passengers: row.passengers,
+      contactEmail: row.contactEmail,
+      contactPhone: row.contactPhone,
+      ...(row.ticketNumbers ? { ticketNumbers: row.ticketNumbers } : {}),
+      totalAmount: row.totalAmount,
+      currency: row.currency,
+      createdAt: row.createdAt,
+      ...(row.paymentIntentId ? { paymentIntentId: row.paymentIntentId } : {}),
     };
   }
 }
+
+// Re-export BookingStatus so downstream consumers keep a single import surface.
+export type { BookingStatus };

@@ -44,6 +44,10 @@ export interface BookingResult {
   totalAmount: string;
   currency: string;
   createdAt: string;
+  /** Stripe PaymentIntent ID, when a Stripe flow is active. */
+  paymentIntentId?: string;
+  /** Stripe PaymentIntent client_secret — returned from book so the frontend can collect card details. */
+  clientSecret?: string;
 }
 
 // ---------------------------------------------------------------------------
