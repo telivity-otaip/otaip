@@ -11,6 +11,9 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import fastifyHelmet from '@fastify/helmet';
+import fastifyCors from '@fastify/cors';
+import fastifyRateLimit from '@fastify/rate-limit';
 import Stripe from 'stripe';
 import type { DistributionAdapter } from '@otaip/core';
 import { createAdapter, createMultiAdapter } from './config/adapters.js';
@@ -79,6 +82,16 @@ export interface BuildAppOptions {
   /** Whether to initialize the airport resolver. Defaults to true. */
   initResolver?: boolean;
   /**
+   * Security plugin overrides — set any field to `false` to skip that
+   * plugin entirely. Defaults to enabling all three with sensible
+   * production settings. `rateLimit.max` defaults to 100 req/min.
+   */
+  security?: {
+    helmet?: boolean;
+    cors?: { origin: string | string[] | false } | false;
+    rateLimit?: { max?: number; timeWindow?: string | number } | false;
+  };
+  /**
    * Override the multi-search service (useful for testing).
    * If not provided, one is constructed from `createMultiAdapter()` iff the
    * `ADAPTERS` env var is set. When neither is present, the ?multi=true
@@ -127,7 +140,82 @@ export async function buildApp(options: BuildAppOptions = {}) {
     options.bookingAdapters ??
     (multiAdapters ? filterBookingAdapters(multiAdapters) : new Map());
 
-  const app = Fastify({ logger: true });
+  const app = Fastify({
+    logger: true,
+    // AJV config:
+    // - allErrors: collect every validation failure, not just the first
+    // - removeAdditional: false — we want `additionalProperties: false`
+    //   schemas to REJECT unknown keys, not silently strip them (Fastify's
+    //   default is to strip, which defeats input-sanitization intent).
+    ajv: {
+      customOptions: { allErrors: true, removeAdditional: false },
+    },
+    // Preserve the pre-existing error envelope for schema-failed requests
+    // so tests and clients that expect `{ error: 'Validation failed',
+    // details: [...] }` keep working after input schemas were added.
+    schemaErrorFormatter: (errors) => {
+      const err = new Error('Validation failed') as Error & {
+        statusCode?: number;
+        validation?: unknown;
+      };
+      err.statusCode = 400;
+      err.validation = errors;
+      return err;
+    },
+  });
+
+  // Convert thrown schema-validation errors into the expected
+  // `{ error: 'Validation failed', details: [...] }` envelope.
+  // Other errors (rate-limit, etc.) retain their original status code
+  // and body — reply.send(error) preserves `statusCode` from the error.
+  app.setErrorHandler((error, _request, reply) => {
+    const validation = (error as { validation?: Array<{ message?: string; instancePath?: string }> }).validation;
+    if (validation) {
+      const details = validation.map(
+        (v) => `${v.instancePath ?? ''} ${v.message ?? ''}`.trim(),
+      );
+      return reply.status(400).send({ error: 'Validation failed', details });
+    }
+    const e = error as { statusCode?: number; status?: number; code?: string };
+    // Fastify error objects use statusCode; some plugins use .status; default 500.
+    const status = e.statusCode ?? e.status ?? 500;
+    return reply.status(status).send(error);
+  });
+
+  // --- Security plugins (register before routes) ---
+  const sec = options.security ?? {};
+
+  // Helmet — defense-in-depth HTTP headers.
+  if (sec.helmet !== false) {
+    await app.register(fastifyHelmet, {
+      // `contentSecurityPolicy: false` lets the plain-HTML frontend load
+      // its bundled Pico CSS from the same origin without wrestling CSP.
+      // Tighten this for production deployments.
+      contentSecurityPolicy: false,
+    });
+  }
+
+  // CORS — opt-in. Config from CORS_ORIGIN env var (comma-separated).
+  // Default: no cross-origin allowed.
+  if (sec.cors !== false) {
+    const envOrigin = process.env['CORS_ORIGIN'];
+    const corsOrigin =
+      sec.cors !== undefined
+        ? sec.cors.origin
+        : envOrigin
+          ? envOrigin.split(',').map((s) => s.trim()).filter(Boolean)
+          : false;
+    await app.register(fastifyCors, { origin: corsOrigin });
+  }
+
+  // Rate limiting — global default 100 req/min/IP; per-route overrides
+  // (book: 20/min, pay: 10/min) are set on the route declarations.
+  if (sec.rateLimit !== false) {
+    await app.register(fastifyRateLimit, {
+      max: sec.rateLimit?.max ?? 100,
+      timeWindow: sec.rateLimit?.timeWindow ?? '1 minute',
+    });
+  }
 
   // Serve static frontend files
   await app.register(fastifyStatic, {

@@ -38,7 +38,18 @@ export function registerManageRoutes(
   });
 
   // POST /api/cancel
-  app.post<{ Body: CancelBody }>('/api/cancel', async (request, reply) => {
+  const cancelSchema = {
+    type: 'object',
+    required: ['bookingReference'],
+    additionalProperties: false,
+    properties: {
+      bookingReference: { type: 'string', minLength: 6, maxLength: 32 },
+    },
+  } as const;
+  app.post<{ Body: CancelBody }>(
+    '/api/cancel',
+    { schema: { body: cancelSchema } },
+    async (request, reply) => {
     const body = request.body as CancelBody | undefined;
 
     if (!body) {
@@ -60,5 +71,6 @@ export function registerManageRoutes(
     }
 
     return reply.send(result);
-  });
+  },
+  );
 }

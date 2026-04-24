@@ -31,12 +31,29 @@ const VALID_CABINS = new Set(['economy', 'premium_economy', 'business', 'first']
 // Route registration
 // ---------------------------------------------------------------------------
 
+const SEARCH_BODY_SCHEMA = {
+  type: 'object',
+  required: ['origin', 'destination', 'date', 'passengers'],
+  additionalProperties: false,
+  properties: {
+    origin: { type: 'string', pattern: '^[A-Za-z]{3}$' },
+    destination: { type: 'string', pattern: '^[A-Za-z]{3}$' },
+    date: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+    returnDate: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+    passengers: { type: 'integer', minimum: 1, maximum: 9 },
+    cabinClass: { type: 'string', enum: ['economy', 'premium_economy', 'business', 'first'] },
+  },
+} as const;
+
 export function registerSearchRoute(
   app: FastifyInstance,
   searchService: SearchService,
   multiSearch?: MultiSearchService,
 ): void {
-  app.post<{ Body: SearchBody }>('/api/search', async (request, reply) => {
+  app.post<{ Body: SearchBody }>(
+    '/api/search',
+    { schema: { body: SEARCH_BODY_SCHEMA } },
+    async (request, reply) => {
     const body = request.body as SearchBody | undefined;
 
     if (!body) {
@@ -131,5 +148,6 @@ export function registerSearchRoute(
       request.log.error({ err }, 'Search failed');
       return reply.status(500).send({ error: 'Search failed', message });
     }
-  });
+  },
+  );
 }

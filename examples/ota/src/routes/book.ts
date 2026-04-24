@@ -30,12 +30,46 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 // Route registration
 // ---------------------------------------------------------------------------
 
+const BOOK_BODY_SCHEMA = {
+  type: 'object',
+  required: ['offerId', 'passengers', 'email', 'phone'],
+  additionalProperties: false,
+  properties: {
+    offerId: { type: 'string', minLength: 1, maxLength: 200 },
+    email: { type: 'string', format: 'email', maxLength: 254 },
+    phone: { type: 'string', minLength: 6, maxLength: 20 },
+    passengers: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 9,
+      items: {
+        type: 'object',
+        required: ['title', 'firstName', 'lastName', 'dateOfBirth', 'gender'],
+        additionalProperties: false,
+        properties: {
+          title: { type: 'string', enum: ['mr', 'ms', 'mrs', 'miss', 'dr'] },
+          firstName: { type: 'string', minLength: 1, maxLength: 60 },
+          lastName: { type: 'string', minLength: 1, maxLength: 60 },
+          dateOfBirth: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+          gender: { type: 'string', enum: ['male', 'female'] },
+        },
+      },
+    },
+  },
+} as const;
+
 export function registerBookRoute(
   app: FastifyInstance,
   bookingService: BookingService,
   paymentService?: PaymentService,
 ): void {
-  app.post<{ Body: BookBody }>('/api/book', async (request, reply) => {
+  app.post<{ Body: BookBody }>(
+    '/api/book',
+    {
+      schema: { body: BOOK_BODY_SCHEMA },
+      config: { rateLimit: { max: 20, timeWindow: '1 minute' } },
+    },
+    async (request, reply) => {
     const body = request.body as BookBody | undefined;
 
     if (!body) {
@@ -127,5 +161,6 @@ export function registerBookRoute(
       const message = err instanceof Error ? err.message : 'Unknown error';
       return reply.status(500).send({ error: 'Booking failed', message });
     }
-  });
+  },
+  );
 }
